@@ -11,7 +11,7 @@ module Battle::CatchAndStoreMixin
       end
     end
     # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
-    if $player.party_full? && $PokemonSystem.sendtoboxes.zero?
+    if pbPlayer.party_full? && $PokemonSystem.sendtoboxes.zero?
       commands = [_INTL("Add to your party"),
                   _INTL("Send to a Box")]
       loop do
