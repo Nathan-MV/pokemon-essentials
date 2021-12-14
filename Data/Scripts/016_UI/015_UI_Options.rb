@@ -5,6 +5,7 @@ class PokemonSystem
   attr_accessor :textspeed
   attr_accessor :battlescene
   attr_accessor :battlestyle
+  attr_accessor :sendtoboxes
   attr_accessor :frame
   attr_accessor :textskin
   attr_accessor :screensize
@@ -18,6 +19,7 @@ class PokemonSystem
     @textspeed   = 1     # Text speed (0=slow, 1=normal, 2=fast)
     @battlescene = 0     # Battle effects (animations) (0=on, 1=off)
     @battlestyle = 0     # Battle style (0=switch, 1=set)
+    @sendtoboxes = 0     # Send to boxes (0=manual, 1=automatic)
     @frame       = 0     # Default window frame (see also Settings::MENU_WINDOWSKINS)
     @textskin    = 0     # Speech frame
     @screensize  = (Settings::SCREEN_SCALE * 2).floor - 1   # 0=half size, 1=full size, 2=full-and-a-half size, 3=double size
@@ -342,6 +344,10 @@ class PokemonOption_Scene
        EnumOption.new(_INTL("Battle Style"),[_INTL("Switch"),_INTL("Set")],
          proc { $PokemonSystem.battlestyle },
          proc { |value| $PokemonSystem.battlestyle = value }
+       ),
+       EnumOption.new(_INTL("Send to Boxes"),[_INTL("Manual"),_INTL("Automatic")],
+       proc { $PokemonSystem.sendtoboxes },
+       proc { |value| $PokemonSystem.sendtoboxes = value }
        ),
        EnumOption.new(_INTL("Default Movement"),[_INTL("Walking"),_INTL("Running")],
          proc { $PokemonSystem.runstyle },

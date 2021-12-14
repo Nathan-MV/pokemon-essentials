@@ -10,6 +10,27 @@ module Battle::CatchAndStoreMixin
         pkmn.name = nickname
       end
     end
+    # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
+    if $player.party_full? && ($PokemonSystem.sendtoboxes == 0)
+      commands = [_INTL("Add to your party"),
+                  _INTL("Send to a Box")]
+      loop do
+        command = pbMessage(_INTL("Where do you want to send {1} to?", pkmn.name), commands, -1)
+        break unless command.zero?
+
+        pbDisplayPaused(_INTL("Please select a Pokémon to swap from your party."))
+        pbChoosePokemon(1, 3)
+        chosen = pbGet(1)
+        next unless chosen.positive?
+
+        pkmn2 = pkmn
+        pkmn  = pbPlayer.party[chosen].clone
+        pbPlayer.party[chosen] = pkmn2
+        @initialItems[0][chosen] = pkmn2.item_id if @initialItems
+        pbDisplayPaused(_INTL("{1} will be added to your party, and {2} will be sent to a Box.", pkmn2.name, pkmn.name))
+        break
+      end
+    end
     # Store the Pokémon
     currentBox = @peer.pbCurrentBox
     storedBox  = @peer.pbStorePokemon(pbPlayer,pkmn)
