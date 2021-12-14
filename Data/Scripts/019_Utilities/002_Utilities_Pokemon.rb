@@ -38,18 +38,21 @@ def pbStorePokemon(pkmn)
         pkmn2 = pkmn
         pkmn  = $player.party[chosen].clone
         $player.party[chosen] = pkmn2
-        $PokemonStorage.pbStoreCaught(pkmn)
-        pbMessage(_INTL("{1} will be added to your party, and {2} will be sent to a Box.", pkmn2.name, pkmn.name))
+        stored_box = $PokemonStorage.pbStoreCaught(pkmn)
+        box_name   = $PokemonStorage[stored_box].name
+        pbMessage(_INTL("{1} will be added to your party, and {2} will be sent to {3}.", pkmn2.name, pkmn.name, box_name))
         @initialItems[0][chosen] = pkmn2.item_id if @initialItems
       else
-        $PokemonStorage.pbStoreCaught(pkmn)
-        pbMessage(_INTL("{1} has been sent to a Box!", pkmn.name))
+        stored_box = $PokemonStorage.pbStoreCaught(pkmn)
+        box_name   = $PokemonStorage[stored_box].name
+        pbMessage(_INTL("{1} has been sent to {2}!", pkmn.name, box_name))
       end
       break
     end
   elsif $player.party_full?
-    $PokemonStorage.pbStoreCaught(pkmn)
-    pbMessage(_INTL("{1} has been sent to a Box!", pkmn.name))
+    stored_box = $PokemonStorage.pbStoreCaught(pkmn)
+    box_name   = $PokemonStorage[stored_box].name
+    pbMessage(_INTL("{1} has been sent to {2}!", pkmn.name, box_name))
   else
     $player.party[$player.party.length] = pkmn
   end

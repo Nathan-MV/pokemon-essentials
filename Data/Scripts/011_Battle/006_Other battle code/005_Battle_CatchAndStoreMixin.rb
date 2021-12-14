@@ -26,7 +26,7 @@ module Battle::CatchAndStoreMixin
         pkmn2 = pkmn
         pkmn  = pbPlayer.party[chosen].clone
         pbPlayer.party[chosen] = pkmn2
-        pbDisplayPaused(_INTL("{1} will be added to your party, and {2} will be sent to a Box.", pkmn2.name, pkmn.name))
+        pbDisplayPaused(_INTL("{1} will be added to your party, and {2} will be sent to Box.", pkmn2.name, pkmn.name))
         @initialItems[0][chosen] = pkmn2.item_id if @initialItems
         break
       end
@@ -39,7 +39,8 @@ module Battle::CatchAndStoreMixin
       return
     end
     # Messages saying the Pokémon was stored in a PC box
-    pbDisplayPaused(_INTL("{1} has been sent to a Box!", pkmn.name)) if $PokemonSystem.sendtoboxes.positive?
+    box_name = @peer.pbBoxName(stored_box)
+    pbDisplayPaused(_INTL("{1} has been sent to {2}!", pkmn.name, box_name)) if $PokemonSystem.sendtoboxes.positive?
   end
 
   # Register all caught Pokémon in the Pokédex, and store them.
