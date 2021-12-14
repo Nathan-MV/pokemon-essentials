@@ -39,7 +39,7 @@ module Battle::CatchAndStoreMixin
       return
     end
     # Messages saying the Pokémon was stored in a PC box
-    pbDisplayPaused(_INTL("{1} has been sent to a Box!", pkmn.name))
+    pbDisplayPaused(_INTL("{1} has been sent to a Box!", pkmn.name)) if $PokemonSystem.sendtoboxes == 1
   end
 
   # Register all caught Pokémon in the Pokédex, and store them.
