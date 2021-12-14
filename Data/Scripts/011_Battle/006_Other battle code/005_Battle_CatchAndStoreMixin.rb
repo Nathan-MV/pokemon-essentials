@@ -4,14 +4,14 @@ module Battle::CatchAndStoreMixin
   #=============================================================================
   def pbStorePokemon(pkmn)
     # Nickname the Pokémon (unless it's a Shadow Pokémon)
-    if !pkmn.shadowPokemon? && ($PokemonSystem.givenicknames == 0)
+    if !pkmn.shadowPokemon? && $PokemonSystem.givenicknames.zero?
       if pbDisplayConfirm(_INTL("Would you like to give a nickname to {1}?", pkmn.name))
         nickname = @scene.pbNameEntry(_INTL("{1}'s nickname?", pkmn.speciesName), pkmn)
         pkmn.name = nickname
       end
     end
     # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
-    if $player.party_full? && ($PokemonSystem.sendtoboxes == 0)
+    if $player.party_full? && $PokemonSystem.sendtoboxes.zero?
       commands = [_INTL("Add to your party"),
                   _INTL("Send to a Box")]
       loop do
@@ -26,20 +26,20 @@ module Battle::CatchAndStoreMixin
         pkmn2 = pkmn
         pkmn  = pbPlayer.party[chosen].clone
         pbPlayer.party[chosen] = pkmn2
-        @initialItems[0][chosen] = pkmn2.item_id if @initialItems
         pbDisplayPaused(_INTL("{1} will be added to your party, and {2} will be sent to a Box.", pkmn2.name, pkmn.name))
+        @initialItems[0][chosen] = pkmn2.item_id if @initialItems
         break
       end
     end
     # Store the Pokémon
     stored_box = @peer.pbStorePokemon(pbPlayer,pkmn)
-    if stored_box < 0
+    if stored_box.negative?
       pbDisplayPaused(_INTL("{1} has been added to your party.", pkmn.name))
       @initialItems[0][pbPlayer.party.length-1] = pkmn.item_id if @initialItems
       return
     end
     # Messages saying the Pokémon was stored in a PC box
-    pbDisplayPaused(_INTL("{1} has been sent to a Box!", pkmn.name)) if $PokemonSystem.sendtoboxes == 1
+    pbDisplayPaused(_INTL("{1} has been sent to a Box!", pkmn.name)) if $PokemonSystem.sendtoboxes.positive?
   end
 
   # Register all caught Pokémon in the Pokédex, and store them.
