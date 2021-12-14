@@ -12,9 +12,9 @@ module Battle::CatchAndStoreMixin
     end
     # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
     if pbPlayer.party_full? && $PokemonSystem.sendtoboxes.zero?
-      commands = [_INTL("Add to your party"),
-                  _INTL("Send to a Box")]
       loop do
+        commands = [_INTL("Add to your party"),
+                    _INTL("Send to a Box")]
         command = pbMessage(_INTL("Where do you want to send {1} to?", pkmn.name), commands, -1)
         break unless command.zero?
 
