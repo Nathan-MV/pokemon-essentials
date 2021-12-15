@@ -29,7 +29,9 @@ module Compiler
     ['pbDayCareChoose',              'DayCare.choose'],
     ['pbDayCareGetCompatibility',    'DayCare.get_compatibility'],
     ['pbEggGenerated?',              'DayCare.egg_generated?'],
-    ['pbDayCareGenerateEgg',         'DayCare.collect_egg']
+    ['pbDayCareGenerateEgg',         'DayCare.collect_egg'],
+    ['get_character(0)',             'get_self'],
+    ['get_character(-1)',            'get_player']
   ]
 
   module_function
@@ -216,7 +218,7 @@ module Compiler
     page.trigger                 = 3   # Autorun
     page.list.clear
     list = page.list
-    push_branch(list,"get_character(0).onEvent?")
+    push_branch(list,"get_self.onEvent?")
     push_event(list,208,[0],1)   # Change Transparent Flag
     push_wait(list,6,1)          # Wait
     push_event(list,208,[1],1)   # Change Transparent Flag
@@ -560,7 +562,7 @@ module Compiler
     introplay   = sprintf("pbTrainerIntro(:%s)",trtype)
     # Write first page
     push_script(firstpage.list,introplay)   # pbTrainerIntro
-    push_script(firstpage.list,"pbNoticePlayer(get_character(0))")
+    push_script(firstpage.list,"pbNoticePlayer(get_self)")
     push_text(firstpage.list,battles[0])
     if battles.length>1   # Has rematches
       push_script(firstpage.list,sprintf("pbTrainerCheck(%s,%d,%d)",safetrcombo,battles.length,battleid))
@@ -580,7 +582,7 @@ module Compiler
     push_branch(firstpage.list,battleString)
     if battles.length>1   # Has rematches
       push_script(firstpage.list,
-         sprintf("pbPhoneRegisterBattle(_I(\"%s\"),get_character(0),%s,%d)",
+         sprintf("pbPhoneRegisterBattle(_I(\"%s\"),get_self,%s,%d)",
          regspeech,safetrcombo,battles.length),1)
     end
     push_self_switch(firstpage.list,"A",true,1)
@@ -638,7 +640,7 @@ module Compiler
         push_text(lastpage.list,ebattle,1)
       end
       push_script(lastpage.list,
-         sprintf("pbPhoneRegisterBattle(_I(\"%s\"),get_character(0),%s,%d)",
+         sprintf("pbPhoneRegisterBattle(_I(\"%s\"),get_self,%s,%d)",
          regspeech,safetrcombo,battles.length),1)
       push_exit(lastpage.list,1)   # Exit Event Processing
       push_branch_end(lastpage.list,1)
@@ -650,7 +652,7 @@ module Compiler
     push_text(lastpage.list,ebattle)
     if battles.length>1
       push_script(lastpage.list,
-         sprintf("pbPhoneRegisterBattle(_I(\"%s\"),get_character(0),%s,%d)",
+         sprintf("pbPhoneRegisterBattle(_I(\"%s\"),get_self,%s,%d)",
          regspeech,safetrcombo,battles.length))
     end
     push_end(lastpage.list)
@@ -788,6 +790,8 @@ module Compiler
           push_move_route_and_wait(list,-1,[   # Move Route for player entering door
              PBMoveRoute::ThroughOn,PBMoveRoute::Up,PBMoveRoute::ThroughOff])
           push_event(list,208,[0])   # Change Transparent Flag (invisible)
+          push_script(list, "Followers.follow_into_door")
+          push_event(list, 210, [], indent)   # Wait for Move's Completion
           push_move_route_and_wait(list,0,[PBMoveRoute::Wait,2,   # Move Route for door closing
              PBMoveRoute::TurnRight,PBMoveRoute::Wait,2,
              PBMoveRoute::TurnLeft,PBMoveRoute::Wait,2,
@@ -801,12 +805,14 @@ module Compiler
           # Rewrite last page
           list = lastPage.list
           list.clear
-          push_branch(list,"get_character(0).onEvent?")   # Conditional Branch
+          push_branch(list,"get_self.onEvent?")   # Conditional Branch
           push_event(list,208,[0],1)   # Change Transparent Flag (invisible)
+          push_script(list, "Followers.hide_followers", 1)
           push_move_route_and_wait(list,0,[   # Move Route for setting door to open
              PBMoveRoute::TurnLeft,PBMoveRoute::Wait,6],1)
           push_event(list,208,[1],1)   # Change Transparent Flag (visible)
           push_move_route_and_wait(list,-1,[PBMoveRoute::Down],1)   # Move Route for player exiting door
+          push_script(list, "Followers.put_followers_on_player", 1)
           push_move_route_and_wait(list,0,[   # Move Route for door closing
              PBMoveRoute::TurnUp,PBMoveRoute::Wait,2,
              PBMoveRoute::TurnRight,PBMoveRoute::Wait,2,
