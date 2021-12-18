@@ -10,36 +10,37 @@ module Battle::CatchAndStoreMixin
         pkmn.name = nickname
       end
     end
+    stored_box = @peer.pbStorePokemon(pbPlayer, pkmn)
+    box_name   = @peer.pbBoxName(stored_box)
     # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
     if pbPlayer.party_full? && $PokemonSystem.sendtoboxes.zero?
       loop do
         commands = [_INTL("Add to your party"),
                     _INTL("Send to a Box")]
         command = pbMessage(_INTL("Where do you want to send {1} to?", pkmn.name), commands, -1)
-        break unless command.zero?
+        if command.zero?
+          pbDisplayPaused(_INTL("Please select a Pokémon to swap from your party."))
+          pbChoosePokemon(1, 3)
+          chosen = pbGet(1)
+          next unless chosen.positive?
 
-        pbDisplayPaused(_INTL("Please select a Pokémon to swap from your party."))
-        pbChoosePokemon(1, 3)
-        chosen = pbGet(1)
-        next unless chosen.positive?
-
-        pkmn2 = pkmn
-        pkmn  = pbPlayer.party[chosen].clone
-        pbPlayer.party[chosen] = pkmn2
-        pbDisplayPaused(_INTL("{1} will be added to your party, and {2} will be sent to Box.", pkmn2.name, pkmn.name))
-        @initialItems[0][chosen] = pkmn2.item_id if @initialItems
+          pkmn2 = pkmn
+          pkmn  = pbPlayer.party[chosen].clone
+          pbPlayer.party[chosen] = pkmn2
+          pbDisplayPaused(_INTL("{1} will be added to your party, and {2} will be sent to {3}!", pkmn2.name, pkmn.name, box_name))
+          @initialItems[0][chosen] = pkmn2.item_id if @initialItems
+        else
+          pbDisplayPaused(_INTL("{1} has been sent to {2}!", pkmn.name, box_name))
+        end
         break
       end
     end
     # Store the Pokémon
-    stored_box = @peer.pbStorePokemon(pbPlayer, pkmn)
     if stored_box.negative?
       pbDisplayPaused(_INTL("{1} has been added to your party.", pkmn.name))
       @initialItems[0][pbPlayer.party.length - 1] = pkmn.item_id if @initialItems
       return
     end
-    # Messages saying the Pokémon was stored in a PC box
-    box_name = @peer.pbBoxName(stored_box)
     pbDisplayPaused(_INTL("{1} has been sent to {2}!", pkmn.name, box_name)) if $PokemonSystem.sendtoboxes.positive?
   end
 

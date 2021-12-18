@@ -66,7 +66,7 @@ class Battle::Scene::SafariDataBox < SpriteWrapper
     super(viewport)
     @selected    = 0
     @battle      = battle
-    @databox     = AnimatedBitmap.new("Graphics/Pictures/Battle/databox_safari")
+    @databox     = AnimatedBitmap.new("Graphics/Pictures - New/Battle/databox_safari")
     self.x       = Graphics.width - 232
     self.y       = Graphics.height - 184
     @contents    = BitmapWrapper.new(@databox.width,@databox.height)
