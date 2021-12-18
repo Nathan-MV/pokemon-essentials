@@ -1,9 +1,9 @@
 #####################################
 # Needed because RGSS doesn't call at_exit procs on exit
 # Exit is not called when game is reset (using F12)
-$AtExitProcs=[] if !$AtExitProcs
+$AtExitProcs = [] if !$AtExitProcs
 
-def exit(code=0)
+def exit(code = 0)
   for p in $AtExitProcs
     p.call
   end
@@ -79,7 +79,7 @@ def oggfiletime(file)
   end
   ret = 0.0
   for i in 0...pcmlengths.length
-    ret += pcmlengths[i].to_f / rates[i].to_f
+    ret += pcmlengths[i].to_f / rates[i]
   end
   return ret * 256.0
 end
@@ -127,7 +127,7 @@ def getPlayTime2(filename)
       data = fgetdw.call(file)
       return -1 if data != 0x61746164   # "data"
       datasize = fgetdw.call(file)
-      time = (datasize*1.0)/bytessec
+      time = (datasize * 1.0) / bytessec
       return time
     elsif fdw == 0x5367674F   # "OggS"
       file.pos = 0
@@ -136,7 +136,7 @@ def getPlayTime2(filename)
     end
     file.pos = 0
     # Find the length of an MP3 file
-    while true
+    loop do
       rstr = ""
       ateof = false
       while !file.eof?

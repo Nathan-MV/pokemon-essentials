@@ -41,7 +41,7 @@ module Graphics
     @@transition = nil if @@transition && @@transition.disposed?
   end
 
-  def self.judge_special_transition(duration,filename)
+  def self.judge_special_transition(duration, filename)
     return false if @_interrupt_transition
     ret = true
     if @@transition && !@@transition.disposed?
@@ -282,7 +282,7 @@ module Transitions
             move_x = (dx == 0) ? rand_sign * vague : dx * SPEED * 1.5
             move_y = (dy == 0) ? rand_sign * vague : dy * SPEED * 1.5
           else
-            radius = Math.sqrt(dx ** 2 + dy ** 2)
+            radius = Math.sqrt(dx**2 + dy**2)
             move_x = dx * vague / radius
             move_y = dy * vague / radius
           end
@@ -548,7 +548,7 @@ module Transitions
       for j in 0...NUM_SPRITES_Y
         for i in 0...NUM_SPRITES_X
           idx_from_start = j * NUM_SPRITES_X + i   # Top left -> bottom right
-          case @parameters[0] || 0   # Origin
+          case @parameters[0]   # Origin
           when 1   # Top right -> bottom left
             idx_from_start = j * NUM_SPRITES_X + NUM_SPRITES_X - i - 1
           when 2   # Bottom left -> top right

@@ -202,7 +202,7 @@ class BerryPlantMoistureSprite
     return if !@sprite || !@event
     new_moisture = -1
     berry_plant = @event.variable
-    if berry_plant&.is_a?(BerryPlantData) && berry_plant.planted?
+    if berry_plant.is_a?(BerryPlantData) && berry_plant.planted?
       new_moisture = berry_plant.moisture_stage
     end
     if new_moisture != @moisture_stage
@@ -375,8 +375,8 @@ def pbBerryPlant
     if berry_plant.mulch_id
       pbMessage(_INTL("{1} has been laid down.\1", GameData::Item.get(berry_plant.mulch_id).name))
     else
-      case pbMessage(_INTL("It's soft, earthy soil."), [
-         _INTL("Fertilize"), _INTL("Plant Berry"), _INTL("Exit")], -1)
+      case pbMessage(_INTL("It's soft, earthy soil."),
+           [_INTL("Fertilize"), _INTL("Plant Berry"), _INTL("Exit")], -1)
       when 0   # Fertilize
         mulch = nil
         pbFadeOutIn {
