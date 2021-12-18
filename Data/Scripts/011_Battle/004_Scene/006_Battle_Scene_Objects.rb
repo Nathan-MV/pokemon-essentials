@@ -12,8 +12,8 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
   # Maximum time in seconds to make a change to the HP bar.
   HP_BAR_CHANGE_TIME = 1.0
   STATUS_ICON_HEIGHT = 16
-  NAME_BASE_COLOR         = Color.new(72,72,72)
-  NAME_SHADOW_COLOR       = Color.new(184,184,184)
+  NAME_BASE_COLOR         = Color.new(255,255,255)
+  NAME_SHADOW_COLOR       = Color.new(49,49,49)
   MALE_BASE_COLOR         = Color.new(48,96,216)
   MALE_SHADOW_COLOR       = NAME_SHADOW_COLOR
   FEMALE_BASE_COLOR       = Color.new(248,88,40)
@@ -112,16 +112,16 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
 
   def x=(value)
     super
-    @hpBar.x     = value+@spriteBaseX+102
+    @hpBar.x     = value+@spriteBaseX+56
     @expBar.x    = value+@spriteBaseX+6
     @hpNumbers.x = value+@spriteBaseX+80
   end
 
   def y=(value)
     super
-    @hpBar.y     = value+40
-    @expBar.y    = value+74
-    @hpNumbers.y = value+52
+    @hpBar.y     = value+42
+    @expBar.y    = value+76
+    @hpNumbers.y = value+54
   end
 
   def z=(value)
@@ -226,8 +226,8 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
     end
     pbDrawTextPositions(self.bitmap,textPos)
     # Draw Pokémon's level
-    imagePos.push(["Graphics/Pictures - New/Battle/overlay_lv",@spriteBaseX+140,16])
-    pbDrawNumber(@battler.level,self.bitmap,@spriteBaseX+162,16)
+    imagePos.push(["Graphics/Pictures - New/Battle/overlay_lv",@spriteBaseX+146,18])
+    pbDrawNumber(@battler.level,self.bitmap,@spriteBaseX+162,18)
     # Draw shiny icon
     if @battler.shiny?
       shinyX = (@battler.opposes?(0)) ? 206 : -6   # Foe's/player's
@@ -235,18 +235,22 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
     end
     # Draw Mega Evolution/Primal Reversion icon
     if @battler.mega?
-      imagePos.push(["Graphics/Pictures - New/Battle/icon_mega",@spriteBaseX+8,34])
+      imagePos.push(["Graphics/Pictures - New/Battle/icon_mega",@spriteBaseX+-14,10])
     elsif @battler.primal?
-      primalX = (@battler.opposes?) ? 208 : -28   # Foe's/player's
+      primalX = (@battler.opposes?) ? 208 : -15   # Foe's/player's
       if @battler.isSpecies?(:KYOGRE)
-        imagePos.push(["Graphics/Pictures - New/Battle/icon_primal_Kyogre",@spriteBaseX+primalX,4])
+        imagePos.push(["Graphics/Pictures - New/Battle/icon_primal_Kyogre",@spriteBaseX+primalX,12])
       elsif @battler.isSpecies?(:GROUDON)
-        imagePos.push(["Graphics/Pictures - New/Battle/icon_primal_Groudon",@spriteBaseX+primalX,4])
+        imagePos.push(["Graphics/Pictures - New/Battle/icon_primal_Groudon",@spriteBaseX+primalX,12])
       end
+    end
+    # Draw hp icon
+    if @battler.pokemon && @battler.status == :NONE
+      imagePos.push(["Graphics/Pictures - New/Battle/icon_hp",@spriteBaseX + 26, 38])
     end
     # Draw owned icon (foe Pokémon only)
     if @battler.owned? && @battler.opposes?(0)
-      imagePos.push(["Graphics/Pictures - New/Battle/icon_own",@spriteBaseX+8,36])
+      imagePos.push(["Graphics/Pictures - New/Battle/icon_own",@spriteBaseX+204,38])
     end
     # Draw status icon
     if @battler.status != :NONE
@@ -255,7 +259,7 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
       else
         s = GameData::Status.get(@battler.status).icon_position
       end
-      imagePos.push(["Graphics/Pictures - New/Battle/icon_statuses",@spriteBaseX+24,36,
+      imagePos.push(["Graphics/Pictures - New/Battle/icon_statuses",@spriteBaseX+12,38,
          0, s * STATUS_ICON_HEIGHT, -1, STATUS_ICON_HEIGHT]) if s >= 0
     end
     pbDrawImagePositions(self.bitmap,imagePos)

@@ -273,8 +273,8 @@ class Battle::Scene::FightMenu < Battle::Scene::MenuBase
       # Create Mega Evolution button
       @megaButton = SpriteWrapper.new(viewport)
       @megaButton.bitmap = @megaEvoBitmap.bitmap
-      @megaButton.x      = self.x+120
-      @megaButton.y      = self.y-@megaEvoBitmap.height/2
+      @megaButton.x      = self.x+230
+      @megaButton.y      = self.y-@megaEvoBitmap.height/2 - 18
       @megaButton.src_rect.height = @megaEvoBitmap.height/2
       addSprite("megaButton",@megaButton)
       # Create Shift button
@@ -416,7 +416,7 @@ class Battle::Scene::FightMenu < Battle::Scene::MenuBase
   def refreshMegaEvolutionButton
     return if !USE_GRAPHICS
     @megaButton.src_rect.y    = (@mode - 1) * @megaEvoBitmap.height / 2
-    @megaButton.x             = self.x + ((@shiftMode > 0) ? 204 : 120)
+    @megaButton.x             = self.x + ((@shiftMode > 0) ? 204 : 230)
     @megaButton.z             = self.z - 1
     @visibility["megaButton"] = (@mode > 0)
   end
