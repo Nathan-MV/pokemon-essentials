@@ -4,7 +4,7 @@ module Battle::CatchAndStoreMixin
   #=============================================================================
   def pbStorePokemon(pkmn)
     # Nickname the Pokémon (unless it's a Shadow Pokémon)
-    if !pkmn.shadowPokemon? && $PokemonSystem.givenicknames.zero?
+    if !pkmn.shadowPokemon? && $PokemonSystem.givenicknames == 0
       if pbDisplayConfirm(_INTL("Would you like to give a nickname to {1}?", pkmn.name))
         nickname = @scene.pbNameEntry(_INTL("{1}'s nickname?", pkmn.speciesName), pkmn)
         pkmn.name = nickname
@@ -13,16 +13,16 @@ module Battle::CatchAndStoreMixin
     stored_box = @peer.pbStorePokemon(pbPlayer, pkmn)
     box_name   = @peer.pbBoxName(stored_box)
     # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
-    if pbPlayer.party_full? && $PokemonSystem.sendtoboxes.zero?
+    if pbPlayer.party_full? && $PokemonSystem.sendtoboxes == 0
       loop do
         commands = [_INTL("Add to your party"),
                     _INTL("Send to a Box")]
         command = pbMessage(_INTL("Where do you want to send {1} to?", pkmn.name), commands, -1)
-        if command.zero?
+        if command == 0
           pbDisplayPaused(_INTL("Please select a Pokémon to swap from your party."))
           pbChoosePokemon(1, 3)
           chosen = pbGet(1)
-          next unless chosen.positive?
+          next unless chosen > 0
 
           pkmn2 = pkmn
           pkmn  = pbPlayer.party[chosen].clone
@@ -36,12 +36,12 @@ module Battle::CatchAndStoreMixin
       end
     end
     # Store the Pokémon
-    if stored_box.negative?
+    if stored_box < 0
       pbDisplayPaused(_INTL("{1} has been added to your party.", pkmn.name))
       @initialItems[0][pbPlayer.party.length - 1] = pkmn.item_id if @initialItems
       return
     end
-    pbDisplayPaused(_INTL("{1} has been sent to {2}!", pkmn.name, box_name)) if $PokemonSystem.sendtoboxes.positive?
+    pbDisplayPaused(_INTL("{1} has been sent to {2}!", pkmn.name, box_name)) if $PokemonSystem.sendtoboxes > 0
   end
 
   # Register all caught Pokémon in the Pokédex, and store them.

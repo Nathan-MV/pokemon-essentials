@@ -7,7 +7,7 @@ end
 
 def pbNickname(pkmn)
   species_name = pkmn.speciesName
-  if $PokemonSystem.givenicknames.zero?
+  if $PokemonSystem.givenicknames == 0
     if pbConfirmMessage(_INTL("Would you like to give a nickname to {1}?", species_name))
       pkmn.name = pbEnterPokemonName(_INTL("{1}'s nickname?", species_name),
                                      0, Pokemon::MAX_NAME_SIZE, "", pkmn)
@@ -23,7 +23,7 @@ def pbStorePokemon(pkmn)
   end
   pkmn.record_first_moves
   # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
-  if $player.party_full? && $PokemonSystem.sendtoboxes.zero?
+  if $player.party_full? && $PokemonSystem.sendtoboxes == 0
     loop do
       commands = [_INTL("Add to your party"),
                   _INTL("Send to a Box")]
@@ -33,7 +33,7 @@ def pbStorePokemon(pkmn)
         pbMessage(_INTL("Please select a Pokémon to swap from your party."))
         pbChoosePokemon(1, 3)
         chosen = pbGet(1)
-        next unless chosen.positive?
+        next unless chosen > 0
 
         pkmn2 = pkmn
         pkmn  = $player.party[chosen].clone
