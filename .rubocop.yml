@@ -1,9 +1,19 @@
 AllCops:
+  TargetRubyVersion: "3.0"
   NewCops: enable
 
 #===============================================================================
 # Layout
 #===============================================================================
+
+# We don't need empty lines in methods to separate "return if"s from later code.
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+# Extra whitespace often helps to make code more presentable.
+Layout/ExtraSpacing:
+  AllowForAlignment: true
+  AllowBeforeTrailingComments: true
 
 # In a hash with multiple values (one per line), prefer the => to be lined up
 # and text to otherwise be left-aligned.
@@ -17,8 +27,57 @@ Layout/SpaceInsideHashLiteralBraces:
   EnforcedStyle: no_space
 
 #===============================================================================
+# Lint
+#===============================================================================
+
+# Some methods and blocks will have unused arguments. That's fine.
+Lint/UnusedBlockArgument:
+  Enabled: false
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+#===============================================================================
+# Metrics
+#===============================================================================
+
+# Yes, Essentials has classes/modules/methods that are too big and complex.
+# That's just how it is.
+Metrics:
+  Enabled: false
+
+#===============================================================================
+# Naming
+#===============================================================================
+
+# This cop forbids class/module names with underscores in them. Having
+# underscores isn't the end of the world.
+Naming/ClassAndModuleCamelCase:
+  Enabled: false
+
+# Script files are given names that look reasonable in the list of script
+# sections in RMXP, and are all numbered. They won't be camel_case.
+Naming/FileName:
+  Enabled: false
+
+#===============================================================================
+# Security
+#===============================================================================
+
+# Script event conditions and script switches are eval'd, amongst other things.
+Security/Eval:
+  Enabled: false
+
+# Plenty of things are loaded via Marshal.
+Security/MarshalLoad:
+  Enabled: false
+
+#===============================================================================
 # Style
 #===============================================================================
+
+# List the attr_reader/writer/accessor variables however you want.
+Style/AccessorGrouping:
+  Enabled: false
 
 # Check with yard instead.
 Style/Documentation:
@@ -29,16 +88,34 @@ Style/Documentation:
 Style/FormatString:
   EnforcedStyle: sprintf
 
+# RMXP and Essentials use lots of global variables.
+Style/GlobalVars:
+  Enabled: false
+
 # Mixing the styles within a hash just looks silly.
 Style/HashSyntax:
   EnforcedStyle: no_mixed_keys
+
+# unless just adds mental gymnastics trying to figure out what it actually
+# means. I much prefer if !something.
+Style/NegatedIf:
+  Enabled: false
 
 # has_key? and has_value? are far more readable than key? and value?
 Style/PreferredHashMethods:
   Enabled: false
 
+# Explicit returns help to show whether a method returns a value.
+Style/RedundantReturn:
+  Enabled: false
+
 # Enforcing the names of variables? To single letter ones? Just no.
 Style/SingleLineBlockParams:
+  Enabled: false
+
+# Single line methods use up less space, and they're easier to list next to each
+# other and see that they behave similarly.
+Style/SingleLineMethods:
   Enabled: false
 
 # Single quotes being faster is hardly measurable and only affects parse time.
@@ -53,3 +130,8 @@ Style/StringLiterals:
 # no additional syntax to confuse people.
 Style/SymbolArray:
   EnforcedStyle: brackets
+
+# Patentheses around the condition in a ternary operator helps to differentiate
+# it from the true/false results.
+Style/TernaryParentheses:
+  EnforcedStyle: require_parentheses
