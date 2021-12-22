@@ -471,20 +471,9 @@ class Battle::Battler
         @battle.pbHideAbilitySplash(b) if b.damageState.magicBounce
         newChoice = choice.clone
         newChoice[3] = user.index
-        newTargets = pbFindTargets(newChoice ,move, b)
+        newTargets = pbFindTargets(newChoice, move, b)
         newTargets = pbChangeTargets(move, b, newTargets)
-        success = false
-        if !move.pbMoveFailed?(b, newTargets)
-          newTargets.each_with_index do |newTarget, idx|
-            if pbSuccessCheckAgainstTarget(move, b, newTarget, newTargets)
-              success = true
-              next
-            end
-            newTargets[idx] = nil
-          end
-          newTargets.compact!
-        end
-        pbProcessMoveHit(move, b, newTargets, 0, false) if success
+        success = pbProcessMoveHit(move, b, newTargets, 0, false)
         b.lastMoveFailed = true if !success
         targets.each { |otherB| otherB.pbFaint if otherB && otherB.fainted? }
         user.pbFaint if user.fainted?
@@ -497,10 +486,7 @@ class Battle::Battler
           @battle.pbShowAbilitySplash(mc) if magicBouncer >= 0
           @battle.pbDisplay(_INTL("{1} bounced the {2} back!", mc.pbThis, move.name))
           @battle.pbHideAbilitySplash(mc) if magicBouncer >= 0
-          success = false
-          if !move.pbMoveFailed?(mc, [])
-            success = pbProcessMoveHit(move, mc, [], 0, false)
-          end
+          success = pbProcessMoveHit(move, mc, [], 0, false)
           mc.lastMoveFailed = true if !success
           targets.each { |b| b.pbFaint if b && b.fainted? }
           user.pbFaint if user.fainted?
