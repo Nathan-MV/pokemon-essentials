@@ -494,10 +494,7 @@ class Battle::Battler
           @battle.pbShowAbilitySplash(mc) if magicBouncer >= 0
           @battle.pbDisplay(_INTL("{1} bounced the {2} back!", mc.pbThis, move.name))
           @battle.pbHideAbilitySplash(mc) if magicBouncer >= 0
-          success = false
-          if !move.pbMoveFailed?(mc, [])
-            success = pbProcessMoveHit(move, mc, [], 0, false)
-          end
+          success = pbProcessMoveHit(move, mc, [], 0, false)
           mc.lastMoveFailed = true if !success
           targets.each { |b| b.pbFaint if b&.fainted? }
           user.pbFaint if user.fainted?
