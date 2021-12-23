@@ -259,8 +259,9 @@ MultipleForms.register(:ROTOM, {
 
 MultipleForms.register(:GIRATINA, {
   "getForm" => proc { |pkmn|
-    maps = [49, 50, 51, 72, 73]   # Map IDs for Origin Forme
-    if pkmn.hasItem?(:GRISEOUSORB) || ($game_map && maps.include?($game_map.map_id))
+    next 1 if pkmn.hasItem?(:GRISEOUSORB)
+    if $game_map &&
+       GameData::MapMetadata.get($game_map.map_id)&.has_flag?("DistortionWorld")
       next 1
     end
     next 0
@@ -333,11 +334,11 @@ MultipleForms.register(:KYUREM, {
     case form
     when 0   # Normal
       pkmn.moves.each do |move|
-        if [:ICEBURN, :FREEZESHOCK].include?(move.id)
-          move.id = :GLACIATE if GameData::Move.exists?(:GLACIATE)
+        if [:ICEBURN, :FREEZESHOCK].include?(move.id) && GameData::Move.exists?(:GLACIATE)
+          move.id = :GLACIATE
         end
-        if [:FUSIONFLARE, :FUSIONBOLT].include?(move.id)
-          move.id = :SCARYFACE if GameData::Move.exists?(:SCARYFACE)
+        if [:FUSIONFLARE, :FUSIONBOLT].include?(move.id) && GameData::Move.exists?(:SCARYFACE)
+          move.id = :SCARYFACE
         end
       end
     when 1   # White
