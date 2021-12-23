@@ -468,9 +468,20 @@ class Battle::Battler
         @battle.pbHideAbilitySplash(b) if b.damageState.magicBounce
         newChoice = choice.clone
         newChoice[3] = user.index
-        newTargets = pbFindTargets(newChoice, move, b)
+        newTargets = pbFindTargets(newChoice ,move, b)
         newTargets = pbChangeTargets(move, b, newTargets)
-        success = pbProcessMoveHit(move, b, newTargets, 0, false)
+        success = false
+        if !move.pbMoveFailed?(b, newTargets)
+          newTargets.each_with_index do |newTarget, idx|
+            if pbSuccessCheckAgainstTarget(move, b, newTarget, newTargets)
+              success = true
+              next
+            end
+            newTargets[idx] = nil
+          end
+          newTargets.compact!
+        end
+        pbProcessMoveHit(move, b, newTargets, 0, false) if success
         b.lastMoveFailed = true if !success
         targets.each { |otherB| otherB.pbFaint if otherB&.fainted? }
         user.pbFaint if user.fainted?
