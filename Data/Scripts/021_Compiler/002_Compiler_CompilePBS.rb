@@ -34,7 +34,6 @@ module Compiler
           case settingname
           when "Name"
             rgnnames[currentmap] = record
-            sections[currentmap][schema[0]] = record
           when "Point"
             placenames.push(record[2])
             placedescs.push(record[3])
