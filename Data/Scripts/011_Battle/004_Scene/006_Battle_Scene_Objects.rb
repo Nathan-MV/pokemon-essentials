@@ -112,9 +112,9 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
 
   def x=(value)
     super
-    @hpBar.x     = value+@spriteBaseX + 56
-    @expBar.x    = value+@spriteBaseX + 6
-    @hpNumbers.x = value+@spriteBaseX + 80
+    @hpBar.x     = value + @spriteBaseX + 56
+    @expBar.x    = value + @spriteBaseX + 6
+    @hpNumbers.x = value + @spriteBaseX + 80
   end
 
   def y=(value)
