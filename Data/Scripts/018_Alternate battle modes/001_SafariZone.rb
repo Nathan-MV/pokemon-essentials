@@ -1,3 +1,6 @@
+#===============================================================================
+#
+#===============================================================================
 class SafariState
   attr_accessor :ballcount
   attr_accessor :captures
@@ -53,12 +56,9 @@ class SafariState
   end
 end
 
-
-
-Events.onMapChange += proc { |_sender, *args|
-  pbSafariState.pbEnd if !pbInSafari?
-}
-
+#===============================================================================
+#
+#===============================================================================
 def pbInSafari?
   if pbSafariState.inProgress?
     # Reception map is handled separately from safari map since the reception
@@ -75,29 +75,44 @@ def pbSafariState
   return $PokemonGlobal.safariState
 end
 
-Events.onStepTakenTransferPossible += proc { |_sender, e|
-  handled = e[0]
-  next if handled[0]
-  if pbInSafari? && pbSafariState.decision == 0 && Settings::SAFARI_STEPS > 0
-    pbSafariState.steps -= 1
-    if pbSafariState.steps <= 0
-      pbMessage(_INTL("PA:  Ding-dong!\1"))
-      pbMessage(_INTL("PA:  Your safari game is over!"))
-      pbSafariState.decision = 1
-      pbSafariState.pbGoToStart
-      handled[0] = true
-    end
-  end
-}
+#===============================================================================
+#
+#===============================================================================
+EventHandlers.add(:on_enter_map, :end_safari_game,
+  proc { |_old_map_id|
+    pbSafariState.pbEnd if !pbInSafari?
+  }
+)
 
-Events.onWildBattleOverride += proc { |_sender, e|
-  species = e[0]
-  level   = e[1]
-  handled = e[2]
-  next if handled[0] != nil
-  next if !pbInSafari?
-  handled[0] = pbSafariBattle(species, level)
-}
+EventHandlers.add(:on_player_step_taken_can_transfer, :safari_game_counter,
+  proc { |handled|
+    # handled is an array: [nil]. If [true], a transfer has happened because of
+    # this event, so don't do anything that might cause another one
+    next if handled[0]
+    next if Settings::SAFARI_STEPS == 0 || !pbInSafari? || pbSafariState.decision != 0
+    pbSafariState.steps -= 1
+    next if pbSafariState.steps > 0
+    pbMessage(_INTL("PA: Ding-dong!\1"))
+    pbMessage(_INTL("PA: Your safari game is over!"))
+    pbSafariState.decision = 1
+    pbSafariState.pbGoToStart
+    handled[0] = true
+  }
+)
+
+#===============================================================================
+#
+#===============================================================================
+EventHandlers.add(:on_calling_wild_battle, :safari_battle,
+  proc { |species, level, handled|
+    # handled is an array: [nil]. If [true] or [false], the battle has already
+    # been overridden (the boolean is its outcome), so don't do anything that
+    # would override it again
+    next if !handled[0].nil?
+    next if !pbInSafari?
+    handled[0] = pbSafariBattle(species, level)
+  }
+)
 
 def pbSafariBattle(species, level)
   # Generate a wild Pokémon based on the species and level
@@ -140,7 +155,43 @@ def pbSafariBattle(species, level)
   end
   pbSet(1, decision)
   # Used by the Poké Radar to update/break the chain
-  Events.onWildBattleEnd.trigger(nil, species, level, decision)
+  EventHandlers.trigger(:on_wild_battle_end, species, level, decision)
   # Return the outcome of the battle
   return decision
 end
+
+#===============================================================================
+#
+#===============================================================================
+class PokemonPauseMenu
+  alias __safari_pbShowInfo pbShowInfo unless method_defined?(:__safari_pbShowInfo)
+
+  def pbShowInfo
+    __safari_pbShowInfo
+    return if !pbInSafari?
+    if Settings::SAFARI_STEPS <= 0
+      @scene.pbShowInfo(_INTL("Balls: {1}", pbSafariState.ballcount))
+    else
+      @scene.pbShowInfo(_INTL("Steps: {1}/{2}\nBalls: {3}",
+                              pbSafariState.steps, Settings::SAFARI_STEPS, pbSafariState.ballcount))
+    end
+  end
+end
+
+MenuHandlers.add(:pause_menu, :quit_safari_game, {
+  "name"      => _INTL("Quit"),
+  "order"     => 60,
+  "condition" => proc { next pbInSafari? },
+  "effect"    => proc { |menu|
+    menu.pbHideMenu
+    if pbConfirmMessage(_INTL("Would you like to leave the Safari Game right now?"))
+      menu.pbEndScene
+      pbSafariState.decision = 1
+      pbSafariState.pbGoToStart
+      next true
+    end
+    menu.pbRefresh
+    menu.pbShowMenu
+    next false
+  }
+})

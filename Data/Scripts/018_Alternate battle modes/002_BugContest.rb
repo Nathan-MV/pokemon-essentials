@@ -1,3 +1,6 @@
+#===============================================================================
+#
+#===============================================================================
 class BugContestState
   attr_accessor :ballcount
   attr_accessor :decision
@@ -214,8 +217,9 @@ class BugContestState
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class TimerDisplay # :nodoc:
   def initialize(start, maxtime)
     @timer = Window_AdvancedTextPokemon.newWithSize("", Graphics.width - 120, 0, 120, 64)
@@ -247,8 +251,9 @@ class TimerDisplay # :nodoc:
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 # Returns a score for this Pokemon in the Bug Catching Contest.
 # Not exactly the HGSS calculation, but it should be decent enough.
 def pbBugContestScore(pkmn)
@@ -286,37 +291,6 @@ def pbBugContestDecided?
   return pbBugContestState.decided?
 end
 
-Events.onMapChange += proc { |_sender, _e|
-  pbBugContestState.pbClearIfEnded
-}
-
-Events.onMapSceneChange += proc { |_sender, e|
-  scene = e[0]
-  if pbInBugContest? && pbBugContestState.decision == 0 && BugContestState::TIME_ALLOWED > 0
-    scene.spriteset.addUserSprite(
-      TimerDisplay.new(pbBugContestState.timer,
-                       BugContestState::TIME_ALLOWED * Graphics.frame_rate)
-    )
-  end
-}
-
-Events.onMapUpdate += proc { |_sender, _e|
-  if !$game_player.move_route_forcing && !pbMapInterpreterRunning? &&
-     !$game_temp.message_window_showing && pbBugContestState.expired?
-    pbMessage(_INTL("ANNOUNCER:  BEEEEEP!"))
-    pbMessage(_INTL("Time's up!"))
-    pbBugContestState.pbStartJudging
-  end
-}
-
-Events.onMapChanging += proc { |_sender, e|
-  newmapID = e[0]
-  if pbInBugContest? && pbBugContestState.pbOffLimits?(newmapID)
-    # Clear bug contest if player flies/warps/teleports out of the contest
-    pbBugContestState.pbEnd(true)
-  end
-}
-
 def pbBugContestStartOver
   $player.party.each do |pkmn|
     pkmn.heal
@@ -326,19 +300,62 @@ def pbBugContestStartOver
   pbBugContestState.pbStartJudging
 end
 
-Events.onWildBattleOverride += proc { |_sender, e|
-  species = e[0]
-  level   = e[1]
-  handled = e[2]
-  next if handled[0] != nil
-  next if !pbInBugContest?
-  handled[0] = pbBugContestBattle(species, level)
-}
+#===============================================================================
+#
+#===============================================================================
+EventHandlers.add(:on_map_or_spriteset_change, :show_bug_contest_timer,
+  proc { |scene, _map_changed|
+    next if !pbInBugContest? || pbBugContestState.decision != 0 || BugContestState::TIME_ALLOWED == 0
+    scene.spriteset.addUserSprite(
+      TimerDisplay.new(pbBugContestState.timer,
+                       BugContestState::TIME_ALLOWED * Graphics.frame_rate)
+    )
+  }
+)
+
+EventHandlers.add(:on_frame_update, :bug_contest_counter,
+  proc {
+    next if !pbBugContestState.expired?
+    next if $game_player.move_route_forcing || pbMapInterpreterRunning? ||
+            $game_temp.message_window_showing
+    pbMessage(_INTL("ANNOUNCER: BEEEEEP!"))
+    pbMessage(_INTL("Time's up!"))
+    pbBugContestState.pbStartJudging
+  }
+)
+
+EventHandlers.add(:on_enter_map, :end_bug_contest,
+  proc { |_old_map_id|
+    pbBugContestState.pbClearIfEnded
+  }
+)
+
+EventHandlers.add(:on_leave_map, :end_bug_contest,
+  proc { |new_map_id, new_map|
+    next if !pbInBugContest? || !pbBugContestState.pbOffLimits?(new_map_id)
+    # Clear bug contest if player flies/warps/teleports out of the contest
+    pbBugContestState.pbEnd(true)
+  }
+)
+
+#===============================================================================
+#
+#===============================================================================
+EventHandlers.add(:on_calling_wild_battle, :bug_contest_battle,
+  proc { |species, level, handled|
+    # handled is an array: [nil]. If [true] or [false], the battle has already
+    # been overridden (the boolean is its outcome), so don't do anything that
+    # would override it again
+    next if !handled[0].nil?
+    next if !pbInBugContest?
+    handled[0] = pbBugContestBattle(species, level)
+  }
+)
 
 def pbBugContestBattle(species, level)
   # Record information about party Pokémon to be used at the end of battle (e.g.
   # comparing levels for an evolution check)
-  Events.onStartBattle.trigger(nil)
+  EventHandlers.trigger(:on_start_battle)
   # Generate a wild Pokémon based on the species and level
   pkmn = pbGenerateWildPokemon(species, level)
   foeParty = [pkmn]
@@ -387,7 +404,44 @@ def pbBugContestBattle(species, level)
   end
   pbSet(1, decision)
   # Used by the Poké Radar to update/break the chain
-  Events.onWildBattleEnd.trigger(nil, species, level, decision)
+  EventHandlers.trigger(:on_wild_battle_end, species, level, decision)
   # Return false if the player lost or drew the battle, and true if any other result
   return (decision != 2 && decision != 5)
 end
+
+#===============================================================================
+#
+#===============================================================================
+class PokemonPauseMenu
+  alias __bug_contest_pbShowInfo pbShowInfo unless method_defined?(:__bug_contest_pbShowInfo)
+
+  def pbShowInfo
+    __bug_contest_pbShowInfo
+    return if !pbInBugContest?
+    if pbBugContestState.lastPokemon
+      @scene.pbShowInfo(_INTL("Caught: {1}\nLevel: {2}\nBalls: {3}",
+                              pbBugContestState.lastPokemon.speciesName,
+                              pbBugContestState.lastPokemon.level,
+                              pbBugContestState.ballcount))
+    else
+      @scene.pbShowInfo(_INTL("Caught: None\nBalls: {1}", pbBugContestState.ballcount))
+    end
+  end
+end
+
+MenuHandlers.add(:pause_menu, :quit_bug_contest, {
+  "name"      => _INTL("Quit Contest"),
+  "order"     => 60,
+  "condition" => proc { next pbInBugContest? },
+  "effect"    => proc { |menu|
+    menu.pbHideMenu
+    if pbConfirmMessage(_INTL("Would you like to end the Contest now?"))
+      menu.pbEndScene
+      pbBugContestState.pbStartJudging
+      next true
+    end
+    menu.pbRefresh
+    menu.pbShowMenu
+    next false
+  }
+})
