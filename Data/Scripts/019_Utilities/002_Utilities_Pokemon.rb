@@ -21,7 +21,9 @@ def pbStorePokemon(pkmn)
     return
   end
   pkmn.record_first_moves
-  # Choose what will happen to the Pokémon (unless Send to Boxes is in Automatic)
+  stored_box = $PokemonStorage.pbStoreCaught(pkmn)
+  box_name   = $PokemonStorage[stored_box].name
+  # Choose what will happen to the Pokémon
   if $player.party_full? && $PokemonSystem.sendtoboxes == 0
     loop do
       commands = [_INTL("Add to your party"),
@@ -37,20 +39,14 @@ def pbStorePokemon(pkmn)
         pkmn2 = pkmn
         pkmn  = $player.party[chosen].clone
         $player.party[chosen] = pkmn2
-        stored_box = $PokemonStorage.pbStoreCaught(pkmn)
-        box_name   = $PokemonStorage[stored_box].name
         pbMessage(_INTL("{1} will be added to your party, and {2} will be sent to {3}.", pkmn2.name, pkmn.name, box_name))
         @initialItems[0][chosen] = pkmn2.item_id if @initialItems
       else
-        stored_box = $PokemonStorage.pbStoreCaught(pkmn)
-        box_name   = $PokemonStorage[stored_box].name
         pbMessage(_INTL("{1} has been sent to {2}!", pkmn.name, box_name))
       end
       break
     end
   elsif $player.party_full?
-    stored_box = $PokemonStorage.pbStoreCaught(pkmn)
-    box_name   = $PokemonStorage[stored_box].name
     pbMessage(_INTL("{1} has been sent to {2}!", pkmn.name, box_name))
   else
     $player.party[$player.party.length] = pkmn
