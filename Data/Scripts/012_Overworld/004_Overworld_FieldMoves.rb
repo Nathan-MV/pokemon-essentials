@@ -253,6 +253,54 @@ end
 #===============================================================================
 # Dig
 #===============================================================================
+def dig_path
+  move = :DIG
+  movefinder = $player.get_pokemon_with_move(move)
+  unless $DEBUG && movefinder
+    pbMessage(_INTL("It's a rugged path, but a Pokémon may be able to dig it."))
+    return false
+  end
+  if pbConfirmMessage(_INTL("This rugged path appears to be diggeable. Would you like to use Dig?"))
+    speciesname = (movefinder) ? movefinder.name : $player.name
+    pbMessage(_INTL("{1} used {2}!", speciesname, GameData::Move.get(move).name))
+    pbHiddenMoveAnimation(movefinder)
+    return true
+  end
+  return false
+end
+
+def dig_spot
+  move = :DIG
+  movefinder = $player.get_pokemon_with_move(move)
+  if !$DEBUG && !movefinder
+    pbMessage(_INTL("It's a rugged crater, but a Pokémon may be able to dig it."))
+    return false
+  end
+  if pbConfirmMessage(_INTL("This crater appears to be diggeable.\nWould you like to use Dig?"))
+    speciesname = (movefinder) ? movefinder.name : $player.name
+    pbMessage(_INTL("{1} used {2}!", speciesname, GameData::Move.get(move).name))
+    pbHiddenMoveAnimation(movefinder)
+    return true
+  end
+  return false
+end
+
+def dig_spot_item(item, quantity = 1)
+  item = GameData::Item.get(item)
+  return false if !item || quantity < 1
+  if $bag.add(item, quantity) # If item can be added
+    pbMessage(_INTL("You have unearthed a {1}", item.name))
+    return true
+  end
+  return false
+end
+
+def dig_encounter
+  if $PokemonEncounters.encounter_triggered?(:Dig, false, false)
+    pbEncounter(:Dig)
+  end
+end
+
 HiddenMoveHandlers::CanUseMove.add(:DIG, proc { |move, pkmn, showmsg|
   escape = ($PokemonGlobal.escapePoint rescue nil)
   if !escape || escape == []
@@ -1032,5 +1080,27 @@ HiddenMoveHandlers::UseMove.add(:WATERFALL, proc { |move, pokemon|
     pbMessage(_INTL("{1} used {2}!", pokemon.name, GameData::Move.get(move).name))
   end
   pbAscendWaterfall
+  next true
+})
+
+
+
+#===============================================================================
+# Defog
+#===============================================================================
+HiddenMoveHandlers::CanUseMove.add(:DEFOG, proc { |move, pkmn, showmsg|
+  unless $game_screen.weather_type == :Fog
+    pbMessage(_INTL("You can't use that here.")) if showmsg
+    next false
+  end
+  next true
+})
+
+HiddenMoveHandlers::UseMove.add(:DEFOG, proc { |move, pokemon|
+  next false unless $game_screen.weather_type == :Fog
+
+  pbMessage(_INTL("{1} used {2}!", pokemon.name, GameData::Move.get(move).name))
+  pbHiddenMoveAnimation(pokemon)
+  $game_screen.weather(:None, 0, 0)
   next true
 })
