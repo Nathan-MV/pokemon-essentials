@@ -158,6 +158,25 @@ class Trainer
     return nil
   end
 
+  def has_move?(move)
+    pokemon_party.each { |pkmn| return true if pkmn.hasMove?(move) }
+    return false
+  end
+
+  def has_ability?(ability)
+    pokemon_party.each { |pkmn| return true if pkmn.hasAbility?(ability) }
+    return false
+  end
+
+  def pokemon_party_form(species, form = 0)
+    pokemon_party.each { |p| return true if p&.isSpecies?(species) && (p&.form = form if form != p.form) }
+    return false
+  end
+
+  def find_species(species, form = -1)
+    return pokemon_party.any? { |p| return p if p&.isSpecies?(species) && (form < 0 || p.form == form) }
+  end
+
   # Fully heal all Pokémon in the party.
   def heal_party
     @party.each { |pkmn| pkmn.heal }

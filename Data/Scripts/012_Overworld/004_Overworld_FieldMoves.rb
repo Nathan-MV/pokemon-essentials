@@ -253,6 +253,12 @@ end
 #===============================================================================
 # Dig
 #===============================================================================
+def dig_encounter
+  if $PokemonEncounters.encounter_triggered?(:Dig, false, false)
+    pbEncounter(:Dig)
+  end
+end
+
 def dig_path
   move = :DIG
   movefinder = $player.get_pokemon_with_move(move)
@@ -293,12 +299,6 @@ def dig_spot_item(item, quantity = 1)
     return true
   end
   return false
-end
-
-def dig_encounter
-  if $PokemonEncounters.encounter_triggered?(:Dig, false, false)
-    pbEncounter(:Dig)
-  end
 end
 
 HiddenMoveHandlers::CanUseMove.add(:DIG, proc { |move, pkmn, showmsg|
