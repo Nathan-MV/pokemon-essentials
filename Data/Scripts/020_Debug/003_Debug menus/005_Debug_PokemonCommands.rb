@@ -857,7 +857,6 @@ MenuHandlers.add(:pokemon_debug_menu, :set_pokeball, {
       cmd = screen.pbShowCommands(_INTL("{1} used.", oldball), commands, cmd)
       break if cmd < 0
       pkmn.poke_ball = balls[cmd][0]
-      screen.pbHardRefresh
     end
     next false
   }
