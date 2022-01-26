@@ -565,7 +565,17 @@ MenuHandlers.add(:debug_menu, :give_demo_party, {
     pbMessage(_INTL("Filled party with demo Pokémon."))
   }
 })
-
+=begin # Take a look later
+MenuHandlers.add(:debug_menu, :clear_party_pokemon, {
+  "name"        => _INTL("Clear Party Pokemon"),
+  "parent"      => :pokemon_menu,
+  "description" => _INTL("Remove all Pokémon in party."),
+  "effect"      => proc {
+    $player.party.each { |pkmn| pkmn.delete }
+    pbMessage(_INTL("Removed all Pokémon in the party."))
+  }
+})
+=end
 MenuHandlers.add(:debug_menu, :heal_party, {
   "name"        => _INTL("Heal Party"),
   "parent"      => :pokemon_menu,
