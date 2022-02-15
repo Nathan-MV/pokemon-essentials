@@ -206,6 +206,84 @@ Generation = 8
 Evolutions = RAICHU,None,
 #-------------------------------
 [PIKACHU,100]
+FormName = Santa Hat
+#-------------------------------
+[PIKACHU,101]
+FormName = Party Hat (Purple)
+#-------------------------------
+[PIKACHU,102]
+FormName = Witch Hat
+#-------------------------------
+[PIKACHU,103]
+FormName = Summer Hat
+#-------------------------------
+[PIKACHU,104]
+FormName = Fragment Hat
+#-------------------------------
+[PIKACHU,105]
+FormName = Flower Crown
+#-------------------------------
+[PIKACHU,106]
+FormName = Detective Hat
+#-------------------------------
+[PIKACHU,107]
+FormName = Straw Hat
+#-------------------------------
+[PIKACHU,108]
+FormName = Mimikyu Costume
+#-------------------------------
+[PIKACHU,109]
+FormName = Winter Beanie
+#-------------------------------
+[PIKACHU,110]
+FormName = Clone Pikachu
+#-------------------------------
+[PIKACHU,111]
+FormName = Party Hat (Red)
+#-------------------------------
+[PIKACHU,112]
+FormName = Flower Hat Pikachu
+#-------------------------------
+[PIKACHU,113]
+FormName = Safari Cap
+#-------------------------------
+[PIKACHU,114]
+FormName = Charizard Cap
+#-------------------------------
+[PIKACHU,115]
+FormName = Umbreon Cap
+#-------------------------------
+[PIKACHU,116]
+FormName = Rayquaza Cap
+#-------------------------------
+[PIKACHU,117]
+FormName = Lucario Cap
+#-------------------------------
+[PIKACHU,118]
+FormName = Flying Pikachu
+#-------------------------------
+[PIKACHU,119]
+FormName = Explorer Pikachu
+#-------------------------------
+[PIKACHU,120]
+FormName = Holiday Pikachu
+#-------------------------------
+[PIKACHU,121]
+FormName = New Year's Hat Pikachu
+#-------------------------------
+[PIKACHU,122]
+FormName = Okinawan Kariyushi Shirt Pikachu
+#-------------------------------
+[PIKACHU,123]
+FormName = Flying Fifth Anniversary Pikachu
+#-------------------------------
+[PIKACHU,124]
+FormName = Meloetta hat Pikachu
+#-------------------------------
+[PIKACHU,125]
+FormName = Halloween Mischief Pikachu
+#-------------------------------
+[PIKACHU,200]
 FormName = Holiday Style Pikachu
 #-------------------------------
 [RAICHU,1]
