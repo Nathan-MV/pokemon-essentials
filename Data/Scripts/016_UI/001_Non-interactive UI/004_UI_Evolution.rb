@@ -414,6 +414,7 @@ class PokemonEvolutionScene
   def pbUpdate(animating = false)
     if animating      # Pokémon shouldn't animate during the evolution animation
       @sprites["background"].update
+      @sprites["msgwindow"].update
     else
       pbUpdateSpriteHash(@sprites)
     end
@@ -516,9 +517,11 @@ class PokemonEvolutionScene
   end
 
   # Closes the evolution screen.
-  def pbEndScreen
-    pbDisposeMessageWindow(@sprites["msgwindow"])
-    pbFadeOutAndHide(@sprites) { pbUpdate }
+  def pbEndScreen(need_fade_out = true)
+    pbDisposeMessageWindow(@sprites["msgwindow"]) if @sprites["msgwindow"]
+    if need_fade_out
+      pbFadeOutAndHide(@sprites) { pbUpdate }
+    end
     pbDisposeSpriteHash(@sprites)
     @viewport.dispose
     @bgviewport.dispose
@@ -532,11 +535,18 @@ class PokemonEvolutionScene
     metaplayer1.play
     metaplayer2.play
     pbBGMStop
-    @pokemon.play_cry
-    pbMessageDisplay(@sprites["msgwindow"],
-                     _INTL("\\se[]What? {1} is evolving!\\^", @pokemon.name)) { pbUpdate }
-    pbMessageWaitForInput(@sprites["msgwindow"], 50, true) { pbUpdate }
+    pbMessageDisplay(@sprites["msgwindow"], "\\se[]" + _INTL("What?") + "\\1") { pbUpdate }
     pbPlayDecisionSE
+    @pokemon.play_cry
+    @sprites["msgwindow"].text = _INTL("{1} is evolving!", @pokemon.name)
+    timer = 0.0
+    loop do
+      Graphics.update
+      Input.update
+      pbUpdate
+      timer += Graphics.delta_s
+      break if timer >= 1.0
+    end
     oldstate  = pbSaveSpriteState(@sprites["rsprite1"])
     oldstate2 = pbSaveSpriteState(@sprites["rsprite2"])
     pbMEPlay("Evolution start")
@@ -571,12 +581,12 @@ class PokemonEvolutionScene
     $stats.evolution_count += 1
     # Play cry of evolved species
     frames = (GameData::Species.cry_length(@newspecies, @pokemon.form) * Graphics.frame_rate).ceil
-    pbBGMStop
     Pokemon.play_cry(@newspecies, @pokemon.form)
     (frames + 4).times do
       Graphics.update
       pbUpdate
     end
+    pbBGMStop
     # Success jingle/message
     pbMEPlay("Evolution success")
     newspeciesname = GameData::Species.get(@newspecies).name
@@ -592,13 +602,31 @@ class PokemonEvolutionScene
     @pokemon.calc_stats
     @pokemon.ready_to_evolve = false
     # See and own evolved species
+    was_owned = $player.owned?(@newspecies)
     $player.pokedex.register(@pokemon)
     $player.pokedex.set_owned(@newspecies)
-    # Learn moves upon evolution for evolved species
+    moves_to_learn = []
     movelist = @pokemon.getMoveList
     movelist.each do |i|
       next if i[0] != 0 && i[0] != @pokemon.level   # 0 is "learn upon evolution"
-      pbLearnMove(@pokemon, i[1], true) { pbUpdate }
+      moves_to_learn.push(i[1])
+    end
+    # Show Pokédex entry for new species if it hasn't been owned before
+    if Settings::SHOW_NEW_SPECIES_POKEDEX_ENTRY_MORE_OFTEN && !was_owned && $player.has_pokedex
+      pbMessageDisplay(@sprites["msgwindow"],
+                       _INTL("{1}'s data was added to the Pokédex.", newspeciesname)) { pbUpdate }
+      $player.pokedex.register_last_seen(@pokemon)
+      pbFadeOutIn {
+        scene = PokemonPokedexInfo_Scene.new
+        screen = PokemonPokedexInfoScreen.new(scene)
+        screen.pbDexEntry(@pokemon.species)
+        @sprites["msgwindow"].text = "" if moves_to_learn.length > 0
+        pbEndScreen(false) if moves_to_learn.length == 0
+      }
+    end
+    # Learn moves upon evolution for evolved species
+    moves_to_learn.each do |move|
+      pbLearnMove(@pokemon, move, true) { pbUpdate }
     end
   end
 
