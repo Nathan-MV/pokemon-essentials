@@ -12,6 +12,7 @@ Data/*
 Game.ini
 Game.rxproj
 RGSS*.dll
+Game.AppImage
 
 # Common code editor folders & files
 .vscode/
@@ -27,5 +28,5 @@ Thumbs.db
 [Dd]esktop.ini
 
 # Temp files
-
+____Transition_HGSS
 ~*

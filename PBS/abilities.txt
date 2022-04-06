@@ -1,4 +1,11 @@
 ﻿# See the documentation on the wiki to learn how to edit this file.
+[berserker]
+Name = Berserker
+Description = The stench may cause the target to flinch.
+#-------------------------------
+[dauntless_leader]
+Name = Dauntless Leader
+Description = The stench may cause the target to flinch.
 #-------------------------------
 [STENCH]
 Name = Stench
