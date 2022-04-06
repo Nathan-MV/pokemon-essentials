@@ -421,25 +421,8 @@ class Battle::Move::ThrowUserItemAtTarget < Battle::Move
 
   def pbBaseDamage(baseDmg, user, target)
     return 0 if !user.item
-<<<<<<< HEAD
-<<<<<<< HEAD
-    return 10 if user.item.is_berry?
-    return 80 if user.item.is_mega_stone?
-    if user.item.is_TR?
-      ret = GameData::Move.get(user.item.move).base_damage
-      ret = 10 if ret < 10
-      return ret
-    end
-    @flingPowers.each do |power, items|
-      return power if items.include?(user.item_id)
-=======
-    user.item.flags.each do |flag|
-      return [$~[1].to_i, 10].min if flag[/^Fling_(\d+)$/i]
->>>>>>> parent of e87d55f (Added underscore in DefaultForm species flag for consistency)
-=======
     user.item.flags.each do |flag|
       return [$~[1].to_i, 10].max if flag[/^Fling_(\d+)$/i]
->>>>>>> upstream/dev
     end
     return 10
   end
