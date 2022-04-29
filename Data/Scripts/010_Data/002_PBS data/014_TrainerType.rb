@@ -6,9 +6,9 @@ module GameData
     attr_reader :base_money
     attr_reader :skill_level
     attr_reader :flags
-    attr_reader :intro_ME
+    attr_reader :intro_BGM
     attr_reader :battle_BGM
-    attr_reader :victory_ME
+    attr_reader :victory_BGM
 
     DATA = {}
     DATA_FILENAME = "trainer_types.dat"
@@ -22,9 +22,9 @@ module GameData
       "BaseMoney"  => [:base_money,  "u"],
       "SkillLevel" => [:skill_level, "u"],
       "Flags"      => [:flags,       "*s"],
-      "IntroME"    => [:intro_ME,    "s"],
+      "IntroBGM"   => [:intro_BGM,   "s"],
       "BattleBGM"  => [:battle_BGM,  "s"],
-      "VictoryME"  => [:victory_ME,  "s"]
+      "VictoryBGM" => [:victory_BGM, "s"]
     }
 
     extend ClassMethodsSymbols
@@ -86,9 +86,9 @@ module GameData
       @base_money  = hash[:base_money]  || 30
       @skill_level = hash[:skill_level] || @base_money
       @flags       = hash[:flags]       || []
-      @intro_ME    = hash[:intro_ME]
+      @intro_BGM   = hash[:intro_BGM]
       @battle_BGM  = hash[:battle_BGM]
-      @victory_ME  = hash[:victory_ME]
+      @victory_BGM = hash[:victory_BGM]
     end
 
     # @return [String] the translated name of this trainer type
