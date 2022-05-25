@@ -37,12 +37,12 @@ end
 #===============================================================================
 #
 #===============================================================================
-def pbOrganizedBattleEx(opponent, challengedata, endspeech, endspeechwin)
+def pbOrganizedBattleEx(opponent, challengedata)
   # Skip battle if holding Ctrl in Debug mode
   if Input.press?(Input::CTRL) && $DEBUG
     pbMessage(_INTL("SKIPPING BATTLE..."))
     pbMessage(_INTL("AFTER WINNING..."))
-    pbMessage(endspeech || "...")
+    pbMessage(opponent.lose_text || "...")
     $game_temp.last_battle_record = nil
     pbMEStop
     return true
@@ -54,14 +54,12 @@ def pbOrganizedBattleEx(opponent, challengedata, endspeech, endspeechwin)
   olditems  = $player.party.transform { |p| p.item_id }
   olditems2 = opponent.party.transform { |p| p.item_id }
   # Create the battle scene (the visual side of it)
-  scene = pbNewBattleScene
+  scene = BattleCreationHelperMethods.create_battle_scene
   # Create the battle class (the mechanics side of it)
   battle = challengedata.createBattle(scene, $player, opponent)
   battle.internalBattle = false
-  battle.endSpeeches    = [endspeech]
-  battle.endSpeechesWin = [endspeechwin]
   # Set various other properties in the battle class
-  pbPrepareBattle(battle)
+  BattleCreationHelperMethods.prepare_battle(battle)
   # Perform the battle itself
   decision = 0
   pbBattleAnimation(pbGetTrainerBattleBGM(opponent)) {
@@ -114,7 +112,7 @@ end
 
 def pbPlayBattle(battledata)
   return if !battledata
-  scene = pbNewBattleScene
+  scene = BattleCreationHelperMethods.create_battle_scene
   scene.abortable = true
   lastbattle = Marshal.restore(battledata)
   case lastbattle[0]

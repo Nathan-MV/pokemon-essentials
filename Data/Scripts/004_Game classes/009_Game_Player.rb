@@ -183,14 +183,14 @@ class Game_Player < Game_Character
     triggerLeaveTile
   end
 
-  def pbTriggeredTrainerEvents(triggers, checkIfRunning = true)
+  def pbTriggeredTrainerEvents(triggers, checkIfRunning = true, trainer_only = false)
     result = []
     # If event is running
     return result if checkIfRunning && $game_system.map_interpreter.running?
     # All event loops
     $game_map.events.each_value do |event|
       next if !triggers.include?(event.trigger)
-      next if !event.name[/trainer\((\d+)\)/i]
+      next if !event.name[/trainer\((\d+)\)/i] && (trainer_only || !event.name[/sight\((\d+)\)/i])
       distance = $~[1].to_i
       next if !pbEventCanReachPlayer?(event, self, distance)
       next if event.jumping? || event.over_trigger?
@@ -398,7 +398,7 @@ class Game_Player < Game_Character
       next if ![1, 2].include?(event.trigger)   # Player touch, event touch
       # If event coordinates and triggers are consistent
       next if !event.at_coordinate?(@x + x_offset, @y + y_offset)
-      if event.name[/trainer\((\d+)\)/i]
+      if event.name[/(?:sight|trainer)\((\d+)\)/i]
         distance = $~[1].to_i
         next if !pbEventCanReachPlayer?(event, self, distance)
       elsif event.name[/counter\((\d+)\)/i]
@@ -517,6 +517,7 @@ class Game_Player < Game_Character
       @pattern = p if !@lock_pattern
       @pattern_surf = p
       @bob_height = (p >= 2) ? 2 : 0
+      @anime_count = 0
     else
       @bob_height = 0
       super

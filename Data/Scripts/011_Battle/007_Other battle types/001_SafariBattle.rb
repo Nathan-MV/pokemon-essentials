@@ -330,6 +330,8 @@ class SafariBattle
     @ballCount     = 0
   end
 
+  def disablePokeBalls=(value); end
+  def sendToBoxes=(value); end
   def defaultWeather=(value); @weather = value; end
   def defaultTerrain=(value); end
 
@@ -478,6 +480,8 @@ class SafariBattle
           pbSEPlay("Battle flee")
           pbDisplayPaused(_INTL("You got away safely!"))
           @decision = 3
+        else
+          next
         end
         catchFactor  = [[catchFactor, 3].max, 20].min
         escapeFactor = [[escapeFactor, 2].max, 20].min

@@ -173,15 +173,15 @@ class DayCare
       end
     end
 
-    # NOTE: Destiny Bond's effect is only in Gen 6+, but I don't think it's
-    #       worth excluding it if the mechanics generation is 5 or lower.
     def inherit_IVs(egg, mother, father)
       # Get all stats
       stats = []
       GameData::Stat.each_main { |s| stats.push(s) }
       # Get the number of stats to inherit
       inherit_count = 3
-      inherit_count = 5 if mother.hasItem?(:DESTINYKNOT) || father.hasItem?(:DESTINYKNOT)
+      if Settings::MECHANICS_GENERATION >= 6
+        inherit_count = 5 if mother.hasItem?(:DESTINYKNOT) || father.hasItem?(:DESTINYKNOT)
+      end
       # Inherit IV because of Power items (if both parents have a Power item,
       # then only a random one of them is inherited)
       power_items = [
@@ -463,7 +463,7 @@ class DayCare
     day_care.reset_egg_counters
   end
 
-  def self.choose(text, choice_var)
+  def self.choose(message, choice_var)
     day_care = $PokemonGlobal.day_care
     case day_care.count
     when 0
@@ -474,13 +474,13 @@ class DayCare
       commands = []
       indices = []
       day_care.slots.each_with_index do |slot, i|
-        text = slot.choice_text
-        next if !text
-        commands.push(text)
+        choice_text = slot.choice_text
+        next if !choice_text
+        commands.push(choice_text)
         indices.push(i)
       end
       commands.push(_INTL("CANCEL"))
-      command = pbMessage(text, commands, commands.length)
+      command = pbMessage(message, commands, commands.length)
       $game_variables[choice_var] = (command == commands.length - 1) ? -1 : indices[command]
     end
   end

@@ -20,8 +20,8 @@ class Battle
     #       battlers will move to the centre position at the end of a round, but
     #       because they cannot move into a position owned by a different
     #       trainer, it's possible that battlers will be unable to move close
-    #       enough to hit each other if there are multiple trainers on each
-    #       side.
+    #       enough to hit each other if there are multiple trainers on both
+    #       sides.
     if trainerBattle? && (@sideSizes[0] > 2 || @sideSizes[1] > 2) &&
        @player.length > 1 && @opponent.length > 1
       raise _INTL("Can't have battles larger than 2v2 where both sides have multiple trainers")
@@ -412,9 +412,10 @@ class Battle
           pbDisplayPaused(_INTL("You defeated {1}, {2} and {3}!", @opponent[0].full_name,
                                 @opponent[1].full_name, @opponent[2].full_name))
         end
-        @opponent.each_with_index do |_t, i|
+        @opponent.each_with_index do |trainer, i|
           @scene.pbShowOpponent(i)
-          msg = (@endSpeeches[i] && @endSpeeches[i] != "") ? @endSpeeches[i] : "..."
+          msg = trainer.lose_text
+          msg = "..." if !msg || msg.empty?
           pbDisplayPaused(msg.gsub(/\\[Pp][Nn]/, pbPlayer.name))
         end
       end
@@ -444,11 +445,12 @@ class Battle
         # Lose money from losing a battle
         pbLoseMoney
         pbDisplayPaused(_INTL("You blacked out!")) if !@canLose
-      elsif @decision == 2
+      elsif @decision == 2   # Lost in a Battle Frontier battle
         if @opponent
-          @opponent.each_with_index do |_t, i|
+          @opponent.each_with_index do |trainer, i|
             @scene.pbShowOpponent(i)
-            msg = (@endSpeechesWin[i] && @endSpeechesWin[i] != "") ? @endSpeechesWin[i] : "..."
+            msg = trainer.win_text
+            msg = "..." if !msg || msg.empty?
             pbDisplayPaused(msg.gsub(/\\[Pp][Nn]/, pbPlayer.name))
           end
         end
