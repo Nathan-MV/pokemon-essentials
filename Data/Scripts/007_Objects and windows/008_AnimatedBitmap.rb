@@ -58,7 +58,7 @@ class PngAnimatedBitmap
       @frameDelay = delay
       subWidth = panorama.width / numFrames
       numFrames.times do |i|
-        subBitmap = BitmapWrapper.new(subWidth, panorama.height)
+        subBitmap = Bitmap.new(subWidth, panorama.height)
         subBitmap.blt(0, 0, panorama, Rect.new(subWidth * i, 0, subWidth, panorama.height))
         @frames.push(subBitmap)
       end
@@ -155,7 +155,7 @@ class GifBitmap
     rescue
       @bitmap = nil
     end
-    @bitmap = BitmapWrapper.new(32, 32) if @bitmap.nil?
+    @bitmap = Bitmap.new(32, 32) if @bitmap.nil?
     @bitmap.play if @bitmap&.animated?
   end
 
@@ -218,9 +218,9 @@ end
 #
 #===============================================================================
 def pbGetTileBitmap(filename, tile_id, hue, width = 1, height = 1)
-  return RPG::Cache.tileEx(filename, tile_id, hue, width, height) { |f|
+  return RPG::Cache.tileEx(filename, tile_id, hue, width, height) do |f|
     AnimatedBitmap.new("Graphics/Tilesets/" + filename).deanimate
-  }
+  end
 end
 
 def pbGetTileset(name, hue = 0)

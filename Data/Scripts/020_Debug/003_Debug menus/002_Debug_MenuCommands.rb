@@ -38,13 +38,12 @@ MenuHandlers.add(:debug_menu, :warp, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :refresh_map, {
-  "name"        => _INTL("Refresh Map"),
+MenuHandlers.add(:debug_menu, :use_pc, {
+  "name"        => _INTL("Use PC"),
   "parent"      => :field_menu,
-  "description" => _INTL("Make all events on this map, and common events, refresh themselves."),
+  "description" => _INTL("Use a PC to access Pokémon storage and player's PC."),
   "effect"      => proc {
-    $game_map.need_refresh = true
-    pbMessage(_INTL("The map will refresh."))
+    pbPokeCenterPC
   }
 })
 
@@ -66,12 +65,40 @@ MenuHandlers.add(:debug_menu, :variables, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :use_pc, {
-  "name"        => _INTL("Use PC"),
+MenuHandlers.add(:debug_menu, :refresh_map, {
+  "name"        => _INTL("Refresh Map"),
   "parent"      => :field_menu,
-  "description" => _INTL("Use a PC to access Pokémon storage and player's PC."),
+  "description" => _INTL("Make all events on this map, and common events, refresh themselves."),
   "effect"      => proc {
-    pbPokeCenterPC
+    $game_map.need_refresh = true
+    pbMessage(_INTL("The map will refresh."))
+  }
+})
+
+MenuHandlers.add(:debug_menu, :day_care, {
+  "name"        => _INTL("Day Care"),
+  "parent"      => :field_menu,
+  "description" => _INTL("View Pokémon in the Day Care and edit them."),
+  "effect"      => proc {
+    pbDebugDayCare
+  }
+})
+
+MenuHandlers.add(:debug_menu, :relic_stone, {
+  "name"        => _INTL("Use Relic Stone"),
+  "parent"      => :field_menu,
+  "description" => _INTL("Shadow Pokémon. Choose a Pokémon to show to the Relic Stone for purification."),
+  "effect"      => proc {
+    pbRelicStone
+  }
+})
+
+MenuHandlers.add(:debug_menu, :purify_chamber, {
+  "name"        => _INTL("Use Purify Chamber"),
+  "parent"      => :field_menu,
+  "description" => _INTL("Shadow Pokémon. Open the Purify Chamber for purification."),
+  "effect"      => proc {
+    pbPurifyChamber
   }
 })
 
@@ -113,15 +140,6 @@ MenuHandlers.add(:debug_menu, :storage_wallpapers, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :day_care, {
-  "name"        => _INTL("Day Care"),
-  "parent"      => :field_menu,
-  "description" => _INTL("View Pokémon in the Day Care and edit them."),
-  "effect"      => proc {
-    pbDebugDayCare
-  }
-})
-
 MenuHandlers.add(:debug_menu, :skip_credits, {
   "name"        => _INTL("Skip Credits"),
   "parent"      => :field_menu,
@@ -130,24 +148,6 @@ MenuHandlers.add(:debug_menu, :skip_credits, {
     $PokemonGlobal.creditsPlayed = !$PokemonGlobal.creditsPlayed
     pbMessage(_INTL("Credits can be skipped when played in future.")) if $PokemonGlobal.creditsPlayed
     pbMessage(_INTL("Credits cannot be skipped when next played.")) if !$PokemonGlobal.creditsPlayed
-  }
-})
-
-MenuHandlers.add(:debug_menu, :relic_stone, {
-  "name"        => _INTL("Use Relic Stone"),
-  "parent"      => :field_menu,
-  "description" => _INTL("Shadow Pokémon. Choose a Pokémon to show to the Relic Stone for purification."),
-  "effect"      => proc {
-    pbRelicStone
-  }
-})
-
-MenuHandlers.add(:debug_menu, :purify_chamber, {
-  "name"        => _INTL("Use Purify Chamber"),
-  "parent"      => :field_menu,
-  "description" => _INTL("Shadow Pokémon. Open the Purify Chamber for purification."),
-  "effect"      => proc {
-    pbPurifyChamber
   }
 })
 
@@ -233,7 +233,7 @@ MenuHandlers.add(:debug_menu, :test_wild_battle_advanced, {
           params.setCancelValue(0)
           level = pbMessageChooseNumber(_INTL("Set the wild {1}'s level.",
                                               GameData::Species.get(species).name), params)
-          pkmn.push(Pokemon.new(species, level)) if level > 0
+          pkmn.push(pbGenerateWildPokemon(species, level)) if level > 0
         end
       else                                   # Edit a Pokémon
         if pbConfirmMessage(_INTL("Change this Pokémon?"))
@@ -336,6 +336,7 @@ MenuHandlers.add(:debug_menu, :test_trainer_battle_advanced, {
         trainerdata = pbListScreen(_INTL("CHOOSE A TRAINER"), TrainerBattleLister.new(0, false))
         if trainerdata
           tr = pbLoadTrainer(trainerdata[0], trainerdata[1], trainerdata[2])
+          EventHandlers.trigger(:on_trainer_load, tr)
           trainers.push([0, tr])
         end
       else                                         # Edit a trainer
@@ -344,6 +345,7 @@ MenuHandlers.add(:debug_menu, :test_trainer_battle_advanced, {
                                      TrainerBattleLister.new(trainers[trainerCmd][0], false))
           if trainerdata
             tr = pbLoadTrainer(trainerdata[0], trainerdata[1], trainerdata[2])
+            EventHandlers.trigger(:on_trainer_load, tr)
             trainers[trainerCmd] = [0, tr]
           end
         elsif pbConfirmMessage(_INTL("Delete this trainer?"))
@@ -355,14 +357,55 @@ MenuHandlers.add(:debug_menu, :test_trainer_battle_advanced, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :toggle_logging, {
-  "name"        => _INTL("Toggle Battle Logging"),
+MenuHandlers.add(:debug_menu, :encounter_version, {
+  "name"        => _INTL("Set Encounters Version"),
   "parent"      => :battle_menu,
-  "description" => _INTL("Record debug logs for battles in Data/debuglog.txt."),
+  "description" => _INTL("Choose which version of wild encounters should be used."),
   "effect"      => proc {
-    $INTERNAL = !$INTERNAL
-    pbMessage(_INTL("Debug logs for battles will be made in the Data folder.")) if $INTERNAL
-    pbMessage(_INTL("Debug logs for battles will not be made.")) if !$INTERNAL
+    params = ChooseNumberParams.new
+    params.setRange(0, 99)
+    params.setInitialValue($PokemonGlobal.encounter_version)
+    params.setCancelValue(-1)
+    value = pbMessageChooseNumber(_INTL("Set encounters version to which value?"), params)
+    $PokemonGlobal.encounter_version = value if value >= 0
+  }
+})
+
+MenuHandlers.add(:debug_menu, :roamers, {
+  "name"        => _INTL("Roaming Pokémon"),
+  "parent"      => :battle_menu,
+  "description" => _INTL("Toggle and edit all roaming Pokémon."),
+  "effect"      => proc {
+    pbDebugRoamers
+  }
+})
+
+MenuHandlers.add(:debug_menu, :toggle_rematches_possible, {
+  "name"        => _INTL("Toggle Phone Rematches Possible"),
+  "parent"      => :battle_menu,
+  "description" => _INTL("Toggles whether trainers in the phone can be rebattled."),
+  "effect"      => proc {
+    Phone.rematches_enabled = !Phone.rematches_enabled
+    pbMessage(_INTL("Trainers in the phone can now be rebattled.")) if Phone.rematches_enabled
+    pbMessage(_INTL("Trainers in the phone cannot be rebattled.")) if !Phone.rematches_enabled
+  }
+})
+
+MenuHandlers.add(:debug_menu, :ready_rematches, {
+  "name"        => _INTL("Ready All Phone Rematches"),
+  "parent"      => :battle_menu,
+  "description" => _INTL("Make all trainers in the phone ready for rematches."),
+  "effect"      => proc {
+    if !$PokemonGlobal.phone || $PokemonGlobal.phone.contacts.length == 0
+      pbMessage(_INTL("There are no trainers in the Phone."))
+    else
+      $PokemonGlobal.phone.contacts.each do |contact|
+        next if !contact.trainer?
+        contact.rematch_flag = 1
+        contact.set_trainer_event_ready_for_rematch
+      end
+      pbMessage(_INTL("All trainers in the Phone are now ready to rebattle."))
+    end
   }
 })
 
@@ -386,117 +429,25 @@ MenuHandlers.add(:debug_menu, :reset_trainers, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :ready_rematches, {
-  "name"        => _INTL("Ready All Phone Rematches"),
+MenuHandlers.add(:debug_menu, :toggle_exp_all, {
+  "name"        => _INTL("Toggle Exp. All's Effect"),
   "parent"      => :battle_menu,
-  "description" => _INTL("Make all trainers in the phone ready for rematches."),
+  "description" => _INTL("Toggle Exp. All's effect of giving Exp. to non-participants."),
   "effect"      => proc {
-    if !$PokemonGlobal.phoneNumbers || $PokemonGlobal.phoneNumbers.length == 0
-      pbMessage(_INTL("There are no trainers in the Phone."))
-    else
-      $PokemonGlobal.phoneNumbers.each do |i|
-        next if i.length != 8   # Isn't a trainer with an event
-        i[4] = 2
-        pbSetReadyToBattle(i)
-      end
-      pbMessage(_INTL("All trainers in the Phone are now ready to rebattle."))
-    end
+    $player.has_exp_all = !$player.has_exp_all
+    pbMessage(_INTL("Enabled Exp. All's effect.")) if $player.has_exp_all
+    pbMessage(_INTL("Disabled Exp. All's effect.")) if !$player.has_exp_all
   }
 })
 
-MenuHandlers.add(:debug_menu, :roamers, {
-  "name"        => _INTL("Roaming Pokémon"),
+MenuHandlers.add(:debug_menu, :toggle_logging, {
+  "name"        => _INTL("Toggle Battle Logging"),
   "parent"      => :battle_menu,
-  "description" => _INTL("Toggle and edit all roaming Pokémon."),
+  "description" => _INTL("Record debug logs for battles in Data/debuglog.txt."),
   "effect"      => proc {
-    pbDebugRoamers
-  }
-})
-
-MenuHandlers.add(:debug_menu, :encounter_version, {
-  "name"        => _INTL("Set Encounters Version"),
-  "parent"      => :battle_menu,
-  "description" => _INTL("Choose which version of wild encounters should be used."),
-  "effect"      => proc {
-    params = ChooseNumberParams.new
-    params.setRange(0, 99)
-    params.setInitialValue($PokemonGlobal.encounter_version)
-    params.setCancelValue(-1)
-    value = pbMessageChooseNumber(_INTL("Set encounters version to which value?"), params)
-    if value >= 0
-      $PokemonGlobal.encounter_version = value
-    end
-  }
-})
-
-#===============================================================================
-# Item options
-#===============================================================================
-MenuHandlers.add(:debug_menu, :items_menu, {
-  "name"        => _INTL("Item Options..."),
-  "parent"      => :main,
-  "description" => _INTL("Give and take items."),
-  "always_show" => false
-})
-
-MenuHandlers.add(:debug_menu, :add_item, {
-  "name"        => _INTL("Add Item"),
-  "parent"      => :items_menu,
-  "description" => _INTL("Choose an item and a quantity of it to add to the Bag."),
-  "effect"      => proc {
-    pbListScreenBlock(_INTL("ADD ITEM"), ItemLister.new) { |button, item|
-      if button == Input::USE && item
-        params = ChooseNumberParams.new
-        params.setRange(1, Settings::BAG_MAX_PER_SLOT)
-        params.setInitialValue(1)
-        params.setCancelValue(0)
-        qty = pbMessageChooseNumber(_INTL("Add how many {1}?",
-                                          GameData::Item.get(item).name_plural), params)
-        if qty > 0
-          $bag.add(item, qty)
-          pbMessage(_INTL("Gave {1}x {2}.", qty, GameData::Item.get(item).name))
-        end
-      end
-    }
-  }
-})
-
-MenuHandlers.add(:debug_menu, :fill_bag, {
-  "name"        => _INTL("Fill Bag"),
-  "parent"      => :items_menu,
-  "description" => _INTL("Empties the Bag and then fills it with a certain number of every item."),
-  "effect"      => proc {
-    params = ChooseNumberParams.new
-    params.setRange(1, Settings::BAG_MAX_PER_SLOT)
-    params.setInitialValue(1)
-    params.setCancelValue(0)
-    qty = pbMessageChooseNumber(_INTL("Choose the number of items."), params)
-    if qty > 0
-      $bag.clear
-      # NOTE: This doesn't simply use $bag.add for every item in turn, because
-      #       that's really slow when done in bulk.
-      pocket_sizes = Settings::BAG_MAX_POCKET_SIZE
-      bag = $bag.pockets   # Called here so that it only rearranges itself once
-      GameData::Item.each do |i|
-        next if !pocket_sizes[i.pocket - 1] || pocket_sizes[i.pocket - 1] == 0
-        next if pocket_sizes[i.pocket - 1] > 0 && bag[i.pocket].length >= pocket_sizes[i.pocket - 1]
-        item_qty = (i.is_important?) ? 1 : qty
-        bag[i.pocket].push([i.id, item_qty])
-      end
-      # NOTE: Auto-sorting pockets don't need to be sorted afterwards, because
-      #       items are added in the same order they would be sorted into.
-      pbMessage(_INTL("The Bag was filled with {1} of each item.", qty))
-    end
-  }
-})
-
-MenuHandlers.add(:debug_menu, :empty_bag, {
-  "name"        => _INTL("Empty Bag"),
-  "parent"      => :items_menu,
-  "description" => _INTL("Remove all items from the Bag."),
-  "effect"      => proc {
-    $bag.clear
-    pbMessage(_INTL("The Bag was cleared."))
+    $INTERNAL = !$INTERNAL
+    pbMessage(_INTL("Debug logs for battles will be made in the Data folder.")) if $INTERNAL
+    pbMessage(_INTL("Debug logs for battles will not be made.")) if !$INTERNAL
   }
 })
 
@@ -506,68 +457,8 @@ MenuHandlers.add(:debug_menu, :empty_bag, {
 MenuHandlers.add(:debug_menu, :pokemon_menu, {
   "name"        => _INTL("Pokémon Options..."),
   "parent"      => :main,
-  "description" => _INTL("Give Pokémon, heal party, fill/empty PC storage, etc."),
+  "description" => _INTL("Heal the party, give Pokémon, fill/empty PC storage, etc."),
   "always_show" => false
-})
-
-MenuHandlers.add(:debug_menu, :add_pokemon, {
-  "name"        => _INTL("Add Pokémon"),
-  "parent"      => :pokemon_menu,
-  "description" => _INTL("Give yourself a Pokémon of a chosen species/level. Goes to PC if party is full."),
-  "effect"      => proc {
-    species = pbChooseSpeciesList
-    if species
-      params = ChooseNumberParams.new
-      params.setRange(1, GameData::GrowthRate.max_level)
-      params.setInitialValue(5)
-      params.setCancelValue(0)
-      level = pbMessageChooseNumber(_INTL("Set the Pokémon's level."), params)
-      pbAddPokemon(species, level) if level > 0
-    end
-  }
-})
-
-MenuHandlers.add(:debug_menu, :give_demo_party, {
-  "name"        => _INTL("Give Demo Party"),
-  "parent"      => :pokemon_menu,
-  "description" => _INTL("Give yourself 6 preset Pokémon. They overwrite the current party."),
-  "effect"      => proc {
-    party = []
-    species = [:PIKACHU, :PIDGEOTTO, :KADABRA, :GYARADOS, :DIGLETT, :CHANSEY]
-    species.each do |id|
-      party.push(id) if GameData::Species.exists?(id)
-    end
-    $player.party.clear
-    # Generate Pokémon of each species at level 20
-    party.each do |species|
-      pkmn = Pokemon.new(species, 20)
-      $player.party.push(pkmn)
-      $player.pokedex.register(pkmn)
-      $player.pokedex.set_owned(species)
-      case species
-      when :PIDGEOTTO
-        pkmn.learn_move(:FLY)
-      when :KADABRA
-        pkmn.learn_move(:FLASH)
-        pkmn.learn_move(:TELEPORT)
-      when :GYARADOS
-        pkmn.learn_move(:SURF)
-        pkmn.learn_move(:DIVE)
-        pkmn.learn_move(:WATERFALL)
-      when :DIGLETT
-        pkmn.learn_move(:DIG)
-        pkmn.learn_move(:CUT)
-        pkmn.learn_move(:HEADBUTT)
-        pkmn.learn_move(:ROCKSMASH)
-      when :CHANSEY
-        pkmn.learn_move(:SOFTBOILED)
-        pkmn.learn_move(:STRENGTH)
-        pkmn.learn_move(:SWEETSCENT)
-      end
-      pkmn.record_first_moves
-    end
-    pbMessage(_INTL("Filled party with demo Pokémon."))
-  }
 })
 
 MenuHandlers.add(:debug_menu, :clear_party_pokemon, {
@@ -590,20 +481,38 @@ MenuHandlers.add(:debug_menu, :heal_party, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :quick_hatch_party_eggs, {
-  "name"        => _INTL("Quick Hatch"),
+MenuHandlers.add(:debug_menu, :add_pokemon, {
+  "name"        => _INTL("Add Pokémon"),
   "parent"      => :pokemon_menu,
-  "description" => _INTL("Make all eggs in the party require just one more step to hatch."),
+  "description" => _INTL("Give yourself a Pokémon of a chosen species/level. Goes to PC if party is full."),
   "effect"      => proc {
-    $player.party.each { |pkmn| pkmn.steps_to_hatch = 1 if pkmn.egg? }
-    pbMessage(_INTL("All eggs in your party now require one step to hatch."))
+    species = pbChooseSpeciesList
+    if species
+      params = ChooseNumberParams.new
+      params.setRange(1, GameData::GrowthRate.max_level)
+      params.setInitialValue(5)
+      params.setCancelValue(0)
+      level = pbMessageChooseNumber(_INTL("Set the Pokémon's level."), params)
+      if level > 0
+        goes_to_party = !$player.party_full?
+        if pbAddPokemonSilent(species, level)
+          if goes_to_party
+            pbMessage(_INTL("Added {1} to party.", GameData::Species.get(species).name))
+          else
+            pbMessage(_INTL("Added {1} to Pokémon storage.", GameData::Species.get(species).name))
+          end
+        else
+          pbMessage(_INTL("Couldn't add Pokémon because party and storage are full."))
+        end
+      end
+    end
   }
 })
 
 MenuHandlers.add(:debug_menu, :fill_boxes, {
   "name"        => _INTL("Fill Storage Boxes"),
   "parent"      => :pokemon_menu,
-  "description" => _INTL("Add one Pokémon of each species (at Level 50) to storage."),
+  "description" => _INTL("Puts one Pokémon of each species (at Level 50) in storage."),
   "effect"      => proc {
     added = 0
     box_qty = $PokemonStorage.maxPokemon(0)
@@ -661,16 +570,138 @@ MenuHandlers.add(:debug_menu, :clear_boxes, {
   }
 })
 
+MenuHandlers.add(:debug_menu, :give_demo_party, {
+  "name"        => _INTL("Give Demo Party"),
+  "parent"      => :pokemon_menu,
+  "description" => _INTL("Give yourself 6 preset Pokémon. They overwrite the current party."),
+  "effect"      => proc {
+    party = []
+    species = [:PIKACHU, :PIDGEOTTO, :KADABRA, :GYARADOS, :DIGLETT, :CHANSEY]
+    species.each { |id| party.push(id) if GameData::Species.exists?(id) }
+    $player.party.clear
+    # Generate Pokémon of each species at level 20
+    party.each do |spec|
+      pkmn = Pokemon.new(spec, 20)
+      $player.party.push(pkmn)
+      $player.pokedex.register(pkmn)
+      $player.pokedex.set_owned(spec)
+      case spec
+      when :PIDGEOTTO
+        pkmn.learn_move(:FLY)
+      when :KADABRA
+        pkmn.learn_move(:FLASH)
+        pkmn.learn_move(:TELEPORT)
+      when :GYARADOS
+        pkmn.learn_move(:SURF)
+        pkmn.learn_move(:DIVE)
+        pkmn.learn_move(:WATERFALL)
+      when :DIGLETT
+        pkmn.learn_move(:DIG)
+        pkmn.learn_move(:CUT)
+        pkmn.learn_move(:HEADBUTT)
+        pkmn.learn_move(:ROCKSMASH)
+      when :CHANSEY
+        pkmn.learn_move(:SOFTBOILED)
+        pkmn.learn_move(:STRENGTH)
+        pkmn.learn_move(:SWEETSCENT)
+      end
+      pkmn.record_first_moves
+    end
+    pbMessage(_INTL("Filled party with demo Pokémon."))
+  }
+})
+
+MenuHandlers.add(:debug_menu, :quick_hatch_party_eggs, {
+  "name"        => _INTL("Quick Hatch"),
+  "parent"      => :pokemon_menu,
+  "description" => _INTL("Make all eggs in the party require just one more step to hatch."),
+  "effect"      => proc {
+    $player.party.each { |pkmn| pkmn.steps_to_hatch = 1 if pkmn.egg? }
+    pbMessage(_INTL("All eggs in your party now require one step to hatch."))
+  }
+})
+
 MenuHandlers.add(:debug_menu, :open_storage, {
   "name"        => _INTL("Access Pokémon Storage"),
   "parent"      => :pokemon_menu,
   "description" => _INTL("Opens the Pokémon storage boxes in Organize Boxes mode."),
   "effect"      => proc {
-    pbFadeOutIn {
+    pbFadeOutIn do
       scene = PokemonStorageScene.new
       screen = PokemonStorageScreen.new(scene, $PokemonStorage)
       screen.pbStartScreen(0)
-    }
+    end
+  }
+})
+
+#===============================================================================
+# Item options
+#===============================================================================
+MenuHandlers.add(:debug_menu, :items_menu, {
+  "name"        => _INTL("Item Options..."),
+  "parent"      => :main,
+  "description" => _INTL("Give and take items."),
+  "always_show" => false
+})
+
+MenuHandlers.add(:debug_menu, :add_item, {
+  "name"        => _INTL("Add Item"),
+  "parent"      => :items_menu,
+  "description" => _INTL("Choose an item and a quantity of it to add to the Bag."),
+  "effect"      => proc {
+    pbListScreenBlock(_INTL("ADD ITEM"), ItemLister.new) do |button, item|
+      if button == Input::USE && item
+        params = ChooseNumberParams.new
+        params.setRange(1, Settings::BAG_MAX_PER_SLOT)
+        params.setInitialValue(1)
+        params.setCancelValue(0)
+        qty = pbMessageChooseNumber(_INTL("Add how many {1}?",
+                                          GameData::Item.get(item).name_plural), params)
+        if qty > 0
+          $bag.add(item, qty)
+          pbMessage(_INTL("Gave {1}x {2}.", qty, GameData::Item.get(item).name))
+        end
+      end
+    end
+  }
+})
+
+MenuHandlers.add(:debug_menu, :fill_bag, {
+  "name"        => _INTL("Fill Bag"),
+  "parent"      => :items_menu,
+  "description" => _INTL("Empties the Bag and then fills it with a certain number of every item."),
+  "effect"      => proc {
+    params = ChooseNumberParams.new
+    params.setRange(1, Settings::BAG_MAX_PER_SLOT)
+    params.setInitialValue(1)
+    params.setCancelValue(0)
+    qty = pbMessageChooseNumber(_INTL("Choose the number of items."), params)
+    if qty > 0
+      $bag.clear
+      # NOTE: This doesn't simply use $bag.add for every item in turn, because
+      #       that's really slow when done in bulk.
+      pocket_sizes = Settings::BAG_MAX_POCKET_SIZE
+      bag = $bag.pockets   # Called here so that it only rearranges itself once
+      GameData::Item.each do |i|
+        next if !pocket_sizes[i.pocket - 1] || pocket_sizes[i.pocket - 1] == 0
+        next if pocket_sizes[i.pocket - 1] > 0 && bag[i.pocket].length >= pocket_sizes[i.pocket - 1]
+        item_qty = (i.is_important?) ? 1 : qty
+        bag[i.pocket].push([i.id, item_qty])
+      end
+      # NOTE: Auto-sorting pockets don't need to be sorted afterwards, because
+      #       items are added in the same order they would be sorted into.
+      pbMessage(_INTL("The Bag was filled with {1} of each item.", qty))
+    end
+  }
+})
+
+MenuHandlers.add(:debug_menu, :empty_bag, {
+  "name"        => _INTL("Empty Bag"),
+  "parent"      => :items_menu,
+  "description" => _INTL("Remove all items from the Bag."),
+  "effect"      => proc {
+    $bag.clear
+    pbMessage(_INTL("The Bag was cleared."))
   }
 })
 
@@ -682,33 +713,6 @@ MenuHandlers.add(:debug_menu, :player_menu, {
   "parent"      => :main,
   "description" => _INTL("Set money, badges, Pokédexes, player's appearance and name, etc."),
   "always_show" => false
-})
-
-MenuHandlers.add(:debug_menu, :set_badges, {
-  "name"        => _INTL("Set Badges"),
-  "parent"      => :player_menu,
-  "description" => _INTL("Toggle possession of each Gym Badge."),
-  "effect"      => proc {
-    badgecmd = 0
-    loop do
-      badgecmds = []
-      badgecmds.push(_INTL("Give all"))
-      badgecmds.push(_INTL("Remove all"))
-      24.times do |i|
-        badgecmds.push(_INTL("{1} Badge {2}", $player.badges[i] ? "[Y]" : "[  ]", i + 1))
-      end
-      badgecmd = pbShowCommands(nil, badgecmds, -1, badgecmd)
-      break if badgecmd < 0
-      case badgecmd
-      when 0   # Give all
-        24.times { |i| $player.badges[i] = true }
-      when 1   # Remove all
-        24.times { |i| $player.badges[i] = false }
-      else
-        $player.badges[badgecmd - 2] = !$player.badges[badgecmd - 2]
-      end
-    end
-  }
 })
 
 MenuHandlers.add(:debug_menu, :set_money, {
@@ -750,6 +754,33 @@ MenuHandlers.add(:debug_menu, :set_bp, {
   }
 })
 
+MenuHandlers.add(:debug_menu, :set_badges, {
+  "name"        => _INTL("Set Badges"),
+  "parent"      => :player_menu,
+  "description" => _INTL("Toggle possession of each Gym Badge."),
+  "effect"      => proc {
+    badgecmd = 0
+    loop do
+      badgecmds = []
+      badgecmds.push(_INTL("Give all"))
+      badgecmds.push(_INTL("Remove all"))
+      24.times do |i|
+        badgecmds.push(_INTL("{1} Badge {2}", $player.badges[i] ? "[Y]" : "[  ]", i + 1))
+      end
+      badgecmd = pbShowCommands(nil, badgecmds, -1, badgecmd)
+      break if badgecmd < 0
+      case badgecmd
+      when 0   # Give all
+        24.times { |i| $player.badges[i] = true }
+      when 1   # Remove all
+        24.times { |i| $player.badges[i] = false }
+      else
+        $player.badges[badgecmd - 2] = !$player.badges[badgecmd - 2]
+      end
+    end
+  }
+})
+
 MenuHandlers.add(:debug_menu, :toggle_running_shoes, {
   "name"        => _INTL("Toggle Running Shoes"),
   "parent"      => :player_menu,
@@ -758,17 +789,6 @@ MenuHandlers.add(:debug_menu, :toggle_running_shoes, {
     $player.has_running_shoes = !$player.has_running_shoes
     pbMessage(_INTL("Gave Running Shoes.")) if $player.has_running_shoes
     pbMessage(_INTL("Lost Running Shoes.")) if !$player.has_running_shoes
-  }
-})
-
-MenuHandlers.add(:debug_menu, :toggle_pokegear, {
-  "name"        => _INTL("Toggle Pokégear"),
-  "parent"      => :player_menu,
-  "description" => _INTL("Toggle possession of the Pokégear."),
-  "effect"      => proc {
-    $player.has_pokegear = !$player.has_pokegear
-    pbMessage(_INTL("Gave Pokégear.")) if $player.has_pokegear
-    pbMessage(_INTL("Lost Pokégear.")) if !$player.has_pokegear
   }
 })
 
@@ -801,6 +821,17 @@ MenuHandlers.add(:debug_menu, :toggle_pokedex, {
   }
 })
 
+MenuHandlers.add(:debug_menu, :toggle_pokegear, {
+  "name"        => _INTL("Toggle Pokégear"),
+  "parent"      => :player_menu,
+  "description" => _INTL("Toggle possession of the Pokégear."),
+  "effect"      => proc {
+    $player.has_pokegear = !$player.has_pokegear
+    pbMessage(_INTL("Gave Pokégear.")) if $player.has_pokegear
+    pbMessage(_INTL("Lost Pokégear.")) if !$player.has_pokegear
+  }
+})
+
 MenuHandlers.add(:debug_menu, :toggle_box_link, {
   "name"        => _INTL("Toggle Pokémon Box Link's Effect"),
   "parent"      => :player_menu,
@@ -809,17 +840,6 @@ MenuHandlers.add(:debug_menu, :toggle_box_link, {
     $player.has_box_link = !$player.has_box_link
     pbMessage(_INTL("Enabled Pokémon Box Link's effect.")) if $player.has_box_link
     pbMessage(_INTL("Disabled Pokémon Box Link's effect.")) if !$player.has_box_link
-  }
-})
-
-MenuHandlers.add(:debug_menu, :toggle_exp_all, {
-  "name"        => _INTL("Toggle Exp. All's Effect"),
-  "parent"      => :player_menu,
-  "description" => _INTL("Toggle Exp. All's effect of giving Exp. to non-participants."),
-  "effect"      => proc {
-    $player.has_exp_all = !$player.has_exp_all
-    pbMessage(_INTL("Enabled Exp. All's effect.")) if $player.has_exp_all
-    pbMessage(_INTL("Disabled Exp. All's effect.")) if !$player.has_exp_all
   }
 })
 
@@ -893,80 +913,71 @@ MenuHandlers.add(:debug_menu, :random_id, {
 })
 
 #===============================================================================
-# Information editors
+# PBS file editors
 #===============================================================================
-MenuHandlers.add(:debug_menu, :editors_menu, {
-  "name"        => _INTL("Information Editors..."),
+MenuHandlers.add(:debug_menu, :pbs_editors_menu, {
+  "name"        => _INTL("PBS File Editors..."),
   "parent"      => :main,
-  "description" => _INTL("Edit information in the PBS files, terrain tags, battle animations, etc.")
-})
-
-MenuHandlers.add(:debug_menu, :set_metadata, {
-  "name"        => _INTL("Edit Metadata"),
-  "parent"      => :editors_menu,
-  "description" => _INTL("Edit global metadata and player character metadata."),
-  "effect"      => proc {
-    pbMetadataScreen
-  }
-})
-
-MenuHandlers.add(:debug_menu, :set_map_metadata, {
-  "name"        => _INTL("Edit Map Metadata"),
-  "parent"      => :editors_menu,
-  "description" => _INTL("Edit map metadata."),
-  "effect"      => proc {
-    pbMapMetadataScreen(pbDefaultMap)
-  }
+  "description" => _INTL("Edit information in the PBS files.")
 })
 
 MenuHandlers.add(:debug_menu, :set_map_connections, {
-  "name"        => _INTL("Edit Map Connections"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Edit map_connections.txt"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Connect maps using a visual interface. Can also edit map encounters/metadata."),
   "effect"      => proc {
     pbFadeOutIn { pbConnectionsEditor }
   }
 })
 
-MenuHandlers.add(:debug_menu, :set_terrain_tags, {
-  "name"        => _INTL("Edit Terrain Tags"),
-  "parent"      => :editors_menu,
-  "description" => _INTL("Edit the terrain tags of tiles in tilesets. Required for tags 8+."),
-  "effect"      => proc {
-    pbFadeOutIn { pbTilesetScreen }
-  }
-})
-
 MenuHandlers.add(:debug_menu, :set_encounters, {
-  "name"        => _INTL("Edit Wild Encounters"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Edit encounters.txt"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Edit the wild Pokémon that can be found on maps, and how they are encountered."),
   "effect"      => proc {
     pbFadeOutIn { pbEncountersEditor }
   }
 })
 
-MenuHandlers.add(:debug_menu, :set_trainer_types, {
-  "name"        => _INTL("Edit Trainer Types"),
-  "parent"      => :editors_menu,
-  "description" => _INTL("Edit the properties of trainer types."),
-  "effect"      => proc {
-    pbFadeOutIn { pbTrainerTypeEditor }
-  }
-})
-
 MenuHandlers.add(:debug_menu, :set_trainers, {
-  "name"        => _INTL("Edit Individual Trainers"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Edit trainers.txt"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Edit individual trainers, their Pokémon and items."),
   "effect"      => proc {
     pbFadeOutIn { pbTrainerBattleEditor }
   }
 })
 
+MenuHandlers.add(:debug_menu, :set_trainer_types, {
+  "name"        => _INTL("Edit trainer_types.txt"),
+  "parent"      => :pbs_editors_menu,
+  "description" => _INTL("Edit the properties of trainer types."),
+  "effect"      => proc {
+    pbFadeOutIn { pbTrainerTypeEditor }
+  }
+})
+
+MenuHandlers.add(:debug_menu, :set_map_metadata, {
+  "name"        => _INTL("Edit map_metadata.txt"),
+  "parent"      => :pbs_editors_menu,
+  "description" => _INTL("Edit map metadata."),
+  "effect"      => proc {
+    pbMapMetadataScreen(pbDefaultMap)
+  }
+})
+
+MenuHandlers.add(:debug_menu, :set_metadata, {
+  "name"        => _INTL("Edit metadata.txt"),
+  "parent"      => :pbs_editors_menu,
+  "description" => _INTL("Edit global metadata and player character metadata."),
+  "effect"      => proc {
+    pbMetadataScreen
+  }
+})
+
 MenuHandlers.add(:debug_menu, :set_items, {
-  "name"        => _INTL("Edit Items"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Edit items.txt"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Edit item data."),
   "effect"      => proc {
     pbFadeOutIn { pbItemEditor }
@@ -974,39 +985,30 @@ MenuHandlers.add(:debug_menu, :set_items, {
 })
 
 MenuHandlers.add(:debug_menu, :set_species, {
-  "name"        => _INTL("Edit Pokémon Species"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Edit pokemon.txt"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Edit Pokémon species data."),
   "effect"      => proc {
     pbFadeOutIn { pbPokemonEditor }
   }
 })
 
-MenuHandlers.add(:debug_menu, :set_pokedex_lists, {
-  "name"        => _INTL("Edit Regional Dexes"),
-  "parent"      => :editors_menu,
-  "description" => _INTL("Create, rearrange and delete Regional Pokédex lists."),
-  "effect"      => proc {
-    pbFadeOutIn { pbRegionalDexEditorMain }
-  }
-})
-
 MenuHandlers.add(:debug_menu, :position_sprites, {
-  "name"        => _INTL("Edit Pokémon Sprite Positions"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Edit pokemon_metrics.txt"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Reposition Pokémon sprites in battle."),
   "effect"      => proc {
-    pbFadeOutIn {
+    pbFadeOutIn do
       sp = SpritePositioner.new
       sps = SpritePositionerScreen.new(sp)
       sps.pbStart
-    }
+    end
   }
 })
 
 MenuHandlers.add(:debug_menu, :auto_position_sprites, {
-  "name"        => _INTL("Auto-Position All Pokémon Sprites"),
-  "parent"      => :editors_menu,
+  "name"        => _INTL("Auto-Set pokemon_metrics.txts"),
+  "parent"      => :pbs_editors_menu,
   "description" => _INTL("Automatically reposition all Pokémon sprites in battle. Don't use lightly."),
   "effect"      => proc {
     if pbConfirmMessage(_INTL("Are you sure you want to reposition all sprites?"))
@@ -1017,6 +1019,24 @@ MenuHandlers.add(:debug_menu, :auto_position_sprites, {
       pbDisposeMessageWindow(msgwindow)
     end
   }
+})
+
+MenuHandlers.add(:debug_menu, :set_pokedex_lists, {
+  "name"        => _INTL("Edit regional_dexes.txt"),
+  "parent"      => :pbs_editors_menu,
+  "description" => _INTL("Create, rearrange and delete Regional Pokédex lists."),
+  "effect"      => proc {
+    pbFadeOutIn { pbRegionalDexEditorMain }
+  }
+})
+
+#===============================================================================
+# Other editors
+#===============================================================================
+MenuHandlers.add(:debug_menu, :editors_menu, {
+  "name"        => _INTL("Other Editors..."),
+  "parent"      => :main,
+  "description" => _INTL("Edit battle animations, terrain tags, map data, etc.")
 })
 
 MenuHandlers.add(:debug_menu, :animation_editor, {
@@ -1055,45 +1075,36 @@ MenuHandlers.add(:debug_menu, :export_animations, {
   }
 })
 
+MenuHandlers.add(:debug_menu, :set_terrain_tags, {
+  "name"        => _INTL("Edit Terrain Tags"),
+  "parent"      => :editors_menu,
+  "description" => _INTL("Edit the terrain tags of tiles in tilesets. Required for tags 8+."),
+  "effect"      => proc {
+    pbFadeOutIn { pbTilesetScreen }
+  }
+})
+
+MenuHandlers.add(:debug_menu, :fix_invalid_tiles, {
+  "name"        => _INTL("Fix Invalid Tiles"),
+  "parent"      => :editors_menu,
+  "description" => _INTL("Scans all maps and erases non-existent tiles."),
+  "effect"      => proc {
+    pbDebugFixInvalidTiles
+  }
+})
+
 #===============================================================================
 # Other options
 #===============================================================================
-MenuHandlers.add(:debug_menu, :other_menu, {
-  "name"        => _INTL("Other Options..."),
+MenuHandlers.add(:debug_menu, :files_menu, {
+  "name"        => _INTL("Files Options..."),
   "parent"      => :main,
-  "description" => _INTL("Mystery Gifts, translations, compile data, etc.")
-})
-
-MenuHandlers.add(:debug_menu, :mystery_gift, {
-  "name"        => _INTL("Manage Mystery Gifts"),
-  "parent"      => :other_menu,
-  "description" => _INTL("Edit and enable/disable Mystery Gifts."),
-  "effect"      => proc {
-    pbManageMysteryGifts
-  }
-})
-
-MenuHandlers.add(:debug_menu, :extract_text, {
-  "name"        => _INTL("Extract Text"),
-  "parent"      => :other_menu,
-  "description" => _INTL("Extract all text in the game to a single file for translating."),
-  "effect"      => proc {
-    pbExtractText
-  }
-})
-
-MenuHandlers.add(:debug_menu, :compile_text, {
-  "name"        => _INTL("Compile Text"),
-  "parent"      => :other_menu,
-  "description" => _INTL("Import text and converts it into a language file."),
-  "effect"      => proc {
-    pbCompileTextUI
-  }
+  "description" => _INTL("Compile, generate PBS files, translations, Mystery Gifts, etc.")
 })
 
 MenuHandlers.add(:debug_menu, :compile_data, {
   "name"        => _INTL("Compile Data"),
-  "parent"      => :other_menu,
+  "parent"      => :files_menu,
   "description" => _INTL("Fully compile all data."),
   "effect"      => proc {
     msgwindow = pbCreateMessageWindow
@@ -1105,7 +1116,7 @@ MenuHandlers.add(:debug_menu, :compile_data, {
 
 MenuHandlers.add(:debug_menu, :create_pbs_files, {
   "name"        => _INTL("Create PBS File(s)"),
-  "parent"      => :other_menu,
+  "parent"      => :files_menu,
   "description" => _INTL("Choose one or all PBS files and create it."),
   "effect"      => proc {
     cmd = 0
@@ -1114,6 +1125,8 @@ MenuHandlers.add(:debug_menu, :create_pbs_files, {
       "abilities.txt",
       "battle_facility_lists.txt",
       "berry_plants.txt",
+      "dungeon_parameters.txt",
+      "dungeon_tilesets.txt",
       "encounters.txt",
       "items.txt",
       "map_connections.txt",
@@ -1139,23 +1152,25 @@ MenuHandlers.add(:debug_menu, :create_pbs_files, {
       when 1  then Compiler.write_abilities
       when 2  then Compiler.write_trainer_lists
       when 3  then Compiler.write_berry_plants
-      when 4  then Compiler.write_encounters
-      when 5  then Compiler.write_items
-      when 6  then Compiler.write_connections
-      when 7  then Compiler.write_map_metadata
-      when 8  then Compiler.write_metadata
-      when 9  then Compiler.write_moves
-      when 10 then Compiler.write_phone
-      when 11 then Compiler.write_pokemon
-      when 12 then Compiler.write_pokemon_forms
-      when 13 then Compiler.write_pokemon_metrics
-      when 14 then Compiler.write_regional_dexes
-      when 15 then Compiler.write_ribbons
-      when 16 then Compiler.write_shadow_pokemon
-      when 17 then Compiler.write_town_map
-      when 18 then Compiler.write_trainer_types
-      when 19 then Compiler.write_trainers
-      when 20 then Compiler.write_types
+      when 4  then Compiler.write_dungeon_parameters
+      when 5  then Compiler.write_dungeon_tilesets
+      when 6  then Compiler.write_encounters
+      when 7  then Compiler.write_items
+      when 8  then Compiler.write_connections
+      when 9  then Compiler.write_map_metadata
+      when 10 then Compiler.write_metadata
+      when 11 then Compiler.write_moves
+      when 12 then Compiler.write_phone
+      when 13 then Compiler.write_pokemon
+      when 14 then Compiler.write_pokemon_forms
+      when 15 then Compiler.write_pokemon_metrics
+      when 16 then Compiler.write_regional_dexes
+      when 17 then Compiler.write_ribbons
+      when 18 then Compiler.write_shadow_pokemon
+      when 19 then Compiler.write_town_map
+      when 20 then Compiler.write_trainer_types
+      when 21 then Compiler.write_trainers
+      when 22 then Compiler.write_types
       else break
       end
       pbMessage(_INTL("File written."))
@@ -1163,18 +1178,9 @@ MenuHandlers.add(:debug_menu, :create_pbs_files, {
   }
 })
 
-MenuHandlers.add(:debug_menu, :fix_invalid_tiles, {
-  "name"        => _INTL("Fix Invalid Tiles"),
-  "parent"      => :other_menu,
-  "description" => _INTL("Scans all maps and erases non-existent tiles."),
-  "effect"      => proc {
-    pbDebugFixInvalidTiles
-  }
-})
-
 MenuHandlers.add(:debug_menu, :rename_files, {
   "name"        => _INTL("Rename Outdated Files"),
-  "parent"      => :other_menu,
+  "parent"      => :files_menu,
   "description" => _INTL("Check for files with outdated names and rename/move them. Can alter map data."),
   "effect"      => proc {
     if pbConfirmMessage(_INTL("Are you sure you want to automatically rename outdated files?"))
@@ -1184,9 +1190,74 @@ MenuHandlers.add(:debug_menu, :rename_files, {
   }
 })
 
+MenuHandlers.add(:debug_menu, :extract_text, {
+  "name"        => _INTL("Extract Text For Translation"),
+  "parent"      => :files_menu,
+  "description" => _INTL("Extract all text in the game to text files for translating."),
+  "effect"      => proc {
+    if Settings::LANGUAGES.length == 0
+      pbMessage(_INTL("No languages are defined in the LANGUAGES array in Settings."))
+      pbMessage(_INTL("You need to add at least one language to LANGUAGES first, to choose which one to extract text for."))
+      next
+    end
+    # Choose a language from Settings to name the extraction folder after
+    cmds = []
+    Settings::LANGUAGES.each { |val| cmds.push(val[0]) }
+    cmds.push(_INTL("Cancel"))
+    language_index = pbMessage(_INTL("Choose a language to extract text for."), cmds, cmds.length)
+    next if language_index == cmds.length - 1
+    language_name = Settings::LANGUAGES[language_index][1]
+    # Choose whether to extract core text or game text
+    text_type = pbMessage(_INTL("Choose a language to extract text for."),
+                          [_INTL("Game-specific text"), _INTL("Core text"), _INTL("Cancel")], 3)
+    next if text_type == 2
+    # If game text, choose whether to extract map texts to map-specific files or
+    # to one big file
+    map_files = 0
+    if text_type == 0
+      map_files = pbMessage(_INTL("How many text files should map event texts be extracted to?"),
+                            [_INTL("One big file"), _INTL("One file per map"), _INTL("Cancel")], 3)
+      next if map_files == 2
+    end
+    # Extract the chosen set of text for the chosen language
+    Translator.extract_text(language_name, text_type == 1, map_files == 1)
+  }
+})
+
+MenuHandlers.add(:debug_menu, :compile_text, {
+  "name"        => _INTL("Compile Translated Text"),
+  "parent"      => :files_menu,
+  "description" => _INTL("Import text files and convert them into a language file."),
+  "effect"      => proc {
+    # Find all folders with a particular naming convention
+    cmds = Dir.glob("Text_*_*")
+    if cmds.length == 0
+      pbMessage(_INTL("No language folders found to compile."))
+      pbMessage(_INTL("Language folders must be named \"Text_SOMETHING_core\" or \"Text_SOMETHING_game\" and be in the root folder."))
+      next
+    end
+    cmds.push(_INTL("Cancel"))
+    # Ask which folder to compile into a .dat file
+    folder_index = pbMessage(_INTL("Choose a language folder to compile."), cmds, cmds.length)
+    next if folder_index == cmds.length - 1
+    # Compile the text files in the chosen folder
+    dat_filename = cmds[folder_index].gsub!(/^Text_/, "")
+    Translator.compile_text(cmds[folder_index], dat_filename)
+  }
+})
+
+MenuHandlers.add(:debug_menu, :mystery_gift, {
+  "name"        => _INTL("Manage Mystery Gifts"),
+  "parent"      => :files_menu,
+  "description" => _INTL("Edit and enable/disable Mystery Gifts."),
+  "effect"      => proc {
+    pbManageMysteryGifts
+  }
+})
+
 MenuHandlers.add(:debug_menu, :reload_system_cache, {
   "name"        => _INTL("Reload System Cache"),
-  "parent"      => :other_menu,
+  "parent"      => :files_menu,
   "description" => _INTL("Refreshes the system's file cache. Use if you change a file while playing."),
   "effect"      => proc {
     System.reload_cache

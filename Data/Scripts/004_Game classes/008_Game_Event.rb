@@ -237,14 +237,13 @@ class Game_Event < Game_Character
     @trigger              = @page.trigger
     @list                 = @page.list
     @interpreter          = nil
-    if @trigger == 4   # Parallel Process
-      @interpreter        = Interpreter.new
-    end
+    @interpreter          = Interpreter.new if @trigger == 4   # Parallel Process
     check_event_trigger_auto
   end
 
   def should_update?(recalc = false)
     return @to_update if !recalc
+    return true if @updated_last_frame
     return true if @trigger && (@trigger == 3 || @trigger == 4)
     return true if @move_route_forcing || @moveto_happened
     return true if @event.name[/update/i]
@@ -258,23 +257,30 @@ class Game_Event < Game_Character
 
   def update
     @to_update = should_update?(true)
+    @updated_last_frame = false
     return if !@to_update
+    @updated_last_frame = true
     @moveto_happened = false
     last_moving = moving?
     super
-    if !moving? && last_moving
-      $game_player.pbCheckEventTriggerFromDistance([2])
-    end
+    $game_player.pbCheckEventTriggerFromDistance([2]) if !moving? && last_moving
     if @need_refresh
       @need_refresh = false
       refresh
     end
     check_event_trigger_auto
     if @interpreter
-      unless @interpreter.running?
-        @interpreter.setup(@list, @event.id, @map_id)
-      end
+      @interpreter.setup(@list, @event.id, @map_id) if !@interpreter.running?
       @interpreter.update
+    end
+  end
+
+  def update_move
+    was_jumping = jumping?
+    super
+    if was_jumping && !jumping? && !@transparent && (@tile_id > 0 || @character_name != "")
+      spriteset = $scene.spriteset(map_id)
+      spriteset&.addUserAnimation(Settings::DUST_ANIMATION_ID, self.x, self.y, true, 1)
     end
   end
 end

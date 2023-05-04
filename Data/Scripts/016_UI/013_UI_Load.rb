@@ -1,7 +1,7 @@
 #===============================================================================
 #
 #===============================================================================
-class PokemonLoadPanel < SpriteWrapper
+class PokemonLoadPanel < Sprite
   attr_reader :selected
 
   TEXTCOLOR             = Color.new(232, 232, 232)
@@ -20,7 +20,7 @@ class PokemonLoadPanel < SpriteWrapper
     @totalsec = (stats) ? stats.play_time.to_i : ((framecount || 0) / Graphics.frame_rate)
     @mapid = mapid
     @selected = (index == 0)
-    @bgbitmap = AnimatedBitmap.new("Graphics/Pictures/loadPanels")
+    @bgbitmap = AnimatedBitmap.new("Graphics/UI/Load/panels")
     @refreshBitmap = true
     @refreshing = false
     refresh
@@ -49,7 +49,7 @@ class PokemonLoadPanel < SpriteWrapper
     return if disposed?
     @refreshing = true
     if !self.bitmap || self.bitmap.disposed?
-      self.bitmap = BitmapWrapper.new(@bgbitmap.width, 222)
+      self.bitmap = Bitmap.new(@bgbitmap.width, 222)
       pbSetSystemFont(self.bitmap)
     end
     if @refreshBitmap
@@ -62,31 +62,31 @@ class PokemonLoadPanel < SpriteWrapper
       end
       textpos = []
       if @isContinue
-        textpos.push([@title, 32, 16, 0, TEXTCOLOR, TEXTSHADOWCOLOR])
-        textpos.push([_INTL("Badges:"), 32, 118, 0, TEXTCOLOR, TEXTSHADOWCOLOR])
-        textpos.push([@trainer.badge_count.to_s, 206, 118, 1, TEXTCOLOR, TEXTSHADOWCOLOR])
-        textpos.push([_INTL("Pokédex:"), 32, 150, 0, TEXTCOLOR, TEXTSHADOWCOLOR])
-        textpos.push([@trainer.pokedex.seen_count.to_s, 206, 150, 1, TEXTCOLOR, TEXTSHADOWCOLOR])
-        textpos.push([_INTL("Time:"), 32, 182, 0, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([@title, 32, 16, :left, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([_INTL("Badges:"), 32, 118, :left, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([@trainer.badge_count.to_s, 206, 118, :right, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([_INTL("Pokédex:"), 32, 150, :left, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([@trainer.pokedex.seen_count.to_s, 206, 150, :right, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([_INTL("Time:"), 32, 182, :left, TEXTCOLOR, TEXTSHADOWCOLOR])
         hour = @totalsec / 60 / 60
         min  = @totalsec / 60 % 60
         if hour > 0
-          textpos.push([_INTL("{1}h {2}m", hour, min), 206, 182, 1, TEXTCOLOR, TEXTSHADOWCOLOR])
+          textpos.push([_INTL("{1}h {2}m", hour, min), 206, 182, :right, TEXTCOLOR, TEXTSHADOWCOLOR])
         else
-          textpos.push([_INTL("{1}m", min), 206, 182, 1, TEXTCOLOR, TEXTSHADOWCOLOR])
+          textpos.push([_INTL("{1}m", min), 206, 182, :right, TEXTCOLOR, TEXTSHADOWCOLOR])
         end
         if @trainer.male?
-          textpos.push([@trainer.name, 112, 70, 0, MALETEXTCOLOR, MALETEXTSHADOWCOLOR])
+          textpos.push([@trainer.name, 112, 70, :left, MALETEXTCOLOR, MALETEXTSHADOWCOLOR])
         elsif @trainer.female?
-          textpos.push([@trainer.name, 112, 70, 0, FEMALETEXTCOLOR, FEMALETEXTSHADOWCOLOR])
+          textpos.push([@trainer.name, 112, 70, :left, FEMALETEXTCOLOR, FEMALETEXTSHADOWCOLOR])
         else
-          textpos.push([@trainer.name, 112, 70, 0, TEXTCOLOR, TEXTSHADOWCOLOR])
+          textpos.push([@trainer.name, 112, 70, :left, TEXTCOLOR, TEXTSHADOWCOLOR])
         end
         mapname = pbGetMapNameFromId(@mapid)
         mapname.gsub!(/\\PN/, @trainer.name)
-        textpos.push([mapname, 386, 16, 1, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([mapname, 386, 16, :right, TEXTCOLOR, TEXTSHADOWCOLOR])
       else
-        textpos.push([@title, 32, 14, 0, TEXTCOLOR, TEXTSHADOWCOLOR])
+        textpos.push([@title, 32, 14, :left, TEXTCOLOR, TEXTSHADOWCOLOR])
       end
       pbDrawTextPositions(self.bitmap, textpos)
     end
@@ -103,7 +103,7 @@ class PokemonLoad_Scene
     @sprites = {}
     @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @viewport.z = 99998
-    addBackgroundOrColoredPlane(@sprites, "background", "loadbg", Color.new(248, 248, 248), @viewport)
+    addBackgroundOrColoredPlane(@sprites, "background", "Load/bg", Color.new(248, 248, 248), @viewport)
     y = 32
     commands.length.times do |i|
       @sprites["panel#{i}"] = PokemonLoadPanel.new(
@@ -128,7 +128,7 @@ class PokemonLoad_Scene
     @sprites = {}
     @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @viewport.z = 99998
-    addBackgroundOrColoredPlane(@sprites, "background", "loadbg", Color.new(248, 248, 248), @viewport)
+    addBackgroundOrColoredPlane(@sprites, "background", "Load/bg", Color.new(248, 248, 248), @viewport)
   end
 
   def pbUpdate
@@ -240,7 +240,7 @@ class PokemonLoadScreen
   # Called if all save data is invalid.
   # Prompts the player to delete the save files.
   def prompt_save_deletion
-    pbMessage(_INTL("The save file is corrupt, or is incompatible with this game."))
+    pbMessage(_INTL("The save file is corrupt, or is incompatible with this game.") + "\1")
     exit unless pbConfirmMessageSerious(
       _INTL("Do you want to delete the save file and start anew?")
     )
@@ -254,9 +254,9 @@ class PokemonLoadScreen
     @scene.pbStartScene2
     if SaveData.exists?
       if pbConfirmMessageSerious(_INTL("Delete all saved data?"))
-        pbMessage(_INTL("Once data has been deleted, there is no way to recover it.\1"))
+        pbMessage(_INTL("Once data has been deleted, there is no way to recover it.") + "\1")
         if pbConfirmMessageSerious(_INTL("Delete the saved data anyway?"))
-          pbMessage(_INTL("Deleting all data. Don't turn off the power.\\wtnp[0]"))
+          pbMessage(_INTL("Deleting all data. Don't turn off the power.") + "\\wtnp[0]")
           self.delete_save_data
         end
       end
@@ -325,7 +325,7 @@ class PokemonLoadScreen
       when cmd_language
         @scene.pbEndScene
         $PokemonSystem.language = pbChooseLanguage
-        pbLoadMessages("Data/" + Settings::LANGUAGES[$PokemonSystem.language][1])
+        MessageTypes.load_message_files(Settings::LANGUAGES[$PokemonSystem.language][1])
         if show_continue
           @save_data[:pokemon_system] = $PokemonSystem
           File.open(SaveData::FILE_PATH, "wb") { |file| Marshal.dump(@save_data, file) }

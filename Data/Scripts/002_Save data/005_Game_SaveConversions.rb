@@ -147,7 +147,8 @@ SaveData.register_conversion(:v20_refactor_follower_data) do
   display_title "Updating follower data format"
   to_value :global_metadata do |global|
     # NOTE: dependentEvents is still defined in class PokemonGlobalMetadata just
-    #       for the sake of this conversion. It will be removed in future.
+    #       for the sake of this conversion. It is deprecated and will be
+    #       removed in v22.
     if global.dependentEvents && global.dependentEvents.length > 0
       global.followers = []
       global.dependentEvents.each do |follower|
@@ -344,6 +345,36 @@ SaveData.register_conversion(:v20_convert_pokemon_markings) do
         value.each { |value2| update_markings.call(value2) if value2.is_a?(Pokemon) }
       when Pokemon
         update_markings.call(value)
+      end
+    end
+  end
+end
+
+#===============================================================================
+
+SaveData.register_conversion(:v21_replace_phone_data) do
+  essentials_version 21
+  display_title "Updating Phone data format"
+  to_value :global_metadata do |global|
+    if !global.phone
+      global.instance_eval do
+        @phone = Phone.new
+        @phoneTime = nil   # Don't bother using this
+        if @phoneNumbers
+          @phoneNumbers.each do |contact|
+            if contact.length > 4
+              # Trainer
+              Phone.add_silent(contact[6], contact[7], contact[1], contact[2], contact[5], 0)
+              new_contact = Phone.get(contact[1], contact[2], 0)
+              new_contact.visible = contact[0]
+              new_contact.rematch_flag = [contact[4] - 1, 0].max
+            else
+              # Non-trainer
+              Phone.add_silent(contact[3], contact[2], contact[1])
+            end
+          end
+          @phoneNumbers = nil
+        end
       end
     end
   end

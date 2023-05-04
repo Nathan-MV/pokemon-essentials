@@ -1,99 +1,8 @@
 #===============================================================================
-# SpriteWrapper is a class which wraps (most of) Sprite's properties.
-#===============================================================================
-class SpriteWrapper
-  def initialize(viewport = nil)
-    @sprite = Sprite.new(viewport)
-  end
-
-  def dispose;                @sprite.dispose;                       end
-  def disposed?;              return @sprite.disposed?;              end
-  def viewport;               return @sprite.viewport;               end
-  def flash(color, duration); return @sprite.flash(color, duration); end
-  def update;                 return @sprite.update;                 end
-  def x;                      @sprite.x;                             end
-  def x=(value);              @sprite.x = value;                     end
-  def y;                      @sprite.y;                             end
-  def y=(value);              @sprite.y = value;                     end
-  def bitmap;                 @sprite.bitmap;                        end
-  def bitmap=(value);         @sprite.bitmap = value;                end
-  def src_rect;               @sprite.src_rect;                      end
-  def src_rect=(value);       @sprite.src_rect = value;              end
-  def visible;                @sprite.visible;                       end
-  def visible=(value);        @sprite.visible = value;               end
-  def z;                      @sprite.z;                             end
-  def z=(value);              @sprite.z = value;                     end
-  def ox;                     @sprite.ox;                            end
-  def ox=(value);             @sprite.ox = value;                    end
-  def oy;                     @sprite.oy;                            end
-  def oy=(value);             @sprite.oy = value;                    end
-  def zoom_x;                 @sprite.zoom_x;                        end
-  def zoom_x=(value);         @sprite.zoom_x = value;                end
-  def zoom_y;                 @sprite.zoom_y;                        end
-  def zoom_y=(value);         @sprite.zoom_y = value;                end
-  def angle;                  @sprite.angle;                         end
-  def angle=(value);          @sprite.angle = value;                 end
-  def mirror;                 @sprite.mirror;                        end
-  def mirror=(value);         @sprite.mirror = value;                end
-  def bush_depth;             @sprite.bush_depth;                    end
-  def bush_depth=(value);     @sprite.bush_depth = value;            end
-  def opacity;                @sprite.opacity;                       end
-  def opacity=(value);        @sprite.opacity = value;               end
-  def blend_type;             @sprite.blend_type;                    end
-  def blend_type=(value);     @sprite.blend_type = value;            end
-  def color;                  @sprite.color;                         end
-  def color=(value);          @sprite.color = value;                 end
-  def tone;                   @sprite.tone;                          end
-  def tone=(value);           @sprite.tone = value;                  end
-
-  def viewport=(value)
-    return if self.viewport == value
-    bitmap     = @sprite.bitmap
-    src_rect   = @sprite.src_rect
-    visible    = @sprite.visible
-    x          = @sprite.x
-    y          = @sprite.y
-    z          = @sprite.z
-    ox         = @sprite.ox
-    oy         = @sprite.oy
-    zoom_x     = @sprite.zoom_x
-    zoom_y     = @sprite.zoom_y
-    angle      = @sprite.angle
-    mirror     = @sprite.mirror
-    bush_depth = @sprite.bush_depth
-    opacity    = @sprite.opacity
-    blend_type = @sprite.blend_type
-    color      = @sprite.color
-    tone       = @sprite.tone
-    @sprite.dispose
-    @sprite = Sprite.new(value)
-    @sprite.bitmap     = bitmap
-    @sprite.src_rect   = src_rect
-    @sprite.visible    = visible
-    @sprite.x          = x
-    @sprite.y          = y
-    @sprite.z          = z
-    @sprite.ox         = ox
-    @sprite.oy         = oy
-    @sprite.zoom_x     = zoom_x
-    @sprite.zoom_y     = zoom_y
-    @sprite.angle      = angle
-    @sprite.mirror     = mirror
-    @sprite.bush_depth = bush_depth
-    @sprite.opacity    = opacity
-    @sprite.blend_type = blend_type
-    @sprite.color      = color
-    @sprite.tone       = tone
-  end
-end
-
-
-
-#===============================================================================
 # Sprite class that maintains a bitmap of its own.
 # This bitmap can't be changed to a different one.
 #===============================================================================
-class BitmapSprite < SpriteWrapper
+class BitmapSprite < Sprite
   def initialize(width, height, viewport = nil)
     super(viewport)
     self.bitmap = Bitmap.new(width, height)
@@ -110,12 +19,10 @@ class BitmapSprite < SpriteWrapper
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
-class AnimatedSprite < SpriteWrapper
+class AnimatedSprite < Sprite
   attr_reader :frame
   attr_reader :framewidth
   attr_reader :frameheight
@@ -236,12 +143,10 @@ class AnimatedSprite < SpriteWrapper
   end
 end
 
-
-
 #===============================================================================
 # Displays an icon bitmap in a sprite. Supports animated images.
 #===============================================================================
-class IconSprite < SpriteWrapper
+class IconSprite < Sprite
   attr_reader :name
 
   def initialize(*args)
@@ -309,24 +214,10 @@ class IconSprite < SpriteWrapper
   end
 end
 
-
-
 #===============================================================================
-# Old GifSprite class, retained for compatibility
+# Sprite class that stores multiple bitmaps, and displays only one at once.
 #===============================================================================
-class GifSprite < IconSprite
-  def initialize(path)
-    super(0, 0)
-    setBitmap(path)
-  end
-end
-
-
-
-#===============================================================================
-# SpriteWrapper that stores multiple bitmaps, and displays only one at once.
-#===============================================================================
-class ChangelingSprite < SpriteWrapper
+class ChangelingSprite < Sprite
   def initialize(x = 0, y = 0, viewport = nil)
     super(viewport)
     self.x = x

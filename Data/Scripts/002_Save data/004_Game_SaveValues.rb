@@ -3,12 +3,8 @@
 SaveData.register(:player) do
   ensure_class :Player
   save_value { $player }
-  load_value { |value| $player = $Trainer = value }
-  new_game_value {
-    # Get the first defined trainer type as a placeholder
-    trainer_type = GameData::TrainerType.keys.first
-    Player.new("Unnamed", trainer_type)
-  }
+  load_value { |value| $player = value }
+  new_game_value { Player.new("Unnamed", GameData::TrainerType.keys.first) }
   from_old_format { |old_format| old_format[0] }
 end
 
@@ -73,7 +69,7 @@ end
 SaveData.register(:map_factory) do
   ensure_class :PokemonMapFactory
   save_value { $map_factory }
-  load_value { |value| $map_factory = $MapFactory = value }
+  load_value { |value| $map_factory = value }
   from_old_format { |old_format| old_format[9] }
 end
 
@@ -104,7 +100,7 @@ end
 SaveData.register(:bag) do
   ensure_class :PokemonBag
   save_value { $bag }
-  load_value { |value| $bag = $PokemonBag = value }
+  load_value { |value| $bag = value }
   new_game_value { PokemonBag.new }
   from_old_format { |old_format| old_format[13] }
 end
@@ -140,4 +136,5 @@ SaveData.register(:stats) do
   save_value { $stats }
   load_value { |value| $stats = value }
   new_game_value { GameStats.new }
+  reset_on_new_game
 end

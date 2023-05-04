@@ -34,7 +34,7 @@ class Battle::Battler
   end
 
   def pbRecoverHPFromDrain(amt, target, msg = nil)
-    if target.hasActiveAbility?(:LIQUIDOOZE)
+    if target.hasActiveAbility?(:LIQUIDOOZE, true)
       @battle.pbShowAbilitySplash(target)
       pbReduceHP(amt)
       @battle.pbDisplay(_INTL("{1} sucked up the liquid ooze!", pbThis))
@@ -129,14 +129,14 @@ class Battle::Battler
     if newType.is_a?(Battle::Battler)
       newTypes = newType.pbTypes
       newTypes.push(:NORMAL) if newTypes.length == 0
-      newType3 = newType.effects[PBEffects::Type3]
-      newType3 = nil if newTypes.include?(newType3)
+      newExtraType = newType.effects[PBEffects::ExtraType]
+      newExtraType = nil if newTypes.include?(newExtraType)
       @types = newTypes.clone
-      @effects[PBEffects::Type3] = newType3
+      @effects[PBEffects::ExtraType] = newExtraType
     else
       newType = GameData::Type.get(newType).id
       @types = [newType]
-      @effects[PBEffects::Type3] = nil
+      @effects[PBEffects::ExtraType] = nil
     end
     @effects[PBEffects::BurnUp] = false
     @effects[PBEffects::Roost]  = false
@@ -144,7 +144,7 @@ class Battle::Battler
 
   def pbResetTypes
     @types = @pokemon.types
-    @effects[PBEffects::Type3]  = nil
+    @effects[PBEffects::ExtraType] = nil
     @effects[PBEffects::BurnUp] = false
     @effects[PBEffects::Roost]  = false
   end
@@ -255,8 +255,6 @@ class Battle::Battler
           @battle.pbShowAbilitySplash(self, true)
           @battle.pbHideAbilitySplash(self)
           pbChangeForm(newForm, _INTL("{1} deactivated!", abilityName))
-        elsif !endOfRound
-          @battle.pbDisplay(_INTL("{1} deactivated!", abilityName))
         end
       elsif @form < 7   # Turn into Core form
         @battle.pbShowAbilitySplash(self, true)

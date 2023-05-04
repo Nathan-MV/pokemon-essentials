@@ -1,24 +1,31 @@
+#===============================================================================
+#
+#===============================================================================
 module MessageConfig
-  LIGHT_TEXT_MAIN_COLOR   = Color.new(248, 248, 248)
-  LIGHT_TEXT_SHADOW_COLOR = Color.new(72, 80, 88)
-  DARK_TEXT_MAIN_COLOR    = Color.new(80, 80, 88)
-  DARK_TEXT_SHADOW_COLOR  = Color.new(160, 160, 168)
-  FONT_NAME               = "Power Green"
-  FONT_SIZE               = 27
-  FONT_Y_OFFSET           = 8
-  SMALL_FONT_NAME         = "Power Green Small"
-  SMALL_FONT_SIZE         = 21
-  SMALL_FONT_Y_OFFSET     = 8
-  NARROW_FONT_NAME        = "Power Green Narrow"
-  NARROW_FONT_SIZE        = 27
-  NARROW_FONT_Y_OFFSET    = 8
+  LIGHT_TEXT_MAIN_COLOR    = Color.new(248, 248, 248)
+  LIGHT_TEXT_SHADOW_COLOR  = Color.new(72, 80, 88)
+  DARK_TEXT_MAIN_COLOR     = Color.new(80, 80, 88)
+  DARK_TEXT_SHADOW_COLOR   = Color.new(160, 160, 168)
+  MALE_TEXT_MAIN_COLOR     = Color.new(48, 80, 200)   # Used by message tag "\b"
+  MALE_TEXT_SHADOW_COLOR   = Color.new(208, 208, 200)
+  FEMALE_TEXT_MAIN_COLOR   = Color.new(224, 8, 8)   # Used by message tag "\r"
+  FEMALE_TEXT_SHADOW_COLOR = Color.new(208, 208, 200)
+  FONT_NAME                = "Power Green"
+  FONT_SIZE                = 27
+  FONT_Y_OFFSET            = 8
+  SMALL_FONT_NAME          = "Power Green Small"
+  SMALL_FONT_SIZE          = 21
+  SMALL_FONT_Y_OFFSET      = 8
+  NARROW_FONT_NAME         = "Power Green Narrow"
+  NARROW_FONT_SIZE         = 27
+  NARROW_FONT_Y_OFFSET     = 8
   # 0 = Pause cursor is displayed at end of text
   # 1 = Pause cursor is displayed at bottom right
   # 2 = Pause cursor is displayed at lower middle side
-  CURSOR_POSITION         = 1
-  WINDOW_OPACITY          = 255
-  TEXT_SPEED              = nil   # can be positive to wait frames or negative to
-                                  # show multiple characters in a single frame
+  CURSOR_POSITION          = 1
+  WINDOW_OPACITY           = 255
+  TEXT_SPEED               = nil   # can be positive to wait frames, or negative
+                                   # to show multiple characters in a single frame
   @@systemFrame     = nil
   @@defaultTextSkin = nil
   @@textSpeed       = nil
@@ -163,8 +170,6 @@ module MessageConfig
   end
 end
 
-
-
 #===============================================================================
 # Position a window
 #===============================================================================
@@ -207,9 +212,7 @@ def pbPositionNearMsgWindow(cmdwindow, msgwindow, side)
   return if !cmdwindow
   if msgwindow
     height = [cmdwindow.height, Graphics.height - msgwindow.height].min
-    if cmdwindow.height != height
-      cmdwindow.height = height
-    end
+    cmdwindow.height = height if cmdwindow.height != height
     cmdwindow.y = msgwindow.y - cmdwindow.height
     if cmdwindow.y < 0
       cmdwindow.y = msgwindow.y + msgwindow.height
@@ -256,9 +259,7 @@ def pbUpdateMsgWindowPos(msgwindow, event, eventChanged = false)
       msgwindow.resizeToFit2(msgwindow.text, Graphics.width * 2 / 3, msgwindow.height)
     end
     msgwindow.y = event.screen_y - 48 - msgwindow.height
-    if msgwindow.y < 0
-      msgwindow.y = event.screen_y + 24
-    end
+    msgwindow.y = event.screen_y + 24 if msgwindow.y < 0
     msgwindow.x = event.screen_x - (msgwindow.width / 2)
     msgwindow.x = 0 if msgwindow.x < 0
     if msgwindow.x > Graphics.width - msgwindow.width
@@ -331,21 +332,22 @@ def getSkinColor(windowskin, color, isDarkSkin)
   if !windowskin || windowskin.disposed? ||
      windowskin.width != 128 || windowskin.height != 128
     # Base color, shadow color (these are reversed on dark windowskins)
+    # Values in arrays are RGB numbers
     textcolors = [
-      "0070F8", "78B8E8",   # 1  Blue
-      "E82010", "F8A8B8",   # 2  Red
-      "60B048", "B0D090",   # 3  Green
-      "48D8D8", "A8E0E0",   # 4  Cyan
-      "D038B8", "E8A0E0",   # 5  Magenta
-      "E8D020", "F8E888",   # 6  Yellow
-      "A0A0A8", "D0D0D8",   # 7  Grey
-      "F0F0F8", "C8C8D0",   # 8  White
-      "9040E8", "B8A8E0",   # 9  Purple
-      "F89818", "F8C898",   # 10 Orange
-      colorToRgb32(MessageConfig::DARK_TEXT_MAIN_COLOR),
-      colorToRgb32(MessageConfig::DARK_TEXT_SHADOW_COLOR),   # 11 Dark default
-      colorToRgb32(MessageConfig::LIGHT_TEXT_MAIN_COLOR),
-      colorToRgb32(MessageConfig::LIGHT_TEXT_SHADOW_COLOR)   # 12 Light default
+      [  0, 112, 248], [120, 184, 232],   # 1  Blue
+      [232,  32,  16], [248, 168, 184],   # 2  Red
+      [ 96, 176,  72], [174, 208, 144],   # 3  Green
+      [ 72, 216, 216], [168, 224, 224],   # 4  Cyan
+      [208,  56, 184], [232, 160, 224],   # 5  Magenta
+      [232, 208,  32], [248, 232, 136],   # 6  Yellow
+      [160, 160, 168], [208, 208, 216],   # 7  Gray
+      [240, 240, 248], [200, 200, 208],   # 8  White
+      [114,  64, 232], [184, 168, 224],   # 9  Purple
+      [248, 152,  24], [248, 200, 152],   # 10 Orange
+      MessageConfig::DARK_TEXT_MAIN_COLOR,
+      MessageConfig::DARK_TEXT_SHADOW_COLOR,   # 11 Dark default
+      MessageConfig::LIGHT_TEXT_MAIN_COLOR,
+      MessageConfig::LIGHT_TEXT_SHADOW_COLOR   # 12 Light default
     ]
     if color == 0 || color > textcolors.length / 2   # No special colour, use default
       if isDarkSkin   # Dark background, light text
@@ -356,16 +358,16 @@ def getSkinColor(windowskin, color, isDarkSkin)
     end
     # Special colour as listed above
     if isDarkSkin && color != 12   # Dark background, light text
-      return sprintf("<c3=%s,%s>", textcolors[(2 * (color - 1)) + 1], textcolors[2 * (color - 1)])
+      return shadowc3tag(textcolors[(2 * (color - 1)) + 1], textcolors[2 * (color - 1)])
     end
     # Light background, dark text
-    return sprintf("<c3=%s,%s>", textcolors[2 * (color - 1)], textcolors[(2 * (color - 1)) + 1])
+    return shadowc3tag(textcolors[2 * (color - 1)], textcolors[(2 * (color - 1)) + 1])
   else   # VX windowskin
     color = 0 if color >= 32
     x = 64 + ((color % 8) * 8)
     y = 96 + ((color / 8) * 8)
     pixel = windowskin.get_pixel(x, y)
-    return shadowctagFromColor(pixel)
+    return shadowc3tag(pixel, pixel.get_contrast_color)
   end
 end
 
@@ -622,24 +624,24 @@ def pbFadeOutInWithMusic(zViewport = 99999)
   $game_system.bgm_pause(1.0)
   $game_system.bgs_pause(1.0)
   pos = $game_system.bgm_position
-  pbFadeOutIn(zViewport) {
+  pbFadeOutIn(zViewport) do
     yield
     $game_system.bgm_position = pos
     $game_system.bgm_resume(playingBGM)
     $game_system.bgs_resume(playingBGS)
-  }
+  end
 end
 
 def pbFadeOutAndHide(sprites)
   visiblesprites = {}
   numFrames = (Graphics.frame_rate * 0.4).floor
   alphaDiff = (255.0 / numFrames).ceil
-  pbDeactivateWindows(sprites) {
+  pbDeactivateWindows(sprites) do
     (0..numFrames).each do |j|
       pbSetSpritesToColor(sprites, Color.new(0, 0, 0, j * alphaDiff))
       (block_given?) ? yield : pbUpdateSpriteHash(sprites)
     end
-  }
+  end
   sprites.each do |i|
     next if !i[1]
     next if pbDisposed?(i[1])
@@ -659,12 +661,12 @@ def pbFadeInAndShow(sprites, visiblesprites = nil)
   end
   numFrames = (Graphics.frame_rate * 0.4).floor
   alphaDiff = (255.0 / numFrames).ceil
-  pbDeactivateWindows(sprites) {
+  pbDeactivateWindows(sprites) do
     (0..numFrames).each do |j|
       pbSetSpritesToColor(sprites, Color.new(0, 0, 0, ((numFrames - j) * alphaDiff)))
       (block_given?) ? yield : pbUpdateSpriteHash(sprites)
     end
-  }
+  end
 end
 
 # Restores which windows are active for the given sprite hash.
@@ -717,12 +719,12 @@ end
 #===============================================================================
 # Adds a background to the sprite hash.
 # _planename_ is the hash key of the background.
-# _background_ is a filename within the Graphics/Pictures/ folder and can be
+# _background_ is a filename within the Graphics/UI/ folder and can be
 #     an animated image.
 # _viewport_ is a viewport to place the background in.
 def addBackgroundPlane(sprites, planename, background, viewport = nil)
   sprites[planename] = AnimatedPlane.new(viewport)
-  bitmapName = pbResolveBitmap("Graphics/Pictures/#{background}")
+  bitmapName = pbResolveBitmap("Graphics/UI/#{background}")
   if bitmapName.nil?
     # Plane should exist in any case
     sprites[planename].bitmap = nil
@@ -730,21 +732,19 @@ def addBackgroundPlane(sprites, planename, background, viewport = nil)
   else
     sprites[planename].setBitmap(bitmapName)
     sprites.each_value do |spr|
-      if spr.is_a?(Window)
-        spr.windowskin = nil
-      end
+      spr.windowskin = nil if spr.is_a?(Window)
     end
   end
 end
 
 # Adds a background to the sprite hash.
 # _planename_ is the hash key of the background.
-# _background_ is a filename within the Graphics/Pictures/ folder and can be
+# _background_ is a filename within the Graphics/UI/ folder and can be
 #       an animated image.
 # _color_ is the color to use if the background can't be found.
 # _viewport_ is a viewport to place the background in.
 def addBackgroundOrColoredPlane(sprites, planename, background, color, viewport = nil)
-  bitmapName = pbResolveBitmap("Graphics/Pictures/#{background}")
+  bitmapName = pbResolveBitmap("Graphics/UI/#{background}")
   if bitmapName.nil?
     # Plane should exist in any case
     sprites[planename] = ColoredPlane.new(color, viewport)
@@ -752,35 +752,31 @@ def addBackgroundOrColoredPlane(sprites, planename, background, color, viewport 
     sprites[planename] = AnimatedPlane.new(viewport)
     sprites[planename].setBitmap(bitmapName)
     sprites.each_value do |spr|
-      if spr.is_a?(Window)
-        spr.windowskin = nil
-      end
+      spr.windowskin = nil if spr.is_a?(Window)
     end
   end
 end
 
-
-
 #===============================================================================
-# Ensure required method definitions
+# Ensure required method definitions.
 #===============================================================================
 module Graphics
   if !self.respond_to?("width")
     def self.width; return 640; end
   end
+
   if !self.respond_to?("height")
     def self.height; return 480; end
   end
 end
 
-
-
+#===============================================================================
+# Ensure required method definitions.
+#===============================================================================
 if !defined?(_INTL)
   def _INTL(*args)
     string = args[0].clone
-    (1...args.length).each do |i|
-      string.gsub!(/\{#{i}\}/, args[i].to_s)
-    end
+    (1...args.length).each { |i| string.gsub!(/\{#{i}\}/, args[i].to_s) }
     return string
   end
 end
@@ -789,9 +785,7 @@ if !defined?(_ISPRINTF)
   def _ISPRINTF(*args)
     string = args[0].clone
     (1...args.length).each do |i|
-      string.gsub!(/\{#{i}\:([^\}]+?)\}/) { |m|
-        next sprintf("%" + $1, args[i])
-      }
+      string.gsub!(/\{#{i}\:([^\}]+?)\}/) { |m| next sprintf("%" + $1, args[i]) }
     end
     return string
   end
@@ -800,9 +794,7 @@ end
 if !defined?(_MAPINTL)
   def _MAPINTL(*args)
     string = args[1].clone
-    (2...args.length).each do |i|
-      string.gsub!(/\{#{i}\}/, args[i + 1].to_s)
-    end
+    (2...args.length).each { |i| string.gsub!(/\{#{i}\}/, args[i + 1].to_s) }
     return string
   end
 end

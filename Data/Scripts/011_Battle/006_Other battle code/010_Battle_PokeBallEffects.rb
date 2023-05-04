@@ -114,14 +114,17 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:LEVELBALL, proc { |ball, catchRate
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:LUREBALL, proc { |ball, catchRate, battle, battler|
-  multiplier = (Settings::NEW_POKE_BALL_CATCH_RATES) ? 5 : 3
-  catchRate *= multiplier if GameData::EncounterType.get($game_temp.encounter_type).type == :fishing
+  if $game_temp.encounter_type &&
+     GameData::EncounterType.get($game_temp.encounter_type).type == :fishing
+    multiplier = (Settings::NEW_POKE_BALL_CATCH_RATES) ? 5 : 3
+    catchRate *= multiplier
+  end
   next [catchRate, 255].min
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:HEAVYBALL, proc { |ball, catchRate, battle, battler|
   next 0 if catchRate == 0
-  weight = battler.pokemon.species_data.base_stats[:SPEED]
+  weight = battler.pbWeight
   if Settings::NEW_POKE_BALL_CATCH_RATES
     if weight >= 3000
       catchRate += 30
@@ -141,8 +144,7 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:HEAVYBALL, proc { |ball, catchRate
       catchRate -= 20
     end
   end
-  catchRate = [catchRate, 1].max
-  next [catchRate, 255].min
+  next catchRate.clamp(1, 255)
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:LOVEBALL, proc { |ball, catchRate, battle, battler|
@@ -192,5 +194,5 @@ Battle::PokeBallEffects::OnCatch.add(:HEALBALL, proc { |ball, battle, pkmn|
 })
 
 Battle::PokeBallEffects::OnCatch.add(:FRIENDBALL, proc { |ball, battle, pkmn|
-  pkmn.happiness = 200
+  pkmn.happiness = (Settings::APPLY_HAPPINESS_SOFT_CAP) ? 150 : 200
 })

@@ -1,9 +1,9 @@
-################################################################################
+#===============================================================================
 # "Mining" mini-game
 # By Maruno
 #-------------------------------------------------------------------------------
 # Run with:      pbMiningGame
-################################################################################
+#===============================================================================
 class MiningGameCounter < BitmapSprite
   attr_accessor :hits
 
@@ -12,7 +12,7 @@ class MiningGameCounter < BitmapSprite
     @viewport.z = 99999
     super(416, 60, @viewport)
     @hits = 0
-    @image = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/cracks"))
+    @image = AnimatedBitmap.new("Graphics/UI/Mining/cracks")
     update
   end
 
@@ -32,8 +32,9 @@ class MiningGameCounter < BitmapSprite
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class MiningGameTile < BitmapSprite
   attr_reader :layer
 
@@ -53,7 +54,7 @@ class MiningGameTile < BitmapSprite
     else
       @layer = 6   # 15%
     end
-    @image = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/tiles"))
+    @image = AnimatedBitmap.new("Graphics/UI/Mining/tiles")
     update
   end
 
@@ -70,8 +71,9 @@ class MiningGameTile < BitmapSprite
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class MiningGameCursor < BitmapSprite
   attr_accessor :mode
   attr_accessor :position
@@ -89,9 +91,9 @@ class MiningGameCursor < BitmapSprite
     @mode     = mode
     @hit      = 0   # 0=regular, 1=hit item, 2=hit iron
     @counter  = 0
-    @cursorbitmap = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/cursor"))
-    @toolbitmap   = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/tools"))
-    @hitsbitmap   = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/hits"))
+    @cursorbitmap = AnimatedBitmap.new("Graphics/UI/Mining/cursor")
+    @toolbitmap   = AnimatedBitmap.new("Graphics/UI/Mining/tools")
+    @hitsbitmap   = AnimatedBitmap.new("Graphics/UI/Mining/hits")
     update
   end
 
@@ -138,8 +140,9 @@ class MiningGameCursor < BitmapSprite
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class MiningGameScene
   BOARD_WIDTH  = 13
   BOARD_HEIGHT = 10
@@ -230,10 +233,10 @@ class MiningGameScene
     @sprites = {}
     @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @viewport.z = 99999
-    addBackgroundPlane(@sprites, "bg", "Mining/miningbg", @viewport)
+    addBackgroundPlane(@sprites, "bg", "Mining/bg", @viewport)
     @sprites["itemlayer"] = BitmapSprite.new(Graphics.width, Graphics.height, @viewport)
-    @itembitmap = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/items"))
-    @ironbitmap = AnimatedBitmap.new(_INTL("Graphics/Pictures/Mining/irons"))
+    @itembitmap = AnimatedBitmap.new("Graphics/UI/Mining/items")
+    @ironbitmap = AnimatedBitmap.new("Graphics/UI/Mining/irons")
     @items = []
     @itemswon = []
     @iron = []
@@ -247,7 +250,7 @@ class MiningGameScene
     @sprites["crack"] = MiningGameCounter.new(0, 4)
     @sprites["cursor"] = MiningGameCursor.new(58, 0)   # central position, pick
     @sprites["tool"] = IconSprite.new(434, 254, @viewport)
-    @sprites["tool"].setBitmap(sprintf("Graphics/Pictures/Mining/toolicons"))
+    @sprites["tool"].setBitmap("Graphics/UI/Mining/toolicons")
     @sprites["tool"].src_rect.set(0, 0, 68, 100)
     update
     pbFadeInAndShow(@sprites)
@@ -531,7 +534,7 @@ class MiningGameScene
         collapseFraction = (Graphics.height.to_f / collapseTime).ceil
         (1..collapseTime).each do |i|
           @sprites["collapse"].bitmap.fill_rect(0, collapseFraction * (i - 1),
-                                                Graphics.width, collapseFraction * i, Color.new(0, 0, 0))
+                                                Graphics.width, collapseFraction * i, Color.black)
           Graphics.update
         end
         pbMessage(_INTL("The wall collapsed!"))
@@ -606,8 +609,9 @@ class MiningGameScene
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class MiningGame
   def initialize(scene)
     @scene = scene
@@ -620,12 +624,13 @@ class MiningGame
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 def pbMiningGame
-  pbFadeOutIn {
+  pbFadeOutIn do
     scene = MiningGameScene.new
     screen = MiningGame.new(scene)
     screen.pbStartScreen
-  }
+  end
 end

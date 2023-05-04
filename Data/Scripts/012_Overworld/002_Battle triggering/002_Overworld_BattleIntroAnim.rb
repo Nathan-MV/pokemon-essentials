@@ -138,7 +138,7 @@ def pbBattleAnimation(bgm = nil, battletype = 0, foe = nil)
   $PokemonGlobal.nextBattleBack       = nil
   $PokemonEncounters.reset_step_count
   # Fade back to the overworld in 0.4 seconds
-  viewport.color = Color.new(0, 0, 0, 255)
+  viewport.color = Color.black
   timer = 0.0
   loop do
     Graphics.update
@@ -179,7 +179,7 @@ def pbBattleAnimationCore(anim, viewport, location, num_flashes = 2)
   $game_temp.background_bitmap = Graphics.snap_to_bitmap
   # Play main animation
   Graphics.freeze
-  viewport.color = Color.new(0, 0, 0, 255)   # Ensure screen is black
+  viewport.color = Color.black   # Ensure screen is black
   Graphics.transition(25, "Graphics/Transitions/" + anim)
   # Slight pause after animation before starting up the battle scene
   pbWait(Graphics.frame_rate / 10)
@@ -195,7 +195,7 @@ end
 #===============================================================================
 SpecialBattleIntroAnimations.register("vs_trainer_animation", 60,   # Priority 60
   proc { |battle_type, foe, location|   # Condition
-    next false if battle_type != 1   # Single trainer battle
+    next false if battle_type.even? || foe.length != 1   # Trainer battle against 1 trainer
     tr_type = foe[0].trainer_type
     next pbResolveBitmap("Graphics/Transitions/hgss_vs_#{tr_type}") &&
          pbResolveBitmap("Graphics/Transitions/hgss_vsBar_#{tr_type}")
@@ -218,7 +218,7 @@ SpecialBattleIntroAnimations.register("vs_trainer_animation", 60,   # Priority 6
 #===============================================================================
 SpecialBattleIntroAnimations.register("vs_elite_four_animation", 60,   # Priority 60
   proc { |battle_type, foe, location|   # Condition
-    next false if battle_type != 1   # Single trainer battle
+    next false if battle_type.even? || foe.length != 1   # Trainer battle against 1 trainer
     tr_type = foe[0].trainer_type
     next pbResolveBitmap("Graphics/Transitions/vsE4_#{tr_type}") &&
          pbResolveBitmap("Graphics/Transitions/vsE4Bar_#{tr_type}")
@@ -274,7 +274,7 @@ SpecialBattleIntroAnimations.register("vs_admin_animation", 60,   # Priority 60
 ##### Tweaked by Maruno           #####
 SpecialBattleIntroAnimations.register("alternate_vs_trainer_animation", 50,   # Priority 50
   proc { |battle_type, foe, location|   # Condition
-    next false if battle_type != 1   # Single trainer battle
+    next false if battle_type.even? || foe.length != 1   # Trainer battle against 1 trainer
     tr_type = foe[0].trainer_type
     next pbResolveBitmap("Graphics/Transitions/vsTrainer_#{tr_type}") &&
          pbResolveBitmap("Graphics/Transitions/vsBar_#{tr_type}")
@@ -373,9 +373,9 @@ SpecialBattleIntroAnimations.register("alternate_vs_trainer_animation", 50,   # 
     trainer.tone = Tone.new(0, 0, 0)
     trainername = foe[0].name
     textpos = [
-      [$player.name, Graphics.width / 4, (Graphics.height / 1.5) + 16, 2,
+      [$player.name, Graphics.width / 4, (Graphics.height / 1.5) + 16, :center,
        Color.new(248, 248, 248), Color.new(72, 72, 72)],
-      [trainername, (Graphics.width / 4) + (Graphics.width / 2), (Graphics.height / 1.5) + 16, 2,
+      [trainername, (Graphics.width / 4) + (Graphics.width / 2), (Graphics.height / 1.5) + 16, :center,
        Color.new(248, 248, 248), Color.new(72, 72, 72)]
     ]
     pbDrawTextPositions(overlay.bitmap, textpos)
@@ -421,7 +421,7 @@ SpecialBattleIntroAnimations.register("alternate_vs_trainer_animation", 50,   # 
     viewvs.dispose
     viewopp.dispose
     viewplayer.dispose
-    viewport.color = Color.new(0, 0, 0, 255)   # Ensure screen is black
+    viewport.color = Color.black   # Ensure screen is black
   }
 )
 

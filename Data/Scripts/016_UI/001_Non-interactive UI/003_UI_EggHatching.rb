@@ -17,7 +17,7 @@ class PokemonEggHatch_Scene
     @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @viewport.z = 99999
     # Create background image
-    addBackgroundOrColoredPlane(@sprites, "background", "hatchbg",
+    addBackgroundOrColoredPlane(@sprites, "background", "hatch_bg",
                                 Color.new(248, 248, 248), @viewport)
     # Create egg sprite/Pokémon sprite
     @sprites["pokemon"] = PokemonSprite.new(@viewport)
@@ -28,12 +28,10 @@ class PokemonEggHatch_Scene
                                          @pokemon.form, @pokemon.shiny?,
                                          false, false, true)   # Egg sprite
     # Load egg cracks bitmap
-    crackfilename = sprintf("Graphics/Pokemon/Eggs/%s_cracks", @pokemon.species)
-    crackfilename = sprintf("Graphics/Pokemon/Eggs/000_cracks") if !pbResolveBitmap(crackfilename)
-    crackfilename = pbResolveBitmap(crackfilename)
+    crackfilename = GameData::Species.egg_cracks_sprite_filename(@pokemon.species, @pokemon.form)
     @hatchSheet = AnimatedBitmap.new(crackfilename)
     # Create egg cracks sprite
-    @sprites["hatch"] = SpriteWrapper.new(@viewport)
+    @sprites["hatch"] = Sprite.new(@viewport)
     @sprites["hatch"].x = @sprites["pokemon"].x
     @sprites["hatch"].y = @sprites["pokemon"].y
     @sprites["hatch"].ox = @sprites["pokemon"].ox
@@ -45,8 +43,7 @@ class PokemonEggHatch_Scene
     @sprites["overlay"] = BitmapSprite.new(Graphics.width, Graphics.height, @viewport)
     @sprites["overlay"].z = 200
     @sprites["overlay"].bitmap = Bitmap.new(Graphics.width, Graphics.height)
-    @sprites["overlay"].bitmap.fill_rect(0, 0, Graphics.width, Graphics.height,
-                                         Color.new(255, 255, 255))
+    @sprites["overlay"].bitmap.fill_rect(0, 0, Graphics.width, Graphics.height, Color.white)
     @sprites["overlay"].opacity = 0
     # Start up scene
     pbFadeInAndShow(@sprites)
@@ -102,7 +99,7 @@ class PokemonEggHatch_Scene
     pbBGMStop
     pbMEPlay("Evolution success")
     @pokemon.name = nil
-    pbMessage(_INTL("\\se[]{1} hatched from the Egg!\\wt[80]", @pokemon.name)) { update }
+    pbMessage("\\se[]" + _INTL("{1} hatched from the Egg!", @pokemon.name) + "\\wt[80]") { update }
     # Record the Pokémon's species as owned in the Pokédex
     was_owned = $player.owned?(@pokemon.species)
     $player.pokedex.register(@pokemon)
@@ -112,11 +109,11 @@ class PokemonEggHatch_Scene
     if Settings::SHOW_NEW_SPECIES_POKEDEX_ENTRY_MORE_OFTEN && !was_owned && $player.has_pokedex
       pbMessage(_INTL("{1}'s data was added to the Pokédex.", @pokemon.name)) { update }
       $player.pokedex.register_last_seen(@pokemon)
-      pbFadeOutIn {
+      pbFadeOutIn do
         scene = PokemonPokedexInfo_Scene.new
         screen = PokemonPokedexInfoScreen.new(scene)
         screen.pbDexEntry(@pokemon.species)
-      }
+      end
     end
     # Nickname the Pokémon
     if $PokemonSystem.givenicknames == 0 &&
@@ -197,12 +194,12 @@ end
 #
 #===============================================================================
 def pbHatchAnimation(pokemon)
-  pbMessage(_INTL("Huh?\1"))
-  pbFadeOutInWithMusic {
+  pbMessage(_INTL("Huh?") + "\1")
+  pbFadeOutInWithMusic do
     scene = PokemonEggHatch_Scene.new
     screen = PokemonEggHatchScreen.new(scene)
     screen.pbStartScreen(pokemon)
-  }
+  end
   return true
 end
 
@@ -217,9 +214,9 @@ def pbHatch(pokemon)
   pokemon.hatched_map    = $game_map.map_id
   pokemon.record_first_moves
   if !pbHatchAnimation(pokemon)
-    pbMessage(_INTL("Huh?\1"))
-    pbMessage(_INTL("...\1"))
-    pbMessage(_INTL("... .... .....\1"))
+    pbMessage(_INTL("Huh?") + "\1")
+    pbMessage(_INTL("...") + "\1")
+    pbMessage(_INTL("... .... .....") + "\1")
     pbMessage(_INTL("{1} hatched from the Egg!", speciesname))
     was_owned = $player.owned?(pokemon.species)
     $player.pokedex.register(pokemon)
@@ -229,11 +226,11 @@ def pbHatch(pokemon)
     if Settings::SHOW_NEW_SPECIES_POKEDEX_ENTRY_MORE_OFTEN && !was_owned && $player.has_pokedex
       pbMessage(_INTL("{1}'s data was added to the Pokédex.", speciesname))
       $player.pokedex.register_last_seen(pokemon)
-      pbFadeOutIn {
+      pbFadeOutIn do
         scene = PokemonPokedexInfo_Scene.new
         screen = PokemonPokedexInfoScreen.new(scene)
         screen.pbDexEntry(pokemon.species)
-      }
+      end
     end
     # Nickname the Pokémon
     if $PokemonSystem.givenicknames == 0 &&

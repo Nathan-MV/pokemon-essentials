@@ -1,7 +1,7 @@
 #===============================================================================
 # Data box for regular battles
 #===============================================================================
-class Battle::Scene::PokemonDataBox < SpriteWrapper
+class Battle::Scene::PokemonDataBox < Sprite
   attr_reader   :battler
   attr_accessor :selected
   attr_reader   :animatingHP
@@ -41,16 +41,16 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
   def initializeDataBoxGraphic(sideSize)
     onPlayerSide = @battler.index.even?
     # Get the data box graphic and set whether the HP numbers/Exp bar are shown
-    if sideSize ==1   # One Pokémon on side, use the regular dara box BG
-      bgFilename = ["Graphics/Pictures - New/Battle/databox_normal",
-                    "Graphics/Pictures - New/Battle/databox_normal_foe"][@battler.index % 2]
+    if sideSize == 1   # One Pokémon on side, use the regular dara box BG
+      bgFilename = ["Graphics/UI/Battle/databox_normal",
+                    "Graphics/UI/Battle/databox_normal_foe"][@battler.index % 2]
       if onPlayerSide
         @showHP  = true
         @showExp = true
       end
     else   # Multiple Pokémon on side, use the thin dara box BG
-      bgFilename = ["Graphics/Pictures - New/Battle/databox_thin",
-                    "Graphics/Pictures - New/Battle/databox_thin_foe"][@battler.index % 2]
+      bgFilename = ["Graphics/UI/Battle/databox_thin",
+                    "Graphics/UI/Battle/databox_thin_foe"][@battler.index % 2]
     end
     @databoxBitmap&.dispose
     @databoxBitmap = AnimatedBitmap.new(bgFilename)
@@ -76,24 +76,24 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
 
   def initializeOtherGraphics(viewport)
     # Create other bitmaps
-    @numbersBitmap = AnimatedBitmap.new(_INTL("Graphics/Pictures - New/Battle/icon_numbers"))
-    @hpBarBitmap   = AnimatedBitmap.new(_INTL("Graphics/Pictures - New/Battle/overlay_hp"))
-    @expBarBitmap  = AnimatedBitmap.new(_INTL("Graphics/Pictures - New/Battle/overlay_exp"))
+    @numbersBitmap = AnimatedBitmap.new("Graphics/UI/Battle/icon_numbers")
+    @hpBarBitmap   = AnimatedBitmap.new("Graphics/UI/Battle/overlay_hp")
+    @expBarBitmap  = AnimatedBitmap.new("Graphics/UI/Battle/overlay_exp")
     # Create sprite to draw HP numbers on
     @hpNumbers = BitmapSprite.new(124, 16, viewport)
 #    pbSetSmallFont(@hpNumbers.bitmap)
     @sprites["hpNumbers"] = @hpNumbers
     # Create sprite wrapper that displays HP bar
-    @hpBar = SpriteWrapper.new(viewport)
+    @hpBar = Sprite.new(viewport)
     @hpBar.bitmap = @hpBarBitmap.bitmap
     @hpBar.src_rect.height = @hpBarBitmap.height / 3
     @sprites["hpBar"] = @hpBar
     # Create sprite wrapper that displays Exp bar
-    @expBar = SpriteWrapper.new(viewport)
+    @expBar = Sprite.new(viewport)
     @expBar.bitmap = @expBarBitmap.bitmap
     @sprites["expBar"] = @expBar
     # Create sprite wrapper that displays everything except the above
-    @contents = BitmapWrapper.new(@databoxBitmap.width, @databoxBitmap.height)
+    @contents = Bitmap.new(@databoxBitmap.width, @databoxBitmap.height)
     self.bitmap  = @contents
     self.visible = false
     self.z       = 150 + ((@battler.index / 2) * 5)
@@ -205,66 +205,85 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
     end
   end
 
-  def refresh
-    self.bitmap.clear
-    return if !@battler.pokemon
-    textPos = []
-    imagePos = []
-    # Draw background panel
+  def draw_background
     self.bitmap.blt(0, 0, @databoxBitmap.bitmap, Rect.new(0, 0, @databoxBitmap.width, @databoxBitmap.height))
-    # Draw Pokémon's name
+  end
+
+  def draw_name
     nameWidth = self.bitmap.text_size(@battler.name).width
     nameOffset = 0
     nameOffset = nameWidth - 116 if nameWidth > 116
-    textPos.push([@battler.name, @spriteBaseX + 8 - nameOffset, 12, false, NAME_BASE_COLOR, NAME_SHADOW_COLOR])
-    # Draw Pokémon's gender symbol
-    case @battler.displayGender
-    when 0   # Male
-      textPos.push([_INTL("♂"), @spriteBaseX + 126, 12, false, MALE_BASE_COLOR, MALE_SHADOW_COLOR])
-    when 1   # Female
-      textPos.push([_INTL("♀"), @spriteBaseX + 126, 12, false, FEMALE_BASE_COLOR, FEMALE_SHADOW_COLOR])
+    pbDrawTextPositions(self.bitmap, [[@battler.name, @spriteBaseX + 8 - nameOffset, 12, :left,
+                                       NAME_BASE_COLOR, NAME_SHADOW_COLOR]]
+    )
+  end
+
+  def draw_level
+    # "Lv" graphic
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/overlay_lv", @spriteBaseX + 140, 16]])
+    # Level number
+    pbDrawNumber(@battler.level, self.bitmap, @spriteBaseX + 162, 16)
+  end
+
+  def draw_gender
+    gender = @battler.displayGender
+    return if ![0, 1].include?(gender)
+    gender_text  = (gender == 0) ? _INTL("♂") : _INTL("♀")
+    base_color   = (gender == 0) ? MALE_BASE_COLOR : FEMALE_BASE_COLOR
+    shadow_color = (gender == 0) ? MALE_SHADOW_COLOR : FEMALE_SHADOW_COLOR
+    pbDrawTextPositions(self.bitmap, [[gender_text, @spriteBaseX + 126, 12, :left, base_color, shadow_color]])
+  end
+
+  def draw_status
+    return if @battler.status == :NONE
+    if @battler.status == :POISON && @battler.statusCount > 0   # Badly poisoned
+      s = GameData::Status.count - 1
+    else
+      s = GameData::Status.get(@battler.status).icon_position
     end
-    pbDrawTextPositions(self.bitmap, textPos)
-    # Draw Pokémon's level
-    imagePos.push(["Graphics/Pictures - New/Battle/overlay_lv", @spriteBaseX + 146, 18])
-    pbDrawNumber(@battler.level, self.bitmap, @spriteBaseX + 162, 18)
-    # Draw shiny icon
-    if @battler.shiny?
-      shinyX = (@battler.opposes?(0)) ? 206 : -6   # Foe's/player's
-      imagePos.push(["Graphics/Pictures/shiny", @spriteBaseX + shinyX, 36])
-    end
-    # Draw Mega Evolution/Primal Reversion icon
+    return if s < 0
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_statuses", @spriteBaseX + 24, 36,
+                                        0, s * STATUS_ICON_HEIGHT, -1, STATUS_ICON_HEIGHT]])
+  end
+
+  def draw_shiny_icon
+    return if !@battler.shiny?
+    shiny_x = (@battler.opposes?(0)) ? 206 : -6   # Foe's/player's
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/shiny", @spriteBaseX + shiny_x, 36]])
+  end
+
+  def draw_special_form_icon
+    # Mega Evolution/Primal Reversion icon
     if @battler.mega?
-      imagePos.push(["Graphics/Pictures - New/Battle/icon_mega", @spriteBaseX - 14, 10])
+      pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_mega", @spriteBaseX + 8, 34]])
     elsif @battler.primal?
-      primalX = (@battler.opposes?) ? 208 : -15   # Foe's/player's
-      if @battler.isSpecies?(:KYOGRE)
-        imagePos.push(["Graphics/Pictures - New/Battle/icon_primal_Kyogre", @spriteBaseX + primalX, 12])
-      elsif @battler.isSpecies?(:GROUDON)
-        imagePos.push(["Graphics/Pictures - New/Battle/icon_primal_Groudon", @spriteBaseX + primalX, 12])
+      filename = nil
+      if @battler.isSpecies?(:GROUDON)
+        filename = "Graphics/UI/Battle/icon_primal_Groudon"
+      elsif @battler.isSpecies?(:KYOGRE)
+        filename = "Graphics/UI/Battle/icon_primal_Kyogre"
       end
+      primalX = (@battler.opposes?) ? 208 : -28   # Foe's/player's
+      pbDrawImagePositions(self.bitmap, [[filename, @spriteBaseX + primalX, 4]]) if filename
     end
-    # Draw hp icon
-    if @battler.pokemon && @battler.status == :NONE
-      imagePos.push(["Graphics/Pictures - New/Battle/icon_hp",@spriteBaseX + 26, 38])
-    end
-    # Draw owned icon (foe Pokémon only)
-    if @battler.owned? && @battler.opposes?(0)
-      imagePos.push(["Graphics/Pictures - New/Battle/icon_own", @spriteBaseX + 204, 38])
-    end
-    # Draw status icon
-    if @battler.status != :NONE
-      if @battler.status == :POISON && @battler.statusCount > 0   # Badly poisoned
-        s = GameData::Status.count - 1
-      else
-        s = GameData::Status.get(@battler.status).icon_position
-      end
-      if s >= 0
-        imagePos.push(["Graphics/Pictures - New/Battle/icon_statuses", @spriteBaseX + 24, 36,
-                       0, s * STATUS_ICON_HEIGHT, -1, STATUS_ICON_HEIGHT])
-      end
-    end
-    pbDrawImagePositions(self.bitmap, imagePos)
+  end
+
+  def draw_owned_icon
+    return if !@battler.owned? || !@battler.opposes?(0)   # Draw for foe Pokémon only
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_own", @spriteBaseX + 8, 36]])
+  end
+
+  def refresh
+    self.bitmap.clear
+    return if !@battler.pokemon
+    draw_background
+    draw_name
+    draw_level
+    draw_gender
+    draw_status
+    draw_shiny_icon
+    draw_special_form_icon
+    draw_owned_icon
     refreshHP
     refreshExp
   end
@@ -381,12 +400,10 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
   end
 end
 
-
-
 #===============================================================================
 # Splash bar to announce a triggered ability
 #===============================================================================
-class Battle::Scene::AbilitySplashBar < SpriteWrapper
+class Battle::Scene::AbilitySplashBar < Sprite
   attr_reader :battler
 
   TEXT_BASE_COLOR   = Color.new(0, 0, 0)
@@ -397,13 +414,13 @@ class Battle::Scene::AbilitySplashBar < SpriteWrapper
     @side    = side
     @battler = nil
     # Create sprite wrapper that displays background graphic
-    @bgBitmap = AnimatedBitmap.new(_INTL("Graphics/Pictures - New/Battle/ability_bar"))
-    @bgSprite = SpriteWrapper.new(viewport)
+    @bgBitmap = AnimatedBitmap.new("Graphics/UI/Battle/ability_bar")
+    @bgSprite = Sprite.new(viewport)
     @bgSprite.bitmap = @bgBitmap.bitmap
     @bgSprite.src_rect.y      = (side == 0) ? 0 : @bgBitmap.height / 2
     @bgSprite.src_rect.height = @bgBitmap.height / 2
     # Create bitmap that displays the text
-    @contents = BitmapWrapper.new(@bgBitmap.width, @bgBitmap.height / 2)
+    @contents = Bitmap.new(@bgBitmap.width, @bgBitmap.height / 2)
     self.bitmap = @contents
     pbSetSystemFont(self.bitmap)
     # Position the bar
@@ -460,12 +477,13 @@ class Battle::Scene::AbilitySplashBar < SpriteWrapper
     return if !@battler
     textPos = []
     textX = (@side == 0) ? 10 : self.bitmap.width - 8
+    align = (@side == 0) ? :left : :right
     # Draw Pokémon's name
-    textPos.push([_INTL("{1}'s", @battler.name), textX, 8, @side == 1,
-                  TEXT_BASE_COLOR, TEXT_SHADOW_COLOR, true])
+    textPos.push([_INTL("{1}'s", @battler.name), textX, 8, align,
+                  TEXT_BASE_COLOR, TEXT_SHADOW_COLOR, :outline])
     # Draw Pokémon's ability
-    textPos.push([@battler.abilityName, textX, 38, @side == 1,
-                  TEXT_BASE_COLOR, TEXT_SHADOW_COLOR, true])
+    textPos.push([@battler.abilityName, textX, 38, align,
+                  TEXT_BASE_COLOR, TEXT_SHADOW_COLOR, :outline])
     pbDrawTextPositions(self.bitmap, textPos)
   end
 
@@ -474,8 +492,6 @@ class Battle::Scene::AbilitySplashBar < SpriteWrapper
     @bgSprite.update
   end
 end
-
-
 
 #===============================================================================
 # Pokémon sprite (used in battle)
@@ -602,8 +618,6 @@ class Battle::Scene::BattlerSprite < RPG::Sprite
     @updating = false
   end
 end
-
-
 
 #===============================================================================
 # Shadow sprite for Pokémon (used in battle)

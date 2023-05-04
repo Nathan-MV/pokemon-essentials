@@ -33,8 +33,9 @@ module HiddenMoveHandlers
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 def pbCanUseHiddenMove?(pkmn, move, showmsg = true)
   return HiddenMoveHandlers.triggerCanUseMove(move, pkmn, showmsg)
 end
@@ -62,8 +63,6 @@ def pbCheckHiddenMoveBadge(badge = -1, showmsg = true)
   return false
 end
 
-
-
 #===============================================================================
 # Hidden move animation
 #===============================================================================
@@ -72,17 +71,17 @@ def pbHiddenMoveAnimation(pokemon)
   viewport = Viewport.new(0, 0, 0, 0)
   viewport.z = 99999
   bg = Sprite.new(viewport)
-  bg.bitmap = RPG::Cache.picture("hiddenMovebg")
+  bg.bitmap = RPG::Cache.ui("Field move/bg")
   sprite = PokemonSprite.new(viewport)
   sprite.setOffset(PictureOrigin::CENTER)
   sprite.setPokemonBitmap(pokemon)
   sprite.z = 1
   sprite.visible = false
-  strobebitmap = AnimatedBitmap.new("Graphics/Pictures/hiddenMoveStrobes")
+  strobebitmap = AnimatedBitmap.new("Graphics/UI/Field move/strobes")
   strobes = []
   15.times do |i|
-    strobe = BitmapSprite.new(26 * 2, 8 * 2, viewport)
-    strobe.bitmap.blt(0, 0, strobebitmap.bitmap, Rect.new(0, (i % 2) * 8 * 2, 26 * 2, 8 * 2))
+    strobe = BitmapSprite.new(52, 16, viewport)
+    strobe.bitmap.blt(0, 0, strobebitmap.bitmap, Rect.new(0, (i % 2) * 16, 52, 16))
     strobe.z = (i.even? ? 2 : 0)
     strobe.visible = false
     strobes.push(strobe)
@@ -184,8 +183,6 @@ def pbHiddenMoveAnimation(pokemon)
   return true
 end
 
-
-
 #===============================================================================
 # Cut
 #===============================================================================
@@ -222,9 +219,7 @@ HiddenMoveHandlers::UseMove.add(:CUT, proc { |move, pokemon|
   end
   $stats.cut_count += 1
   facingEvent = $game_player.pbFacingEvent
-  if facingEvent
-    pbSmashEvent(facingEvent)
-  end
+  pbSmashEvent(facingEvent) if facingEvent
   next true
 })
 
@@ -235,19 +230,14 @@ def pbSmashEvent(event)
   elsif event.name[/smashrock/i]
     pbSEPlay("Rock Smash", 80)
   end
-  pbMoveRoute(event, [PBMoveRoute::Wait, 2,
-                      PBMoveRoute::TurnLeft,
-                      PBMoveRoute::Wait, 2,
-                      PBMoveRoute::TurnRight,
-                      PBMoveRoute::Wait, 2,
-                      PBMoveRoute::TurnUp,
-                      PBMoveRoute::Wait, 2])
+  pbMoveRoute(event, [PBMoveRoute::WAIT, 2,
+                      PBMoveRoute::TURN_LEFT, PBMoveRoute::WAIT, 2,
+                      PBMoveRoute::TURN_RIGHT, PBMoveRoute::WAIT, 2,
+                      PBMoveRoute::TURN_UP, PBMoveRoute::WAIT, 2])
   pbWait(Graphics.frame_rate * 4 / 10)
   event.erase
   $PokemonMap&.addErasedEvent(event.id)
 end
-
-
 
 #===============================================================================
 # Dig
@@ -326,22 +316,21 @@ HiddenMoveHandlers::UseMove.add(:DIG, proc { |move, pokemon|
     if !pbHiddenMoveAnimation(pokemon)
       pbMessage(_INTL("{1} used {2}!", pokemon.name, GameData::Move.get(move).name))
     end
-    pbFadeOutIn {
+    pbFadeOutIn do
       $game_temp.player_new_map_id    = escape[0]
       $game_temp.player_new_x         = escape[1]
       $game_temp.player_new_y         = escape[2]
       $game_temp.player_new_direction = escape[3]
+      pbDismountBike
       $scene.transfer_player
       $game_map.autoplay
       $game_map.refresh
-    }
+    end
     pbEraseEscapePoint
     next true
   end
   next false
 })
-
-
 
 #===============================================================================
 # Dive
@@ -360,7 +349,7 @@ def pbDive
     speciesname = (movefinder) ? movefinder.name : $player.name
     pbMessage(_INTL("{1} used {2}!", speciesname, GameData::Move.get(move).name))
     pbHiddenMoveAnimation(movefinder)
-    pbFadeOutIn {
+    pbFadeOutIn do
       $game_temp.player_new_map_id    = map_metadata.dive_map_id
       $game_temp.player_new_x         = $game_player.x
       $game_temp.player_new_y         = $game_player.y
@@ -372,7 +361,7 @@ def pbDive
       $scene.transfer_player(false)
       $game_map.autoplay
       $game_map.refresh
-    }
+    end
     return true
   end
   return false
@@ -398,7 +387,7 @@ def pbSurfacing
     speciesname = (movefinder) ? movefinder.name : $player.name
     pbMessage(_INTL("{1} used {2}!", speciesname, GameData::Move.get(move).name))
     pbHiddenMoveAnimation(movefinder)
-    pbFadeOutIn {
+    pbFadeOutIn do
       $game_temp.player_new_map_id    = surface_map_id
       $game_temp.player_new_x         = $game_player.x
       $game_temp.player_new_y         = $game_player.y
@@ -410,24 +399,10 @@ def pbSurfacing
       surfbgm = GameData::Metadata.get.surf_BGM
       (surfbgm) ? pbBGMPlay(surfbgm) : $game_map.autoplayAsCue
       $game_map.refresh
-    }
+    end
     return true
   end
   return false
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbTransferUnderwater(mapid, x, y, direction = $game_player.direction)
-  Deprecation.warn_method("pbTransferUnderwater", "v21", '"Transfer Player" event command')
-  pbFadeOutIn {
-    $game_temp.player_new_map_id    = mapid
-    $game_temp.player_new_x         = x
-    $game_temp.player_new_y         = y
-    $game_temp.player_new_direction = direction
-    $scene.transfer_player(false)
-    $game_map.autoplay
-    $game_map.refresh
-  }
 end
 
 EventHandlers.add(:on_player_interact, :diving,
@@ -492,7 +467,7 @@ HiddenMoveHandlers::UseMove.add(:DIVE, proc { |move, pokemon|
   if !pbHiddenMoveAnimation(pokemon)
     pbMessage(_INTL("{1} used {2}!", pokemon.name, GameData::Move.get(move).name))
   end
-  pbFadeOutIn {
+  pbFadeOutIn do
     $game_temp.player_new_map_id    = dive_map_id
     $game_temp.player_new_x         = $game_player.x
     $game_temp.player_new_y         = $game_player.y
@@ -503,11 +478,9 @@ HiddenMoveHandlers::UseMove.add(:DIVE, proc { |move, pokemon|
     $scene.transfer_player(false)
     $game_map.autoplay
     $game_map.refresh
-  }
+  end
   next true
 })
-
-
 
 #===============================================================================
 # Flash
@@ -544,8 +517,6 @@ HiddenMoveHandlers::UseMove.add(:FLASH, proc { |move, pokemon|
   next true
 })
 
-
-
 #===============================================================================
 # Fly
 #===============================================================================
@@ -576,19 +547,20 @@ def pbFlyToNewLocation(pkmn = nil, move = :FLY)
     pbMessage(_INTL("{1} used {2}!", name, GameData::Move.get(move).name))
   end
   $stats.fly_count += 1
-  pbFadeOutIn {
+  pbFadeOutIn do
     pbSEPlay("Fly")
     $game_temp.player_new_map_id    = $game_temp.fly_destination[0]
     $game_temp.player_new_x         = $game_temp.fly_destination[1]
     $game_temp.player_new_y         = $game_temp.fly_destination[2]
     $game_temp.player_new_direction = 2
     $game_temp.fly_destination = nil
+    pbDismountBike
     $scene.transfer_player
     $game_map.autoplay
     $game_map.refresh
     yield if block_given?
     pbWait(Graphics.frame_rate / 4)
-  }
+  end
   pbEraseEscapePoint
   return true
 end
@@ -605,8 +577,6 @@ HiddenMoveHandlers::UseMove.add(:FLY, proc { |move, pkmn|
   pbFlyToNewLocation(pkmn)
   next true
 })
-
-
 
 #===============================================================================
 # Headbutt
@@ -672,8 +642,6 @@ HiddenMoveHandlers::UseMove.add(:HEADBUTT, proc { |move, pokemon|
   pbHeadbuttEffect(facingEvent)
 })
 
-
-
 #===============================================================================
 # Rock Smash
 #===============================================================================
@@ -724,8 +692,6 @@ HiddenMoveHandlers::UseMove.add(:ROCKSMASH, proc { |move, pokemon|
   next true
 })
 
-
-
 #===============================================================================
 # Strength
 #===============================================================================
@@ -740,7 +706,7 @@ def pbStrength
     pbMessage(_INTL("It's a big boulder, but a Pokémon may be able to push it aside."))
     return false
   end
-  pbMessage(_INTL("It's a big boulder, but you may be able to push it aside with a hidden move.\1"))
+  pbMessage(_INTL("It's a big boulder, but you may be able to push it aside with a hidden move.") + "\1")
   if pbConfirmMessage(_INTL("Would you like to use Strength?"))
     speciesname = (movefinder) ? movefinder.name : $player.name
     pbMessage(_INTL("{1} used {2}!", speciesname, GameData::Move.get(move).name))
@@ -770,14 +736,12 @@ HiddenMoveHandlers::CanUseMove.add(:STRENGTH, proc { |move, pkmn, showmsg|
 
 HiddenMoveHandlers::UseMove.add(:STRENGTH, proc { |move, pokemon|
   if !pbHiddenMoveAnimation(pokemon)
-    pbMessage(_INTL("{1} used {2}!\1", pokemon.name, GameData::Move.get(move).name))
+    pbMessage(_INTL("{1} used {2}!", pokemon.name, GameData::Move.get(move).name) + "\1")
   end
   pbMessage(_INTL("Strength made it possible to move boulders around!"))
   $PokemonMap.strengthUsed = true
   next true
 })
-
-
 
 #===============================================================================
 # Surf
@@ -810,41 +774,19 @@ def pbStartSurfing
   $stats.surf_count += 1
   pbUpdateVehicle
   $game_temp.surf_base_coords = $map_factory.getFacingCoords($game_player.x, $game_player.y, $game_player.direction)
-  pbJumpToward
-  $game_temp.surf_base_coords = nil
-  $game_player.check_event_trigger_here([1, 2])
+  $game_player.jumpForward
 end
 
 def pbEndSurf(_xOffset, _yOffset)
   return false if !$PokemonGlobal.surfing
-  x = $game_player.x
-  y = $game_player.y
-  if $game_map.terrain_tag(x, y).can_surf && !$game_player.pbFacingTerrainTag.can_surf
-    $game_temp.surf_base_coords = [x, y]
-    if pbJumpToward(1, false, true)
-      $game_map.autoplayAsCue
-      $game_player.increase_steps
-      result = $game_player.check_event_trigger_here([1, 2])
-      pbOnStepTaken(result)
-    end
-    $game_temp.surf_base_coords = nil
+  return false if $game_player.pbFacingTerrainTag.can_surf
+  base_coords = [$game_player.x, $game_player.y]
+  if $game_player.jumpForward
+    $game_temp.surf_base_coords = base_coords
+    $game_temp.ending_surf = true
     return true
   end
   return false
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbTransferSurfing(mapid, xcoord, ycoord, direction = $game_player.direction)
-  Deprecation.warn_method("pbTransferSurfing", "v21", '"Transfer Player" event command')
-  pbFadeOutIn {
-    $game_temp.player_new_map_id    = mapid
-    $game_temp.player_new_x         = xcoord
-    $game_temp.player_new_y         = ycoord
-    $game_temp.player_new_direction = direction
-    $scene.transfer_player(false)
-    $game_map.autoplay
-    $game_map.refresh
-  }
 end
 
 EventHandlers.add(:on_player_interact, :start_surfing,
@@ -854,6 +796,23 @@ EventHandlers.add(:on_player_interact, :start_surfing,
     next if !$game_player.pbFacingTerrainTag.can_surf_freely
     next if !$game_map.passable?($game_player.x, $game_player.y, $game_player.direction, $game_player)
     pbSurf
+  }
+)
+
+# Do things after a jump to start/end surfing.
+EventHandlers.add(:on_step_taken, :surf_jump,
+  proc { |event|
+    next if !$scene.is_a?(Scene_Map) || !event.is_a?(Game_Player)
+    next if !$game_temp.surf_base_coords
+    # Hide the temporary surf base graphic after jumping onto/off it
+    $game_temp.surf_base_coords = nil
+    # Finish up dismounting from surfing
+    if $game_temp.ending_surf
+      pbCancelVehicles
+      $PokemonEncounters.reset_step_count
+      $game_map.autoplayAsCue   # Play regular map BGM
+      $game_temp.ending_surf = false
+    end
   }
 )
 
@@ -890,8 +849,6 @@ HiddenMoveHandlers::UseMove.add(:SURF, proc { |move, pokemon|
   pbStartSurfing
   next true
 })
-
-
 
 #===============================================================================
 # Sweet Scent
@@ -942,8 +899,6 @@ HiddenMoveHandlers::UseMove.add(:SWEETSCENT, proc { |move, pokemon|
   next true
 })
 
-
-
 #===============================================================================
 # Teleport
 #===============================================================================
@@ -983,20 +938,19 @@ HiddenMoveHandlers::UseMove.add(:TELEPORT, proc { |move, pokemon|
   if !pbHiddenMoveAnimation(pokemon)
     pbMessage(_INTL("{1} used {2}!", pokemon.name, GameData::Move.get(move).name))
   end
-  pbFadeOutIn {
+  pbFadeOutIn do
     $game_temp.player_new_map_id    = healing[0]
     $game_temp.player_new_x         = healing[1]
     $game_temp.player_new_y         = healing[2]
     $game_temp.player_new_direction = 2
+    pbDismountBike
     $scene.transfer_player
     $game_map.autoplay
     $game_map.refresh
-  }
+  end
   pbEraseEscapePoint
   next true
 })
-
-
 
 #===============================================================================
 # Waterfall

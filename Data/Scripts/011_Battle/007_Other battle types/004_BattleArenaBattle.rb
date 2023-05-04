@@ -10,7 +10,7 @@ class Battle::SuccessState
   def initialize; clear; end
 
   def clear(full = true)
-    @typeMod   = Effectiveness::NORMAL_EFFECTIVE
+    @typeMod   = Effectiveness::NORMAL_EFFECTIVE_MULTIPLIER
     @useState  = 0
     @protected = false
     @skill     = 0 if full
@@ -34,8 +34,6 @@ class Battle::SuccessState
     clear(false)
   end
 end
-
-
 
 #===============================================================================
 #
@@ -179,7 +177,7 @@ class BattleArenaBattle < Battle
     ratings2.each { |val| points[1] += val }
     # Make judgment
     if points[0] == points[1]
-      pbDisplay(_INTL("{1} tied the opponent\n{2} in a referee's decision!",
+      pbDisplay(_INTL("{1} tied the opponent {2} in a referee's decision!",
                       @battlers[0].name, @battlers[1].name))
       # NOTE: Pokémon doesn't really lose HP, but the effect is mostly the
       #       same.
@@ -188,12 +186,12 @@ class BattleArenaBattle < Battle
       @battlers[1].hp = 0
       @battlers[1].pbFaint(false)
     elsif points[0] > points[1]
-      pbDisplay(_INTL("{1} defeated the opponent\n{2} in a referee's decision!",
+      pbDisplay(_INTL("{1} defeated the opponent {2} in a referee's decision!",
                       @battlers[0].name, @battlers[1].name))
       @battlers[1].hp = 0
       @battlers[1].pbFaint(false)
     else
-      pbDisplay(_INTL("{1} lost to the opponent\n{2} in a referee's decision!",
+      pbDisplay(_INTL("{1} lost to the opponent {2} in a referee's decision!",
                       @battlers[0].name, @battlers[1].name))
       @battlers[0].hp = 0
       @battlers[0].pbFaint(false)
@@ -202,8 +200,6 @@ class BattleArenaBattle < Battle
     pbEORSwitch
   end
 end
-
-
 
 #===============================================================================
 #
@@ -220,8 +216,6 @@ class Battle::AI
     return false
   end
 end
-
-
 
 #===============================================================================
 #
@@ -241,32 +235,32 @@ class Battle::Scene
     window.contents.clear
     pbSetSystemFont(window.contents)
     textpos = [
-      [battler1.name, 64, 6, 2, Color.new(248, 0, 0), Color.new(208, 208, 200)],
-      [_INTL("VS"), 144, 6, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [battler2.name, 224, 6, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [_INTL("Mind"), 144, 54, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [_INTL("Skill"), 144, 86, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [_INTL("Body"), 144, 118, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [sprintf("%d", total1), 64, 166, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [_INTL("Judgment"), 144, 166, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)],
-      [sprintf("%d", total2), 224, 166, 2, Color.new(72, 72, 72), Color.new(208, 208, 200)]
+      [battler1.name, 64, 6, :center, Color.new(248, 0, 0), Color.new(208, 208, 200)],
+      [_INTL("VS"), 144, 6, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [battler2.name, 224, 6, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [_INTL("Mind"), 144, 54, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [_INTL("Skill"), 144, 86, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [_INTL("Body"), 144, 118, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [total1.to_s, 64, 166, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [_INTL("Judgment"), 144, 166, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)],
+      [total2.to_s, 224, 166, :center, Color.new(72, 72, 72), Color.new(208, 208, 200)]
     ]
     pbDrawTextPositions(window.contents, textpos)
     images = []
     phase.times do |i|
       y = [48, 80, 112][i]
       x = (ratings1[i] == ratings2[i]) ? 64 : ((ratings1[i] > ratings2[i]) ? 0 : 32)
-      images.push(["Graphics/Pictures/judgment", 64 - 16, y, x, 0, 32, 32])
+      images.push(["Graphics/UI/Battle/judgment", 64 - 16, y, x, 0, 32, 32])
       x = (ratings1[i] == ratings2[i]) ? 64 : ((ratings1[i] < ratings2[i]) ? 0 : 32)
-      images.push(["Graphics/Pictures/judgment", 224 - 16, y, x, 0, 32, 32])
+      images.push(["Graphics/UI/Battle/judgment", 224 - 16, y, x, 0, 32, 32])
     end
     pbDrawImagePositions(window.contents, images)
     window.contents.fill_rect(16, 150, 256, 4, Color.new(80, 80, 80))
   end
 
   def pbBattleArenaBattlers(battler1, battler2)
-    pbMessage(_INTL("REFEREE: {1} VS {2}!\nCommence battling!\\wtnp[20]",
-                    battler1.name, battler2.name)) { pbBattleArenaUpdate }
+    pbMessage(_INTL("REFEREE: {1} VS {2}!\nCommence battling!",
+                    battler1.name, battler2.name) + "\\wtnp[20]") { pbBattleArenaUpdate }
   end
 
   def pbBattleArenaJudgment(battler1, battler2, ratings1, ratings2)
@@ -277,10 +271,10 @@ class Battle::Scene
       msgwindow = pbCreateMessageWindow
       dimmingvp = Viewport.new(0, 0, Graphics.width, Graphics.height - msgwindow.height)
       pbMessageDisplay(msgwindow,
-                       _INTL("REFEREE: That's it! We will now go to judging to determine the winner!\\wtnp[20]")) {
+                       _INTL("REFEREE: That's it! We will now go to judging to determine the winner!") + "\\wtnp[20]") do
         pbBattleArenaUpdate
         dimmingvp.update
-      }
+      end
       dimmingvp.z = 99999
       infowindow = SpriteWindow_Base.new(80, 0, 320, 224)
       infowindow.contents = Bitmap.new(infowindow.width - infowindow.borderX,
@@ -305,25 +299,25 @@ class Battle::Scene
       end
       updateJudgment(infowindow, 1, battler1, battler2, ratings1, ratings2)
       pbMessageDisplay(msgwindow,
-                       _INTL("REFEREE: Judging category 1, Mind!\nThe Pokémon showing the most guts!\\wtnp[40]")) {
+                       _INTL("REFEREE: Judging category 1, Mind!\nThe Pokémon showing the most guts!") + "\\wtnp[40]") do
         pbBattleArenaUpdate
         dimmingvp.update
         infowindow.update
-      }
+      end
       updateJudgment(infowindow, 2, battler1, battler2, ratings1, ratings2)
       pbMessageDisplay(msgwindow,
-                       _INTL("REFEREE: Judging category 2, Skill!\nThe Pokémon using moves the best!\\wtnp[40]")) {
+                       _INTL("REFEREE: Judging category 2, Skill!\nThe Pokémon using moves the best!") + "\\wtnp[40]") do
         pbBattleArenaUpdate
         dimmingvp.update
         infowindow.update
-      }
+      end
       updateJudgment(infowindow, 3, battler1, battler2, ratings1, ratings2)
       pbMessageDisplay(msgwindow,
-                       _INTL("REFEREE: Judging category 3, Body!\nThe Pokémon with the most vitality!\\wtnp[40]")) {
+                       _INTL("REFEREE: Judging category 3, Body!\nThe Pokémon with the most vitality!") + "\\wtnp[40]") do
         pbBattleArenaUpdate
         dimmingvp.update
         infowindow.update
-      }
+      end
       total1 = 0
       total2 = 0
       3.times do |i|
@@ -332,27 +326,27 @@ class Battle::Scene
       end
       if total1 == total2
         pbMessageDisplay(msgwindow,
-                         _INTL("REFEREE: Judgment: {1} to {2}!\nWe have a draw!\\wtnp[40]", total1, total2)) {
+                         _INTL("REFEREE: Judgment: {1} to {2}!\nWe have a draw!", total1, total2) + "\\wtnp[40]") do
           pbBattleArenaUpdate
           dimmingvp.update
           infowindow.update
-        }
+        end
       elsif total1 > total2
         pbMessageDisplay(msgwindow,
-                         _INTL("REFEREE: Judgment: {1} to {2}!\nThe winner is {3}'s {4}!\\wtnp[40]",
-                               total1, total2, @battle.pbGetOwnerName(battler1.index), battler1.name)) {
+                         _INTL("REFEREE: Judgment: {1} to {2}!\nThe winner is {3}'s {4}!",
+                               total1, total2, @battle.pbGetOwnerName(battler1.index), battler1.name) + "\\wtnp[40]") do
           pbBattleArenaUpdate
           dimmingvp.update
           infowindow.update
-        }
+        end
       else
         pbMessageDisplay(msgwindow,
-                         _INTL("REFEREE: Judgment: {1} to {2}!\nThe winner is {3}!\\wtnp[40]",
-                               total1, total2, battler2.name)) {
+                         _INTL("REFEREE: Judgment: {1} to {2}!\nThe winner is {3}!",
+                               total1, total2, battler2.name) + "\\wtnp[40]") do
           pbBattleArenaUpdate
           dimmingvp.update
           infowindow.update
-        }
+        end
       end
       infowindow.visible = false
       msgwindow.visible  = false

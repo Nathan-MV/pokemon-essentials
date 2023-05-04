@@ -29,8 +29,6 @@ class AnimFrame
   FOCUS      = 26
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -166,8 +164,6 @@ def pbConvertRPGAnimation(animation)
   return pbAnim
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -230,8 +226,6 @@ class RPG::Animation
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -268,7 +262,7 @@ class PBAnimTiming
     @colorAlpha    = nil
     @duration      = 5
     @flashScope    = 0
-    @flashColor    = Color.new(255, 255, 255, 255)
+    @flashColor    = Color.white
     @flashDuration = 5
   end
 
@@ -310,7 +304,7 @@ class PBAnimTiming
       text = sprintf("[%d] Set FG: \"%s\"", @frame + 1, name)
       text += sprintf(" (color=%s,%s,%s,%s)",
                       @colorRed || "-",
-                      @colorGreen | "-",
+                      @colorGreen || "-",
                       @colorBlue || "-",
                       @colorAlpha || "-")
       text += sprintf(" (opacity=%d)", @opacity)
@@ -332,8 +326,6 @@ class PBAnimTiming
     return ""
   end
 end
-
-
 
 #===============================================================================
 #
@@ -396,8 +388,6 @@ class PBAnimations < Array
     self.selected = len if self.selected >= len
   end
 end
-
-
 
 #===============================================================================
 #
@@ -482,6 +472,49 @@ class PBAnimation < Array
 
   def playTiming(frame, bgGraphic, bgColor, foGraphic, foColor, oldbg = [], oldfo = [], user = nil)
     @timing.each do |i|
+      next if !i.duration || i.duration <= 0
+      next if i.frame + i.duration < frame || i.frame >= frame
+      fraction = (frame - i.frame).to_f / i.duration
+      case i.timingType
+      when 2
+        if bgGraphic.bitmap.nil?
+          bgColor.opacity = oldbg[2] + ((i.opacity - oldbg[2]) * fraction) if i.opacity
+          cr = (i.colorRed) ? oldbg[3].red + ((i.colorRed - oldbg[3].red) * fraction) : oldbg[3].red
+          cg = (i.colorGreen) ? oldbg[3].green + ((i.colorGreen - oldbg[3].green) * fraction) : oldbg[3].green
+          cb = (i.colorBlue) ? oldbg[3].blue + ((i.colorBlue - oldbg[3].blue) * fraction) : oldbg[3].blue
+          ca = (i.colorAlpha) ? oldbg[3].alpha + ((i.colorAlpha - oldbg[3].alpha) * fraction) : oldbg[3].alpha
+          bgColor.color = Color.new(cr, cg, cb, ca)
+        else
+          bgGraphic.ox      = oldbg[0] - ((i.bgX - oldbg[0]) * fraction) if i.bgX
+          bgGraphic.oy      = oldbg[1] - ((i.bgY - oldbg[1]) * fraction) if i.bgY
+          bgGraphic.opacity = oldbg[2] + ((i.opacity - oldbg[2]) * fraction) if i.opacity
+          cr = (i.colorRed) ? oldbg[3].red + ((i.colorRed - oldbg[3].red) * fraction) : oldbg[3].red
+          cg = (i.colorGreen) ? oldbg[3].green + ((i.colorGreen - oldbg[3].green) * fraction) : oldbg[3].green
+          cb = (i.colorBlue) ? oldbg[3].blue + ((i.colorBlue - oldbg[3].blue) * fraction) : oldbg[3].blue
+          ca = (i.colorAlpha) ? oldbg[3].alpha + ((i.colorAlpha - oldbg[3].alpha) * fraction) : oldbg[3].alpha
+          bgGraphic.color = Color.new(cr, cg, cb, ca)
+        end
+      when 4
+        if foGraphic.bitmap.nil?
+          foColor.opacity = oldfo[2] + ((i.opacity - oldfo[2]) * fraction) if i.opacity
+          cr = (i.colorRed) ? oldfo[3].red + ((i.colorRed - oldfo[3].red) * fraction) : oldfo[3].red
+          cg = (i.colorGreen) ? oldfo[3].green + ((i.colorGreen - oldfo[3].green) * fraction) : oldfo[3].green
+          cb = (i.colorBlue) ? oldfo[3].blue + ((i.colorBlue - oldfo[3].blue) * fraction) : oldfo[3].blue
+          ca = (i.colorAlpha) ? oldfo[3].alpha + ((i.colorAlpha - oldfo[3].alpha) * fraction) : oldfo[3].alpha
+          foColor.color = Color.new(cr, cg, cb, ca)
+        else
+          foGraphic.ox      = oldfo[0] - ((i.bgX - oldfo[0]) * fraction) if i.bgX
+          foGraphic.oy      = oldfo[1] - ((i.bgY - oldfo[1]) * fraction) if i.bgY
+          foGraphic.opacity = oldfo[2] + ((i.opacity - oldfo[2]) * fraction) if i.opacity
+          cr = (i.colorRed) ? oldfo[3].red + ((i.colorRed - oldfo[3].red) * fraction) : oldfo[3].red
+          cg = (i.colorGreen) ? oldfo[3].green + ((i.colorGreen - oldfo[3].green) * fraction) : oldfo[3].green
+          cb = (i.colorBlue) ? oldfo[3].blue + ((i.colorBlue - oldfo[3].blue) * fraction) : oldfo[3].blue
+          ca = (i.colorAlpha) ? oldfo[3].alpha + ((i.colorAlpha - oldfo[3].alpha) * fraction) : oldfo[3].alpha
+          foGraphic.color = Color.new(cr, cg, cb, ca)
+        end
+      end
+    end
+    @timing.each do |i|
       next if i.frame != frame
       case i.timingType
       when 0   # Play SE
@@ -549,56 +582,8 @@ class PBAnimation < Array
         end
       end
     end
-    @timing.each do |i|
-      case i.timingType
-      when 2
-        next if !i.duration || i.duration <= 0
-        next if frame < i.frame || frame > i.frame + i.duration
-        fraction = (frame - i.frame).to_f / i.duration
-        if bgGraphic.bitmap.nil?
-          bgColor.opacity = oldbg[2] + ((i.opacity - oldbg[2]) * fraction) if i.opacity
-          cr = (i.colorRed) ? oldbg[3].red + ((i.colorRed - oldbg[3].red) * fraction) : oldbg[3].red
-          cg = (i.colorGreen) ? oldbg[3].green + ((i.colorGreen - oldbg[3].green) * fraction) : oldbg[3].green
-          cb = (i.colorBlue) ? oldbg[3].blue + ((i.colorBlue - oldbg[3].blue) * fraction) : oldbg[3].blue
-          ca = (i.colorAlpha) ? oldbg[3].alpha + ((i.colorAlpha - oldbg[3].alpha) * fraction) : oldbg[3].alpha
-          bgColor.color = Color.new(cr, cg, cb, ca)
-        else
-          bgGraphic.ox      = oldbg[0] - ((i.bgX - oldbg[0]) * fraction) if i.bgX
-          bgGraphic.oy      = oldbg[1] - ((i.bgY - oldbg[1]) * fraction) if i.bgY
-          bgGraphic.opacity = oldbg[2] + ((i.opacity - oldbg[2]) * fraction) if i.opacity
-          cr = (i.colorRed) ? oldbg[3].red + ((i.colorRed - oldbg[3].red) * fraction) : oldbg[3].red
-          cg = (i.colorGreen) ? oldbg[3].green + ((i.colorGreen - oldbg[3].green) * fraction) : oldbg[3].green
-          cb = (i.colorBlue) ? oldbg[3].blue + ((i.colorBlue - oldbg[3].blue) * fraction) : oldbg[3].blue
-          ca = (i.colorAlpha) ? oldbg[3].alpha + ((i.colorAlpha - oldbg[3].alpha) * fraction) : oldbg[3].alpha
-          bgGraphic.color = Color.new(cr, cg, cb, ca)
-        end
-      when 4
-        next if !i.duration || i.duration <= 0
-        next if frame < i.frame || frame > i.frame + i.duration
-        fraction = (frame - i.frame).to_f / i.duration
-        if foGraphic.bitmap.nil?
-          foColor.opacity = oldfo[2] + ((i.opacity - oldfo[2]) * fraction) if i.opacity
-          cr = (i.colorRed) ? oldfo[3].red + ((i.colorRed - oldfo[3].red) * fraction) : oldfo[3].red
-          cg = (i.colorGreen) ? oldfo[3].green + ((i.colorGreen - oldfo[3].green) * fraction) : oldfo[3].green
-          cb = (i.colorBlue) ? oldfo[3].blue + ((i.colorBlue - oldfo[3].blue) * fraction) : oldfo[3].blue
-          ca = (i.colorAlpha) ? oldfo[3].alpha + ((i.colorAlpha - oldfo[3].alpha) * fraction) : oldfo[3].alpha
-          foColor.color = Color.new(cr, cg, cb, ca)
-        else
-          foGraphic.ox      = oldfo[0] - ((i.bgX - oldfo[0]) * fraction) if i.bgX
-          foGraphic.oy      = oldfo[1] - ((i.bgY - oldfo[1]) * fraction) if i.bgY
-          foGraphic.opacity = oldfo[2] + ((i.opacity - oldfo[2]) * fraction) if i.opacity
-          cr = (i.colorRed) ? oldfo[3].red + ((i.colorRed - oldfo[3].red) * fraction) : oldfo[3].red
-          cg = (i.colorGreen) ? oldfo[3].green + ((i.colorGreen - oldfo[3].green) * fraction) : oldfo[3].green
-          cb = (i.colorBlue) ? oldfo[3].blue + ((i.colorBlue - oldfo[3].blue) * fraction) : oldfo[3].blue
-          ca = (i.colorAlpha) ? oldfo[3].alpha + ((i.colorAlpha - oldfo[3].alpha) * fraction) : oldfo[3].alpha
-          foGraphic.color = Color.new(cr, cg, cb, ca)
-        end
-      end
-    end
   end
 end
-
-
 
 #===============================================================================
 #
@@ -678,8 +663,6 @@ def pbSpriteSetAnimFrame(sprite, frame, user = nil, target = nil, inEditor = fal
   end
 end
 
-
-
 #===============================================================================
 # Animation player
 #===============================================================================
@@ -722,7 +705,7 @@ class PBAnimationPlayerX
       @animsprites[i].visible = false
     end
     # Create background colour sprite
-    @bgColor = ColoredPlane.new(Color.new(0, 0, 0), @viewport)
+    @bgColor = ColoredPlane.new(Color.black, @viewport)
     @bgColor.z       = 5
     @bgColor.opacity = 0
     @bgColor.refresh
@@ -733,7 +716,7 @@ class PBAnimationPlayerX
     @bgGraphic.opacity = 0
     @bgGraphic.refresh
     # Create foreground colour sprite
-    @foColor = ColoredPlane.new(Color.new(0, 0, 0), @viewport)
+    @foColor = ColoredPlane.new(Color.black, @viewport)
     @foColor.z       = 85
     @foColor.opacity = 0
     @foColor.refresh

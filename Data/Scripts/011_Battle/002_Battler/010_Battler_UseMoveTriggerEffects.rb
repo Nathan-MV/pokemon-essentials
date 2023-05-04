@@ -26,7 +26,7 @@ class Battle::Battler
         when 1   # Gulping Form
           user.pbLowerStatStageByAbility(:DEFENSE, 1, target, false)
         when 2   # Gorging Form
-          target.pbParalyze(user) if target.pbCanParalyze?(user, false)
+          user.pbParalyze(target) if user.pbCanParalyze?(target, false)
         end
         @battle.pbHideAbilitySplash(target)
         user.pbItemHPHealCheck if user.hp < oldHP
@@ -54,8 +54,8 @@ class Battle::Battler
       if target.effects[PBEffects::BeakBlast]
         PBDebug.log("[Lingering effect] #{target.pbThis}'s Beak Blast")
         if move.pbContactMove?(user) && user.affectedByContactEffect? &&
-           target.pbCanBurn?(user, false, self)
-          target.pbBurn(user)
+           user.pbCanBurn?(target, false, self)
+          user.pbBurn(target)
         end
       end
       # Shell Trap (make the trapper move next if the trap was triggered)
@@ -68,7 +68,7 @@ class Battle::Battler
       end
       # Grudge
       if target.effects[PBEffects::Grudge] && target.fainted?
-        move.pp = 0
+        user.pbSetPP(move, 0)
         @battle.pbDisplay(_INTL("{1}'s {2} lost all of its PP due to the grudge!",
                                 user.pbThis, move.name))
       end

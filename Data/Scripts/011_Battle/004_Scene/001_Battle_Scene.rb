@@ -234,7 +234,7 @@ class Battle::Scene
     pbWaitMessage
     pbShowWindow(MESSAGE_BOX)
     cw = @sprites["messageWindow"]
-    cw.text = _INTL("{1}\1", msg)
+    cw.text = msg + "\1"
     PBDebug.log(msg)
     yielded = false
     timer = 0.0
@@ -363,8 +363,7 @@ class Battle::Scene
     pbShowWindow(MESSAGE_BOX)
   end
 
-  def pbBeginEndOfRoundPhase
-  end
+  def pbBeginEndOfRoundPhase; end
 
   def pbEndBattle(_result)
     @abortable = false

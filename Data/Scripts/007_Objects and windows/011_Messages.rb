@@ -30,7 +30,7 @@ def pbEventCommentInput(*args)
   return nil if list.nil?
   return nil unless list.is_a?(Array)
   list.each do |item|
-    next if ![108, 108].include?(item.code)
+    next if ![108, 408].include?(item.code)
     next if item.parameters[0] != trigger
     start = list.index(item) + 1
     finish = start + elements
@@ -48,8 +48,6 @@ def pbCurrentEventCommentInput(elements, trigger)
   return nil if !event
   return pbEventCommentInput(event, elements, trigger)
 end
-
-
 
 #===============================================================================
 #
@@ -147,6 +145,8 @@ class ChooseNumberParams
     end
   end
 
+  #-----------------------------------------------------------------------------
+
   private
 
   def clamp(v, mn, mx)
@@ -164,8 +164,9 @@ class ChooseNumberParams
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 def pbChooseNumber(msgwindow, params)
   return 0 if !params
   ret = 0
@@ -208,8 +209,6 @@ def pbChooseNumber(msgwindow, params)
   return ret
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -222,7 +221,7 @@ class FaceWindowVX < SpriteWindow_Base
     self.contents&.dispose
     @faceIndex = faceinfo[1].to_i
     @facebitmaptmp = AnimatedBitmap.new(facefile)
-    @facebitmap = BitmapWrapper.new(96, 96)
+    @facebitmap = Bitmap.new(96, 96)
     @facebitmap.blt(0, 0, @facebitmaptmp.bitmap,
                     Rect.new((@faceIndex % 4) * 96, (@faceIndex / 4) * 96, 96, 96))
     self.contents = @facebitmap
@@ -244,8 +243,6 @@ class FaceWindowVX < SpriteWindow_Base
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -260,9 +257,11 @@ def pbGetBasicMapNameFromId(id)
 end
 
 def pbGetMapNameFromId(id)
-  name = pbGetMessage(MessageTypes::MapNames, id)
-  name = pbGetBasicMapNameFromId(id) if nil_or_empty?(name)
-  name.gsub!(/\\PN/, $player.name) if $player
+  name = GameData::MapMetadata.get(id)&.name
+  if nil_or_empty?(name)
+    name = pbGetBasicMapNameFromId(id)
+    name.gsub!(/\\PN/, $player.name) if $player
+  end
   return name
 end
 
@@ -308,8 +307,6 @@ def pbCsvPosInt!(str)
   end
   return ret.to_i
 end
-
-
 
 #===============================================================================
 # Money and coins windows
@@ -366,8 +363,6 @@ def pbDisplayBattlePointsWindow(msgwindow)
   return pointswindow
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -408,8 +403,6 @@ def pbDisposeMessageWindow(msgwindow)
   msgwindow.dispose
 end
 
-
-
 #===============================================================================
 # Main message-displaying function
 #===============================================================================
@@ -431,16 +424,13 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   msgback = nil
   linecount = (Graphics.height > 400) ? 3 : 2
   ### Text replacement
-  text.gsub!(/\\sign\[([^\]]*)\]/i) {   # \sign[something] gets turned into
+  text.gsub!(/\\sign\[([^\]]*)\]/i) do      # \sign[something] gets turned into
     next "\\op\\cl\\ts[]\\w[" + $1 + "]"    # \op\cl\ts[]\w[something]
-  }
+  end
   text.gsub!(/\\\\/, "\5")
   text.gsub!(/\\1/, "\1")
   if $game_actors
-    text.gsub!(/\\n\[([1-8])\]/i) {
-      m = $1.to_i
-      next $game_actors[m].name
-    }
+    text.gsub!(/\\n\[([1-8])\]/i) { next $game_actors[$1.to_i].name }
   end
   text.gsub!(/\\pn/i,  $player.name) if $player
   text.gsub!(/\\pm/i,  _INTL("${1}", $player.money.to_s_formatted)) if $player
@@ -452,9 +442,11 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   text.gsub!(/\\pog/i, "\\b") if $player&.female?
   text.gsub!(/\\pg/i,  "")
   text.gsub!(/\\pog/i, "")
-  text.gsub!(/\\b/i,   "<c3=3050C8,D0D0C8>")
-  text.gsub!(/\\r/i,   "<c3=E00808,D0D0C8>")
-  text.gsub!(/\\[Ww]\[([^\]]*)\]/) {
+  male_text_tag = shadowc3tag(MessageConfig::MALE_TEXT_MAIN_COLOR, MessageConfig::MALE_TEXT_SHADOW_COLOR)
+  female_text_tag = shadowc3tag(MessageConfig::FEMALE_TEXT_MAIN_COLOR, MessageConfig::FEMALE_TEXT_SHADOW_COLOR)
+  text.gsub!(/\\b/i,   male_text_tag)
+  text.gsub!(/\\r/i,   female_text_tag)
+  text.gsub!(/\\[Ww]\[([^\]]*)\]/) do
     w = $1.to_s
     if w == ""
       msgwindow.windowskin = nil
@@ -462,12 +454,11 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
       msgwindow.setSkin("Graphics/Windowskins/#{w}", false)
     end
     next ""
-  }
+  end
   isDarkSkin = isDarkWindowskin(msgwindow.windowskin)
-  text.gsub!(/\\c\[([0-9]+)\]/i) {
-    m = $1.to_i
-    next getSkinColor(msgwindow.windowskin, m, isDarkSkin)
-  }
+  text.gsub!(/\\c\[([0-9]+)\]/i) do
+    next getSkinColor(msgwindow.windowskin, $1.to_i, isDarkSkin)
+  end
   loop do
     last_text = text.clone
     text.gsub!(/\\v\[([0-9]+)\]/i) { $game_variables[$1.to_i] }
@@ -475,10 +466,10 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   end
   loop do
     last_text = text.clone
-    text.gsub!(/\\l\[([0-9]+)\]/i) {
+    text.gsub!(/\\l\[([0-9]+)\]/i) do
       linecount = [1, $1.to_i].max
       next ""
-    }
+    end
     break if text == last_text
   end
   colortag = ""
@@ -560,7 +551,7 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   elsif signWaitCount == 0 && letterbyletter
     pbPlayDecisionSE
   end
-  ########## Position message window  ##############
+  # Position message window
   pbRepositionMessageWindow(msgwindow, linecount)
   if facewindow
     pbPositionNearMsgWindow(facewindow, msgwindow, :left)
@@ -568,7 +559,7 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
     facewindow.z        = msgwindow.z
   end
   atTop = (msgwindow.y == 0)
-  ########## Show text #############################
+  # Show text
   msgwindow.text = text
   Graphics.frame_reset if Graphics.frame_rate > 40
   loop do
@@ -673,9 +664,7 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
     $game_variables[cmdvariable] = pbShowCommands(msgwindow, commands, cmdIfCancel)
     $game_map.need_refresh = true if $game_map
   end
-  if commandProc
-    ret = commandProc.call(msgwindow)
-  end
+  ret = commandProc.call(msgwindow) if commandProc
   msgback&.dispose
   goldwindow&.dispose
   coinwindow&.dispose
@@ -699,8 +688,6 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   return ret
 end
 
-
-
 #===============================================================================
 # Message-displaying functions
 #===============================================================================
@@ -709,8 +696,8 @@ def pbMessage(message, commands = nil, cmdIfCancel = 0, skin = nil, defaultCmd =
   msgwindow = pbCreateMessageWindow(nil, skin)
   if commands
     ret = pbMessageDisplay(msgwindow, message, true,
-                           proc { |msgwindow|
-                             next Kernel.pbShowCommands(msgwindow, commands, cmdIfCancel, defaultCmd, &block)
+                           proc { |msgwndw|
+                             next Kernel.pbShowCommands(msgwndw, commands, cmdIfCancel, defaultCmd, &block)
                            }, &block)
   else
     pbMessageDisplay(msgwindow, message, &block)
@@ -731,8 +718,8 @@ end
 def pbMessageChooseNumber(message, params, &block)
   msgwindow = pbCreateMessageWindow(nil, params.messageSkin)
   ret = pbMessageDisplay(msgwindow, message, true,
-                         proc { |msgwindow|
-                           next pbChooseNumber(msgwindow, params, &block)
+                         proc { |msgwndw|
+                           next pbChooseNumber(msgwndw, params, &block)
                          }, &block)
   pbDisposeMessageWindow(msgwindow)
   return ret
@@ -794,9 +781,7 @@ def pbShowCommandsWithHelp(msgwindow, commands, help, cmdIfCancel = 0, defaultCm
       Input.update
       oldindex = cmdwindow.index
       cmdwindow.update
-      if oldindex != cmdwindow.index
-        msgwin.text = help[cmdwindow.index]
-      end
+      msgwin.text = help[cmdwindow.index] if oldindex != cmdwindow.index
       msgwin.update
       yield if block_given?
       if Input.trigger?(Input::BACK)
@@ -819,7 +804,7 @@ def pbShowCommandsWithHelp(msgwindow, commands, help, cmdIfCancel = 0, defaultCm
     Input.update
   end
   msgwin.letterbyletter = oldlbl
-  msgwin.dispose if !msgwindow
+  pbDisposeMessageWindow(msgwin) if !msgwindow
   return ret
 end
 
@@ -833,9 +818,7 @@ def pbMessageWaitForInput(msgwindow, frames, showPause = false)
     Input.update
     msgwindow&.update
     pbUpdateSceneMap
-    if Input.trigger?(Input::USE) || Input.trigger?(Input::BACK)
-      break
-    end
+    break if Input.trigger?(Input::USE) || Input.trigger?(Input::BACK)
     yield if block_given?
   end
   msgwindow.stopPause if msgwindow && showPause
@@ -874,8 +857,8 @@ end
 def pbMessageFreeText(message, currenttext, passwordbox, maxlength, width = 240, &block)
   msgwindow = pbCreateMessageWindow
   retval = pbMessageDisplay(msgwindow, message, true,
-                            proc { |msgwindow|
-                              next pbFreeText(msgwindow, currenttext, passwordbox, maxlength, width, &block)
+                            proc { |msgwndw|
+                              next pbFreeText(msgwndw, currenttext, passwordbox, maxlength, width, &block)
                             }, &block)
   pbDisposeMessageWindow(msgwindow)
   return retval

@@ -7,15 +7,16 @@ class PokemonGlobalMetadata
   attr_accessor :bicycle
   attr_accessor :surfing
   attr_accessor :diving
-  attr_accessor :sliding
+  attr_accessor :ice_sliding
   attr_accessor :fishing
   # Player data
   attr_accessor :startTime
   attr_accessor :stepcount
   attr_accessor :pcItemStorage
   attr_accessor :mailbox
-  attr_accessor :phoneNumbers
-  attr_accessor :phoneTime
+  attr_accessor :phoneNumbers   # Deprecated - to be removed in v22
+  attr_accessor :phoneTime   # Deprecated - to be removed in v22
+  attr_accessor :phone
   attr_accessor :partner
   attr_accessor :creditsPlayed
   # Pokédex
@@ -57,15 +58,14 @@ class PokemonGlobalMetadata
     @bicycle              = false
     @surfing              = false
     @diving               = false
-    @sliding              = false
+    @ice_sliding          = false
     @fishing              = false
     # Player data
     @startTime            = Time.now
     @stepcount            = 0
     @pcItemStorage        = nil
     @mailbox              = nil
-    @phoneNumbers         = []
-    @phoneTime            = 0
+    @phone                = Phone.new
     @partner              = nil
     @creditsPlayed        = false
     # Pokédex
@@ -114,8 +114,6 @@ class PokemonGlobalMetadata
     $PokemonEncounters.setup($game_map.map_id) if $PokemonEncounters && $game_map
   end
 end
-
-
 
 #===============================================================================
 # This class keeps track of erased and moved events so their position

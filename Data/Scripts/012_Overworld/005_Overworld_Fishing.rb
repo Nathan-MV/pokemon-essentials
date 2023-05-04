@@ -29,7 +29,7 @@ def pbFishingEnd
     end
   end
   yield if block_given?
-  $game_player.set_movement_type(($PokemonGlobal.surfing) ? :surfing : :walking)
+  $game_player.set_movement_type(($PokemonGlobal.surfing) ? :surfing_stopped : :walking_stopped)
   $game_player.lock_pattern = false
   $game_player.straighten
   $PokemonGlobal.fishing = false
@@ -50,33 +50,27 @@ def pbFishing(hasEncounter, rodType = 1)
     message = ""
     time.times { message += ".   " }
     if pbWaitMessage(msgWindow, time)
-      pbFishingEnd {
-        pbMessageDisplay(msgWindow, _INTL("Not even a nibble..."))
-      }
+      pbFishingEnd { pbMessageDisplay(msgWindow, _INTL("Not even a nibble...")) }
       break
     end
     if hasEncounter && rand(100) < biteChance
       $scene.spriteset.addUserAnimation(Settings::EXCLAMATION_ANIMATION_ID, $game_player.x, $game_player.y, true, 3)
       frames = Graphics.frame_rate - rand(Graphics.frame_rate / 2)   # 0.5-1 second
-      if !pbWaitForInput(msgWindow, message + _INTL("\r\nOh! A bite!"), frames)
-        pbFishingEnd {
-          pbMessageDisplay(msgWindow, _INTL("The Pokémon got away..."))
-        }
+      if !pbWaitForInput(msgWindow, message + "\n" + _INTL("Oh! A bite!"), frames)
+        pbFishingEnd { pbMessageDisplay(msgWindow, _INTL("The Pokémon got away...")) }
         break
       end
       if Settings::FISHING_AUTO_HOOK || rand(100) < hookChance
-        pbFishingEnd {
+        pbFishingEnd do
           pbMessageDisplay(msgWindow, _INTL("Landed a Pokémon!")) if !Settings::FISHING_AUTO_HOOK
-        }
+        end
         ret = true
         break
       end
 #      biteChance += 15
 #      hookChance += 15
     else
-      pbFishingEnd {
-        pbMessageDisplay(msgWindow, _INTL("Not even a nibble..."))
-      }
+      pbFishingEnd { pbMessageDisplay(msgWindow, _INTL("Not even a nibble...")) }
       break
     end
   end

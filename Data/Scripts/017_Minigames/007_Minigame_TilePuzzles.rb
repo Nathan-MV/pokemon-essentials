@@ -1,4 +1,4 @@
-################################################################################
+#===============================================================================
 # "Tile Puzzle" mini-games
 # By Maruno
 # Graphics by the__end
@@ -14,7 +14,7 @@
 # board = The name/number of the graphics to be used.
 # width,height = Optional, the number of tiles wide/high the puzzle is (0 for
 #                the default value of 4).
-################################################################################
+#===============================================================================
 class TilePuzzleCursor < BitmapSprite
   attr_accessor :game
   attr_accessor :position
@@ -35,7 +35,7 @@ class TilePuzzleCursor < BitmapSprite
     @arrows = []
     @selected = false
     @holding = false
-    @cursorbitmap = AnimatedBitmap.new(_INTL("Graphics/Pictures/Tile Puzzle/cursor"))
+    @cursorbitmap = AnimatedBitmap.new("Graphics/UI/Tile Puzzle/cursor")
     update
   end
 
@@ -83,8 +83,9 @@ class TilePuzzleCursor < BitmapSprite
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class TilePuzzleScene
   def initialize(game, board, width, height)
     @game = game
@@ -148,23 +149,23 @@ class TilePuzzleScene
     @sprites = {}
     @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @viewport.z = 99999
-    if pbResolveBitmap("Graphics/Pictures/Tile Puzzle/bg#{@board}")
+    if pbResolveBitmap("Graphics/UI/Tile Puzzle/bg#{@board}")
       addBackgroundPlane(@sprites, "bg", "Tile Puzzle/bg#{@board}", @viewport)
     else
       addBackgroundPlane(@sprites, "bg", "Tile Puzzle/bg", @viewport)
     end
-    @tilebitmap = AnimatedBitmap.new("Graphics/Pictures/Tile Puzzle/tiles#{@board}")
+    @tilebitmap = AnimatedBitmap.new("Graphics/UI/Tile Puzzle/tiles#{@board}")
     @tilebitmap1 = nil
     @tilebitmap2 = nil
     @tilebitmap3 = nil
-    if pbResolveBitmap("Graphics/Pictures/Tile Puzzle/tiles#{@board}_1")
-      @tilebitmap1 = AnimatedBitmap.new("Graphics/Pictures/Tile Puzzle/tiles#{@board}_1")
+    if pbResolveBitmap("Graphics/UI/Tile Puzzle/tiles#{@board}_1")
+      @tilebitmap1 = AnimatedBitmap.new("Graphics/UI/Tile Puzzle/tiles#{@board}_1")
     end
-    if pbResolveBitmap("Graphics/Pictures/Tile Puzzle/tiles#{@board}_2")
-      @tilebitmap2 = AnimatedBitmap.new("Graphics/Pictures/Tile Puzzle/tiles#{@board}_2")
+    if pbResolveBitmap("Graphics/UI/Tile Puzzle/tiles#{@board}_2")
+      @tilebitmap2 = AnimatedBitmap.new("Graphics/UI/Tile Puzzle/tiles#{@board}_2")
     end
-    if pbResolveBitmap("Graphics/Pictures/Tile Puzzle/tiles#{@board}_3")
-      @tilebitmap3 = AnimatedBitmap.new("Graphics/Pictures/Tile Puzzle/tiles#{@board}_3")
+    if pbResolveBitmap("Graphics/UI/Tile Puzzle/tiles#{@board}_3")
+      @tilebitmap3 = AnimatedBitmap.new("Graphics/UI/Tile Puzzle/tiles#{@board}_3")
     end
     @tilewidth = @tilebitmap.width / @boardwidth
     @tileheight = @tilebitmap.height / @boardheight
@@ -563,8 +564,9 @@ class TilePuzzleScene
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class TilePuzzle
   def initialize(scene)
     @scene = scene
@@ -578,14 +580,15 @@ class TilePuzzle
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 def pbTilePuzzle(game, board, width = 0, height = 0)
   ret = false
-  pbFadeOutIn {
+  pbFadeOutIn do
     scene = TilePuzzleScene.new(game, board, width, height)
     screen = TilePuzzle.new(scene)
     ret = screen.pbStartScreen
-  }
+  end
   return ret
 end

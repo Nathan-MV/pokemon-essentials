@@ -37,7 +37,7 @@ def pbNewTrainer(tr_type, tr_name, tr_version, save_changes = true)
   if save_changes
     trainer_hash = {
       :trainer_type => tr_type,
-      :name         => tr_name,
+      :real_name    => tr_name,
       :version      => tr_version,
       :pokemon      => []
     }
@@ -50,7 +50,7 @@ def pbNewTrainer(tr_type, tr_name, tr_version, save_changes = true)
       )
     end
     # Add trainer's data to records
-    trainer_hash[:id] = [trainer_hash[:trainer_type], trainer_hash[:name], trainer_hash[:version]]
+    trainer_hash[:id] = [trainer_hash[:trainer_type], trainer_hash[:real_name], trainer_hash[:version]]
     GameData::Trainer.register(trainer_hash)
     GameData::Trainer.save
     pbConvertTrainerData
@@ -62,7 +62,7 @@ end
 def pbConvertTrainerData
   tr_type_names = []
   GameData::TrainerType.each { |t| tr_type_names.push(t.real_name) }
-  MessageTypes.setMessagesAsHash(MessageTypes::TrainerTypes, tr_type_names)
+  MessageTypes.setMessagesAsHash(MessageTypes::TRAINER_TYPE_NAMES, tr_type_names)
   Compiler.write_trainer_types
   Compiler.write_trainers
 end

@@ -15,6 +15,11 @@ class Battle
       end
       return false
     end
+    # Hyper Mode and non-Scents
+    if pkmn.hyper_mode && !GameData::Item.get(item)&.is_scent?
+      scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+      return false
+    end
     return true
   end
 
@@ -70,7 +75,7 @@ class Battle
   end
 
   def pbUseItemMessage(item, trainerName)
-    itemName = GameData::Item.get(item).name
+    itemName = GameData::Item.get(item).portion_name
     if itemName.starts_with_vowel?
       pbDisplayBrief(_INTL("{1} used an {2}.", trainerName, itemName))
     else

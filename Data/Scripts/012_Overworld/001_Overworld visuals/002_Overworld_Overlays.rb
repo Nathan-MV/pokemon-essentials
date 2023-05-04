@@ -38,17 +38,15 @@ class LocationWindow
   end
 end
 
-
-
 #===============================================================================
 # Visibility circle in dark maps
 #===============================================================================
-class DarknessSprite < SpriteWrapper
+class DarknessSprite < Sprite
   attr_reader :radius
 
   def initialize(viewport = nil)
     super(viewport)
-    @darkness = BitmapWrapper.new(Graphics.width, Graphics.height)
+    @darkness = Bitmap.new(Graphics.width, Graphics.height)
     @radius = radiusMin
     self.bitmap = @darkness
     self.z      = 99998
@@ -69,7 +67,7 @@ class DarknessSprite < SpriteWrapper
   end
 
   def refresh
-    @darkness.fill_rect(0, 0, Graphics.width, Graphics.height, Color.new(0, 0, 0, 255))
+    @darkness.fill_rect(0, 0, Graphics.width, Graphics.height, Color.black)
     cx = Graphics.width / 2
     cy = Graphics.height / 2
     cradius = @radius
@@ -84,8 +82,6 @@ class DarknessSprite < SpriteWrapper
     end
   end
 end
-
-
 
 #===============================================================================
 # Light effects
@@ -120,8 +116,9 @@ class LightEffect
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class LightEffect_Lamp < LightEffect
   def initialize(event, viewport = nil, map = nil)
     lamp = AnimatedBitmap.new("Graphics/Pictures/LE")
@@ -138,8 +135,9 @@ class LightEffect_Lamp < LightEffect
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class LightEffect_Basic < LightEffect
   def initialize(event, viewport = nil, map = nil, filename = nil)
     super
@@ -164,8 +162,9 @@ class LightEffect_Basic < LightEffect
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 class LightEffect_DayNight < LightEffect
   def initialize(event, viewport = nil, map = nil, filename = nil)
     super
@@ -203,8 +202,9 @@ class LightEffect_DayNight < LightEffect
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 EventHandlers.add(:on_new_spriteset_map, :add_light_effects,
   proc { |spriteset, viewport|
     map = spriteset.map   # Map associated with the spriteset (not necessarily the current map)

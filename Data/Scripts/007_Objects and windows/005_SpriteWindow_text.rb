@@ -1,8 +1,7 @@
 #===============================================================================
-#
-#===============================================================================
 # Represents a window with no formatting capabilities. Its text color can be set,
 # though, and line breaks are supported, but the text is generally unformatted.
+#===============================================================================
 class Window_UnformattedTextPokemon < SpriteWindow_Base
   attr_reader :text
   attr_reader :baseColor
@@ -52,7 +51,7 @@ class Window_UnformattedTextPokemon < SpriteWindow_Base
     dims = [0, 0]
     cwidth = maxwidth < 0 ? Graphics.width : maxwidth
     getLineBrokenChunks(self.contents, text,
-                        cwidth - self.borderX - SpriteWindow_Base::TEXTPADDING, dims, true)
+                        cwidth - self.borderX - SpriteWindow_Base::TEXT_PADDING, dims, true)
     return dims
   end
 
@@ -63,7 +62,7 @@ class Window_UnformattedTextPokemon < SpriteWindow_Base
 
   def resizeToFit(text, maxwidth = -1)   # maxwidth is maximum acceptable window width
     dims = resizeToFitInternal(text, maxwidth)
-    self.width = dims[0] + self.borderX + SpriteWindow_Base::TEXTPADDING
+    self.width = dims[0] + self.borderX + SpriteWindow_Base::TEXT_PADDING
     self.height = dims[1] + self.borderY
     refresh
   end
@@ -105,8 +104,6 @@ class Window_UnformattedTextPokemon < SpriteWindow_Base
                @text.gsub(/\r/, ""), @baseColor, @shadowColor)
   end
 end
-
-
 
 #===============================================================================
 #
@@ -214,7 +211,7 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
     dims = resizeToFitInternal(text, maxwidth)
     oldstarting = @starting
     @starting = true
-    self.width  = dims[0] + self.borderX + SpriteWindow_Base::TEXTPADDING
+    self.width  = dims[0] + self.borderX + SpriteWindow_Base::TEXT_PADDING
     self.height = dims[1] + self.borderY
     @starting = oldstarting
     redrawText
@@ -224,7 +221,7 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
     dims = resizeToFitInternal(text, maxwidth)
     oldstarting = @starting
     @starting = true
-    self.width  = [dims[0] + self.borderX + SpriteWindow_Base::TEXTPADDING, maxwidth].min
+    self.width  = [dims[0] + self.borderX + SpriteWindow_Base::TEXT_PADDING, maxwidth].min
     self.height = [dims[1] + self.borderY, maxheight].min
     @starting = oldstarting
     redrawText
@@ -309,8 +306,8 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
       if @letterbyletter
         @fmtchars = []
         fmt = getFormattedText(self.contents, 0, 0,
-                               self.width - self.borderX - SpriteWindow_Base::TEXTPADDING, -1,
-                               shadowctag(@baseColor, @shadowColor) + value, 32, true)
+                               self.width - self.borderX - SpriteWindow_Base::TEXT_PADDING, -1,
+                               shadowc3tag(@baseColor, @shadowColor) + value, 32, true)
         @oldfont = self.contents.font.clone
         fmt.each do |ch|
           chx = ch[1] + ch[3]
@@ -336,8 +333,8 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
         fmt.clear
       else
         @fmtchars = getFormattedText(self.contents, 0, 0,
-                                     self.width - self.borderX - SpriteWindow_Base::TEXTPADDING, -1,
-                                     shadowctag(@baseColor, @shadowColor) + value, 32, true)
+                                     self.width - self.borderX - SpriteWindow_Base::TEXT_PADDING, -1,
+                                     shadowc3tag(@baseColor, @shadowColor) + value, 32, true)
         @oldfont = self.contents.font.clone
         @fmtchars.each do |ch|
           chx = ch[1] + ch[3]
@@ -417,7 +414,7 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
 
   def allocPause
     return if @pausesprite
-    @pausesprite = AnimatedSprite.create("Graphics/Pictures/pause", 4, 3)
+    @pausesprite = AnimatedSprite.create("Graphics/UI/pause_arrow", 4, 3)
     @pausesprite.z       = 100000
     @pausesprite.visible = false
   end
@@ -447,13 +444,13 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
     when 1   # Lower right
       pauseWidth  = @pausesprite.bitmap ? @pausesprite.framewidth : 16
       pauseHeight = @pausesprite.bitmap ? @pausesprite.frameheight : 16
-      @pausesprite.x = self.x + self.width - (20 * 2) + (pauseWidth / 2)
-      @pausesprite.y = self.y + self.height - (30 * 2) + (pauseHeight / 2)
+      @pausesprite.x = self.x + self.width - 40 + (pauseWidth / 2)
+      @pausesprite.y = self.y + self.height - 60 + (pauseHeight / 2)
     when 2   # Lower middle
       pauseWidth  = @pausesprite.bitmap ? @pausesprite.framewidth : 16
       pauseHeight = @pausesprite.bitmap ? @pausesprite.frameheight : 16
       @pausesprite.x = self.x + (self.width / 2) - (pauseWidth / 2)
-      @pausesprite.y = self.y + self.height - (18 * 2) + (pauseHeight / 2)
+      @pausesprite.y = self.y + self.height - 36 + (pauseHeight / 2)
     end
   end
 
@@ -589,6 +586,8 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
     @frameskipChanged = false
   end
 
+  #-----------------------------------------------------------------------------
+
   private
 
   def curcharSkip(skip)
@@ -601,8 +600,6 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
     end
   end
 end
-
-
 
 #===============================================================================
 #
@@ -709,6 +706,8 @@ class Window_InputNumberPokemon < SpriteWindow_Base
     @frame = (@frame + 1) % 30
   end
 
+  #-----------------------------------------------------------------------------
+
   private
 
   def textHelper(x, y, text, i)
@@ -722,8 +721,6 @@ class Window_InputNumberPokemon < SpriteWindow_Base
     end
   end
 end
-
-
 
 #===============================================================================
 #
@@ -902,6 +899,8 @@ class SpriteWindow_Selectable < SpriteWindow_Base
     end
   end
 
+  #-----------------------------------------------------------------------------
+
   private
 
   def priv_page_row_max
@@ -951,17 +950,15 @@ class SpriteWindow_Selectable < SpriteWindow_Base
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
 module UpDownArrowMixin
   def initUpDownArrow
-    @uparrow   = AnimatedSprite.create("Graphics/Pictures/uparrow", 8, 2, self.viewport)
-    @downarrow = AnimatedSprite.create("Graphics/Pictures/downarrow", 8, 2, self.viewport)
-    RPG::Cache.retain("Graphics/Pictures/uparrow")
-    RPG::Cache.retain("Graphics/Pictures/downarrow")
+    @uparrow   = AnimatedSprite.create("Graphics/UI/up_arrow", 8, 2, self.viewport)
+    @downarrow = AnimatedSprite.create("Graphics/UI/down_arrow", 8, 2, self.viewport)
+    RPG::Cache.retain("Graphics/UI/up_arrow")
+    RPG::Cache.retain("Graphics/UI/down_arrow")
     @uparrow.z   = 99998
     @downarrow.z = 99998
     @uparrow.visible   = false
@@ -1016,8 +1013,6 @@ module UpDownArrowMixin
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -1030,8 +1025,6 @@ class SpriteWindow_SelectableEx < SpriteWindow_Selectable
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
@@ -1043,11 +1036,11 @@ class Window_DrawableCommand < SpriteWindow_SelectableEx
     super(x, y, width, height)
     self.viewport = viewport if viewport
     if isDarkWindowskin(self.windowskin)
-      @selarrow = AnimatedBitmap.new("Graphics/Pictures/selarrow_white")
-      RPG::Cache.retain("Graphics/Pictures/selarrow_white")
+      @selarrow = AnimatedBitmap.new("Graphics/UI/sel_arrow_white")
+      RPG::Cache.retain("Graphics/UI/sel_arrow_white")
     else
-      @selarrow = AnimatedBitmap.new("Graphics/Pictures/selarrow")
-      RPG::Cache.retain("Graphics/Pictures/selarrow")
+      @selarrow = AnimatedBitmap.new("Graphics/UI/sel_arrow")
+      RPG::Cache.retain("Graphics/UI/sel_arrow")
     end
     @index = 0
     colors = getDefaultTextColors(self.windowskin)
@@ -1081,13 +1074,13 @@ class Window_DrawableCommand < SpriteWindow_SelectableEx
     windowheight += self.borderY
     if !width || width < 0
       width = 0
-      tmpbitmap = BitmapWrapper.new(1, 1)
+      tmpbitmap = Bitmap.new(1, 1)
       pbSetSystemFont(tmpbitmap)
       commands.each do |i|
         width = [width, tmpbitmap.text_size(i).width].max
       end
       # one 16 to allow cursor
-      width += 16 + 16 + SpriteWindow_Base::TEXTPADDING
+      width += 16 + 16 + SpriteWindow_Base::TEXT_PADDING
       tmpbitmap.dispose
     end
     # Store suggested width and height of window
@@ -1136,8 +1129,6 @@ class Window_DrawableCommand < SpriteWindow_SelectableEx
     refresh if self.index != oldindex
   end
 end
-
-
 
 #===============================================================================
 #
@@ -1229,14 +1220,11 @@ class Window_CommandPokemon < Window_DrawableCommand
   end
 end
 
-
-
 #===============================================================================
 #
 #===============================================================================
 class Window_CommandPokemonEx < Window_CommandPokemon
 end
-
 
 #===============================================================================
 #
@@ -1247,7 +1235,7 @@ class Window_AdvancedCommandPokemon < Window_DrawableCommand
   def textWidth(bitmap, text)
     dims = [nil, 0]
     chars = getFormattedText(bitmap, 0, 0,
-                             Graphics.width - self.borderX - SpriteWindow_Base::TEXTPADDING - 16,
+                             Graphics.width - self.borderX - SpriteWindow_Base::TEXT_PADDING - 16,
                              -1, text, self.rowHeight, true, true)
     chars.each do |ch|
       dims[0] = dims[0] ? [dims[0], ch[1]].min : ch[1]
@@ -1349,8 +1337,6 @@ class Window_AdvancedCommandPokemon < Window_DrawableCommand
     end
   end
 end
-
-
 
 #===============================================================================
 #

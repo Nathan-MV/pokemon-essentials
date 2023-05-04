@@ -545,44 +545,44 @@ class Battle::Move::TargetUsesItsLastUsedMoveAgain < Battle::Move
   def initialize(battle, move)
     super
     @moveBlacklist = [
-      "MultiTurnAttackBideThenReturnDoubleDamage",   # Bide
-      "ProtectUserFromDamagingMovesKingsShield",   # King's Shield
-      "TargetUsesItsLastUsedMoveAgain",   # Instruct (this move)
+      "MultiTurnAttackBideThenReturnDoubleDamage",       # Bide
+      "ProtectUserFromDamagingMovesKingsShield",         # King's Shield
+      "TargetUsesItsLastUsedMoveAgain",                  # Instruct (this move)
       # Struggle
-      "Struggle",   # Struggle
+      "Struggle",                                        # Struggle
       # Moves that affect the moveset
-      "ReplaceMoveThisBattleWithTargetLastMoveUsed",   # Mimic
-      "ReplaceMoveWithTargetLastMoveUsed",   # Sketch
-      "TransformUserIntoTarget",   # Transform
+      "ReplaceMoveThisBattleWithTargetLastMoveUsed",     # Mimic
+      "ReplaceMoveWithTargetLastMoveUsed",               # Sketch
+      "TransformUserIntoTarget",                         # Transform
       # Moves that call other moves
-      "UseLastMoveUsedByTarget",   # Mirror Move
-      "UseLastMoveUsed",   # Copycat
-      "UseMoveTargetIsAboutToUse",   # Me First
-      "UseMoveDependingOnEnvironment",   # Nature Power
-      "UseRandomUserMoveIfAsleep",   # Sleep Talk
-      "UseRandomMoveFromUserParty",   # Assist
-      "UseRandomMove",   # Metronome
+      "UseLastMoveUsedByTarget",                         # Mirror Move
+      "UseLastMoveUsed",                                 # Copycat
+      "UseMoveTargetIsAboutToUse",                       # Me First
+      "UseMoveDependingOnEnvironment",                   # Nature Power
+      "UseRandomUserMoveIfAsleep",                       # Sleep Talk
+      "UseRandomMoveFromUserParty",                      # Assist
+      "UseRandomMove",                                   # Metronome
       # Moves that require a recharge turn
-      "AttackAndSkipNextTurn",   # Hyper Beam
+      "AttackAndSkipNextTurn",                           # Hyper Beam
       # Two-turn attacks
-      "TwoTurnAttack",   # Razor Wind
-      "TwoTurnAttackOneTurnInSun",   # Solar Beam, Solar Blade
-      "TwoTurnAttackParalyzeTarget",   # Freeze Shock
-      "TwoTurnAttackBurnTarget",   # Ice Burn
-      "TwoTurnAttackFlinchTarget",   # Sky Attack
-      "TwoTurnAttackChargeRaiseUserDefense1",   # Skull Bash
-      "TwoTurnAttackInvulnerableInSky",   # Fly
-      "TwoTurnAttackInvulnerableUnderground",   # Dig
-      "TwoTurnAttackInvulnerableUnderwater",   # Dive
-      "TwoTurnAttackInvulnerableInSkyParalyzeTarget",   # Bounce
-      "TwoTurnAttackInvulnerableRemoveProtections",   # Shadow Force, Phantom Force
+      "TwoTurnAttack",                                   # Razor Wind
+      "TwoTurnAttackOneTurnInSun",                       # Solar Beam, Solar Blade
+      "TwoTurnAttackParalyzeTarget",                     # Freeze Shock
+      "TwoTurnAttackBurnTarget",                         # Ice Burn
+      "TwoTurnAttackFlinchTarget",                       # Sky Attack
+      "TwoTurnAttackChargeRaiseUserDefense1",            # Skull Bash
+      "TwoTurnAttackInvulnerableInSky",                  # Fly
+      "TwoTurnAttackInvulnerableUnderground",            # Dig
+      "TwoTurnAttackInvulnerableUnderwater",             # Dive
+      "TwoTurnAttackInvulnerableInSkyParalyzeTarget",    # Bounce
+      "TwoTurnAttackInvulnerableRemoveProtections",      # Shadow Force, Phantom Force
       "TwoTurnAttackInvulnerableInSkyTargetCannotAct",   # Sky Drop
-      "AllBattlersLoseHalfHPUserSkipsNextTurn",   # Shadow Half
-      "TwoTurnAttackRaiseUserSpAtkSpDefSpd2",   # Geomancy
+      "AllBattlersLoseHalfHPUserSkipsNextTurn",          # Shadow Half
+      "TwoTurnAttackRaiseUserSpAtkSpDefSpd2",            # Geomancy
       # Moves that start focussing at the start of the round
-      "FailsIfUserDamagedThisTurn",   # Focus Punch
-      "UsedAfterUserTakesPhysicalDamage",   # Shell Trap
-      "BurnAttackerBeforeUserActs"   # Beak Blast
+      "FailsIfUserDamagedThisTurn",                      # Focus Punch
+      "UsedAfterUserTakesPhysicalDamage",                # Shell Trap
+      "BurnAttackerBeforeUserActs"                       # Beak Blast
     ]
   end
 
@@ -649,27 +649,19 @@ end
 class Battle::Move::HigherPriorityInGrassyTerrain < Battle::Move
   def pbPriority(user)
     ret = super
-    ret += 1 if @battle.field.terrain == :Grass && user.affectedByTerrain?
+    ret += 1 if @battle.field.terrain == :Grassy && user.affectedByTerrain?
     return ret
   end
 end
 
 #===============================================================================
-# Decreases the PP of the last attack used by the target by 3 (or as much as
-# possible). (Eerie Spell)
+# Target's last move used loses 3 PP. Damaging move. (Eerie Spell)
 #===============================================================================
 class Battle::Move::LowerPPOfTargetLastMoveBy3 < Battle::Move
-  def pbFailsAgainstTarget?(user, target, show_message)
-    last_move = target.pbGetMoveWithID(target.lastRegularMoveUsed)
-    if !last_move || last_move.pp == 0 || last_move.total_pp <= 0
-      @battle.pbDisplay(_INTL("But it failed!")) if show_message
-      return true
-    end
-    return false
-  end
-
   def pbEffectAgainstTarget(user, target)
+    return if target.fainted?
     last_move = target.pbGetMoveWithID(target.lastRegularMoveUsed)
+    return if !last_move || last_move.pp == 0 || last_move.total_pp <= 0
     reduction = [3, last_move.pp].min
     target.pbSetPP(last_move, last_move.pp - reduction)
     @battle.pbDisplay(_INTL("It reduced the PP of {1}'s {2} by {3}!",
@@ -678,7 +670,7 @@ class Battle::Move::LowerPPOfTargetLastMoveBy3 < Battle::Move
 end
 
 #===============================================================================
-# Target's last move used loses 4 PP. (Spite)
+# Target's last move used loses 4 PP. Status move. (Spite)
 #===============================================================================
 class Battle::Move::LowerPPOfTargetLastMoveBy4 < Battle::Move
   def ignoresSubstitute?(user); return true; end

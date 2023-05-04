@@ -45,16 +45,23 @@ class Scene_Map
     @spritesets = {}
   end
 
+  def dispose
+    disposeSpritesets
+    @map_renderer.dispose
+    @map_renderer = nil
+    @spritesetGlobal.dispose
+    @spritesetGlobal = nil
+  end
+
   def autofade(mapid)
     playingBGM = $game_system.playing_bgm
     playingBGS = $game_system.playing_bgs
     return if !playingBGM && !playingBGS
     map = load_data(sprintf("Data/Map%03d.rxdata", mapid))
     if playingBGM && map.autoplay_bgm
-      if (PBDayNight.isNight? && FileTest.audio_exist?("Audio/BGM/" + map.bgm.name + "_n") &&
-         playingBGM.name != map.bgm.name + "_n") || playingBGM.name != map.bgm.name
-        pbBGMFade(0.8)
-      end
+      test_filename = map.bgm.name
+      test_filename += "_n" if PBDayNight.isNight? && FileTest.audio_exist?("Audio/BGM/" + test_filename + "_n")
+      pbBGMFade(0.8) if playingBGM.name != test_filename
     end
     if playingBGS && map.autoplay_bgs && playingBGS.name != map.bgs.name
       pbBGMFade(0.8)
@@ -168,7 +175,6 @@ class Scene_Map
     end
     updateSpritesets
     if $game_temp.title_screen_calling
-      $game_temp.title_screen_calling = false
       SaveData.mark_values_as_unloaded
       $scene = pbCallTitle
       return
@@ -182,7 +188,7 @@ class Scene_Map
       end
     end
     return if $game_temp.message_window_showing
-    if !pbMapInterpreterRunning?
+    if !pbMapInterpreterRunning? && !$PokemonGlobal.ice_sliding
       if Input.trigger?(Input::USE)
         $game_temp.interact_calling = true
       elsif Input.trigger?(Input::ACTION)
@@ -191,9 +197,7 @@ class Scene_Map
           $game_temp.menu_beep = true
         end
       elsif Input.trigger?(Input::SPECIAL)
-        unless $game_player.moving?
-          $game_temp.ready_menu_calling = true
-        end
+        $game_temp.ready_menu_calling = true if !$game_player.moving?
       elsif Input.press?(Input::F9)
         $game_temp.debug_calling = true if $DEBUG
       end
@@ -225,8 +229,10 @@ class Scene_Map
       break if $scene != self
     end
     Graphics.freeze
-    disposeSpritesets
+    dispose
     if $game_temp.title_screen_calling
+      pbMapInterpreter.command_end if pbMapInterpreterRunning?
+      $game_temp.title_screen_calling = false
       Graphics.transition
       Graphics.freeze
     end

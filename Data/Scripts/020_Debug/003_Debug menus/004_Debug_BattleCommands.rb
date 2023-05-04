@@ -88,7 +88,7 @@ MenuHandlers.add(:battle_debug_menu, :pokemon_teams, {
       if battle.opponent
         battle.opponent.each_with_index do |trainer, i|
           first_index = foe_party_starts[i]
-          last_index   = (i < foe_party_starts.length - 1) ? foe_party_starts[i + 1] : battle.pbParty(1).length
+          last_index = (i < foe_party_starts.length - 1) ? foe_party_starts[i + 1] : battle.pbParty(1).length
           num_pkmn = last_index - first_index
           commands.push(_INTL("Opponent {1}: {2} ({3} Pokémon)", i + 1, trainer.full_name, num_pkmn))
           team_indices.push([1, i, first_index])
@@ -99,7 +99,7 @@ MenuHandlers.add(:battle_debug_menu, :pokemon_teams, {
       end
       battle.player.each_with_index do |trainer, i|
         first_index = player_party_starts[i]
-        last_index   = (i < player_party_starts.length - 1) ? player_party_starts[i + 1] : battle.pbParty(0).length
+        last_index = (i < player_party_starts.length - 1) ? player_party_starts[i + 1] : battle.pbParty(0).length
         num_pkmn = last_index - first_index
         if i == 0   # Player
           commands.push(_INTL("You: {1} ({2} Pokémon)", trainer.full_name, num_pkmn))
@@ -206,8 +206,8 @@ MenuHandlers.add(:battle_debug_menu, :mega_evolution, {
           next if !trainers[i]
           text = (side == 0) ? "Your side:" : "Foe side:"
           text += sprintf(" %d: %s", i, trainers[i].name)
-          text += sprintf(" [ABLE]") if value == -1
-          text += sprintf(" [UNABLE]") if value == -2
+          text += " [ABLE]" if value == -1
+          text += " [UNABLE]" if value == -2
           commands.push(text)
           cmds.push([side, i])
         end
@@ -252,10 +252,10 @@ MenuHandlers.add(:battle_debug_menu, :weather, {
       msg = _INTL("Current weather: {1}", weather_data.name || _INTL("Unknown"))
       if weather_data.id != :None
         if battle.field.weatherDuration > 0
-          msg += "\r\n"
+          msg += "\n"
           msg += _INTL("Duration : {1} more round(s)", battle.field.weatherDuration)
         elsif battle.field.weatherDuration < 0
-          msg += "\r\n"
+          msg += "\n"
           msg += _INTL("Duration : Infinite")
         end
       end
@@ -314,10 +314,10 @@ MenuHandlers.add(:battle_debug_menu, :terrain, {
       msg = _INTL("Current terrain: {1}", terrain_data.name || _INTL("Unknown"))
       if terrain_data.id != :None
         if battle.field.terrainDuration > 0
-          msg += "\r\n"
+          msg += "\n"
           msg += _INTL("Duration : {1} more round(s)", battle.field.terrainDuration)
         elsif battle.field.terrainDuration < 0
-          msg += "\r\n"
+          msg += "\n"
           msg += _INTL("Duration : Infinite")
         end
       end
@@ -373,7 +373,7 @@ MenuHandlers.add(:battle_debug_menu, :environment_time, {
     loop do
       environment_data = GameData::Environment.try_get(battle.environment)
       msg = _INTL("Environment: {1}", environment_data.name || _INTL("Unknown"))
-      msg += "\r\n"
+      msg += "\n"
       msg += _INTL("Time of day: {1}", [_INTL("Day"), _INTL("Evening"), _INTL("Night")][battle.time])
       cmd = pbMessage("\\ts[]" + msg, [_INTL("Change environment"),
                                        _INTL("Change time of day")], -1, nil, cmd)
@@ -467,14 +467,14 @@ MenuHandlers.add(:battle_debug_menu, :position_effects, {
       if battler && !battler.fainted?
         text = "[#{i}] #{battler.name}"
       else
-        text = _INTL("[#{i}] (empty)", i)
+        text = "[#{i}] " + _INTL("(empty)")
       end
       if battler.pbOwnedByPlayer?
-        text += " (yours)"
+        text += " " + _INTL("(yours)")
       elsif battle.opposes?(i)
-        text += " (opposing)"
+        text += " " + _INTL("(opposing)")
       else
-        text += " (ally's)"
+        text += " " + _INTL("(ally's)")
       end
       cmds.push(text)
     end

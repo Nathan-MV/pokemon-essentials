@@ -49,7 +49,7 @@ end
 # Permanently stores data of follower events (i.e. in save files).
 #===============================================================================
 class PokemonGlobalMetadata
-  attr_accessor :dependentEvents   # Deprecated
+  attr_accessor :dependentEvents   # Deprecated - to be removed in v22
   attr_writer   :followers
 
   def followers
@@ -77,14 +77,14 @@ class Game_FollowerFactory
   attr_reader :last_update
 
   def initialize
-    @events      = []
+    @events = []
     $PokemonGlobal.followers.each do |follower|
       @events.push(create_follower_object(follower))
     end
     @last_update = -1
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   def add_follower(event, name = nil, common_event_id = nil)
     return if !event
@@ -150,7 +150,7 @@ class Game_FollowerFactory
     $PokemonGlobal.followers.each_with_index { |follower, i| yield @events[i], follower }
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   def turn_followers
     leader = $game_player
@@ -208,11 +208,11 @@ class Game_FollowerFactory
       vector = $map_factory.getRelativePos(event.map.map_id, event.x, event.y,
                                            leader[0], leader[1], leader[2])
       if vector[0] != 0
-        move_route.prepend((vector[0] > 0) ? PBMoveRoute::Right : PBMoveRoute::Left)
+        move_route.prepend((vector[0] > 0) ? PBMoveRoute::RIGHT : PBMoveRoute::LEFT)
       elsif vector[1] != 0
-        move_route.prepend((vector[1] > 0) ? PBMoveRoute::Down : PBMoveRoute::Up)
+        move_route.prepend((vector[1] > 0) ? PBMoveRoute::DOWN : PBMoveRoute::UP)
       end
-      pbMoveRoute(event, move_route + [PBMoveRoute::Opacity, 0])
+      pbMoveRoute(event, move_route + [PBMoveRoute::OPACITY, 0])
     end
   end
 
@@ -237,7 +237,7 @@ class Game_FollowerFactory
     end
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   def update
     followers = $PokemonGlobal.followers
@@ -254,7 +254,7 @@ class Game_FollowerFactory
       end
       event.move_speed  = leader.move_speed
       event.transparent = !follower.visible?
-      if $PokemonGlobal.sliding
+      if $PokemonGlobal.ice_sliding
         event.straighten
         event.walk_anime = false
       else
@@ -278,21 +278,15 @@ class Game_FollowerFactory
       facing_tile = $map_factory.getFacingTile
       # Assumes player is 1x1 tile in size
       each_follower do |event, follower|
-        if event.at_coordinate?($game_player.x, $game_player.y)   # Underneath player
-          next if !event.over_trigger?
-        elsif facing_tile && event.map.map_id == facing_tile[0] &&
-              event.at_coordinate?(facing_tile[1], facing_tile[2])   # On facing tile
-          next if event.over_trigger?
-        else   # Somewhere else
-          next
-        end
+        next if !facing_tile || event.map.map_id != facing_tile[0] ||
+                !event.at_coordinate?(facing_tile[1], facing_tile[2])   # Not on facing tile
         next if event.jumping?
         follower.interact(event)
       end
     end
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   private
 
@@ -392,44 +386,4 @@ module Followers
   def put_followers_on_player
     $game_temp.followers.put_followers_on_player
   end
-end
-
-
-#===============================================================================
-# Deprecated methods
-#===============================================================================
-# @deprecated This method is slated to be removed in v21.
-def pbAddDependency2(event_id, name, common_event_id)
-  Deprecation.warn_method("pbAddDependency2", "v21", "Followers.add(event_id, name, common_event_id)")
-  Followers.add(event_id, name, common_event_id)
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbAddDependency(event)
-  Deprecation.warn_method("pbAddDependency", "v21", "Followers.add_event(event)")
-  Followers.add_event(event)
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbRemoveDependency2(name)
-  Deprecation.warn_method("pbRemoveDependency2", "v21", "Followers.remove(name)")
-  Followers.remove(name)
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbRemoveDependency(event)
-  Deprecation.warn_method("pbRemoveDependency", "v21", "Followers.remove_event(event)")
-  Followers.remove_event(event)
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbRemoveDependencies
-  Deprecation.warn_method("pbRemoveDependencies", "v21", "Followers.clear")
-  Followers.clear
-end
-
-# @deprecated This method is slated to be removed in v21.
-def pbGetDependency(name)
-  Deprecation.warn_method("pbGetDependency", "v21", "Followers.get(name)")
-  Followers.get(name)
 end

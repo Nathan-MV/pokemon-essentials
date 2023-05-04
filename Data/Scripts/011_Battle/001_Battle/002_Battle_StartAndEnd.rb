@@ -143,6 +143,8 @@ class Battle
       # For each trainer in turn, find the needed number of Pokémon for them to
       # send out, and initialize them
       battlerNumber = 0
+      partyOrder = pbPartyOrder(side)
+      starts = pbPartyStarts(side)
       trainer.each_with_index do |_t, idxTrainer|
         ret[side][idxTrainer] = []
         eachInTeam(side, idxTrainer) do |pkmn, idxPkmn|
@@ -150,6 +152,10 @@ class Battle
           idxBattler = (2 * battlerNumber) + side
           pbCreateBattler(idxBattler, pkmn, idxPkmn)
           ret[side][idxTrainer].push(idxBattler)
+          if idxPkmn != starts[idxTrainer] + battlerNumber
+            idxOther = starts[idxTrainer] + battlerNumber
+            partyOrder[idxPkmn], partyOrder[idxOther] = partyOrder[idxOther], partyOrder[idxPkmn]
+          end
           battlerNumber += 1
           break if ret[side][idxTrainer].length >= requireds[idxTrainer]
         end
@@ -196,7 +202,7 @@ class Battle
       # Opposing trainers and partner trainers's messages about sending out Pokémon
       trainers.each_with_index do |t, i|
         next if side == 0 && i == 0   # The player's message is shown last
-        msg += "\r\n" if msg.length > 0
+        msg += "\n" if msg.length > 0
         sent = sendOuts[side][i]
         case sent.length
         when 1
@@ -212,7 +218,7 @@ class Battle
       end
       # The player's message about sending out Pokémon
       if side == 0
-        msg += "\r\n" if msg.length > 0
+        msg += "\n" if msg.length > 0
         sent = sendOuts[side][0]
         case sent.length
         when 1

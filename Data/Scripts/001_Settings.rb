@@ -1,6 +1,6 @@
 #==============================================================================#
 #                              Pokémon Essentials                              #
-#                                  Version 20                                  #
+#                               Version 20.1.dev                               #
 #                https://github.com/Maruno17/pokemon-essentials                #
 #==============================================================================#
 $DEBUG = true
@@ -132,6 +132,15 @@ module Settings
   # Whether overworld weather can set the default terrain effect in battle.
   # Storm weather sets Electric Terrain, and fog weather sets Misty Terrain.
   OVERWORLD_WEATHER_SETS_BATTLE_TERRAIN    = (MECHANICS_GENERATION >= 8)
+  # The default setting for Phone.rematches_enabled, which determines whether
+  # trainers registered in the Phone can become ready for a rematch. If false,
+  # Phone.rematches_enabled = true will enable rematches at any point you want.
+  PHONE_REMATCHES_POSSIBLE_FROM_BEGINNING  = false
+  # Whether the messages in a phone call with a trainer are colored blue or red
+  # depending on that trainer's gender. Note that this doesn't apply to contacts
+  # that are not trainers; they will need to be colored manually in their Common
+  # Events.
+  COLOR_PHONE_CALL_MESSAGES_BY_CONTACT_GENDER = true
 
   #=============================================================================
 
@@ -193,7 +202,7 @@ module Settings
   NUM_STORAGE_BOXES   = 40
   # Whether putting a Pokémon into Pokémon storage will heal it. IF false, they
   # are healed by the Recover All: Entire Party event command (at Poké Centers).
-  HEAL_STORED_POKEMON = (MECHANICS_GENERATION >= 8)
+  HEAL_STORED_POKEMON = (MECHANICS_GENERATION <= 7)
 
   #=============================================================================
 
@@ -237,11 +246,11 @@ module Settings
   #   * Game Switch; the graphic is shown if this is ON (non-wall maps only).
   #   * X coordinate of the graphic on the map, in squares.
   #   * Y coordinate of the graphic on the map, in squares.
-  #   * Name of the graphic, found in the Graphics/Pictures folder.
+  #   * Name of the graphic, found in the Graphics/UI/Town Map folder.
   #   * The graphic will always (true) or never (false) be shown on a wall map.
   REGION_MAP_EXTRAS = [
-    [0, 51, 16, 15, "mapHiddenBerth", false],
-    [0, 52, 20, 14, "mapHiddenFaraday", false]
+    [0, 51, 16, 15, "hidden_Berth", false],
+    [0, 52, 20, 14, "hidden_Faraday", false]
   ]
 
   # Whether the player can use Fly while looking at the Town Map. This is only
@@ -292,7 +301,7 @@ module Settings
       31 => [2, 21,     69],
       69 => [   21, 31    ]
     }],
-    [:ENTEI, 40, 55, 1, nil]
+    [:ENTEI, 40, 55, 1]
   ]
 
   #=============================================================================
@@ -363,12 +372,14 @@ module Settings
 
   #=============================================================================
 
-  # An array of available languages in the game, and their corresponding message
-  # file in the Data folder. Edit only if you have 2 or more languages to choose
-  # from.
+  # An array of available languages in the game, and their corresponding
+  # filename. Text files for a language are extracted to a folder called
+  # "Text_filename_core" or "Text_filename_game", and are recompiled into files
+  # in the Data folder called "messages_filename_core.dat" or
+  # "messages_filename_game.dat".
   LANGUAGES = [
-  #  ["English", "english.dat"],
-  #  ["Deutsch", "deutsch.dat"]
+#    ["English", "english"],
+#    ["Deutsch", "deutsch"]
   ]
 
   #=============================================================================
@@ -433,6 +444,7 @@ end
 
 # DO NOT EDIT THESE!
 module Essentials
-  VERSION = "20"
+  VERSION = "20.1.dev"
   ERROR_TEXT = ""
+  MKXPZ_VERSION = "2.4"
 end

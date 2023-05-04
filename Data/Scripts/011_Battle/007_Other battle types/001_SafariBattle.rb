@@ -54,22 +54,20 @@ class Battle::FakeBattler
   def pbReset; end
 end
 
-
-
 #===============================================================================
 # Data box for safari battles
 #===============================================================================
-class Battle::Scene::SafariDataBox < SpriteWrapper
+class Battle::Scene::SafariDataBox < Sprite
   attr_accessor :selected
 
   def initialize(battle, viewport = nil)
     super(viewport)
     @selected    = 0
     @battle      = battle
-    @databox     = AnimatedBitmap.new("Graphics/Pictures - New/Battle/databox_safari")
+    @databox     = AnimatedBitmap.new("Graphics/UI/Battle/databox_safari")
     self.x       = Graphics.width - 232
     self.y       = Graphics.height - 184
-    @contents    = BitmapWrapper.new(@databox.width, @databox.height)
+    @contents    = Bitmap.new(@databox.width, @databox.height)
     self.bitmap  = @contents
     self.visible = false
     self.z       = 50
@@ -83,8 +81,8 @@ class Battle::Scene::SafariDataBox < SpriteWrapper
     base   = Color.new(72, 72, 72)
     shadow = Color.new(184, 184, 184)
     textpos = []
-    textpos.push([_INTL("Safari Balls"), 30, 14, false, base, shadow])
-    textpos.push([_INTL("Left: {1}", @battle.ballCount), 30, 44, false, base, shadow])
+    textpos.push([_INTL("Safari Balls"), 30, 14, :left, base, shadow])
+    textpos.push([_INTL("Left: {1}", @battle.ballCount), 30, 44, :left, base, shadow])
     pbDrawTextPositions(self.bitmap, textpos)
   end
 
@@ -92,8 +90,6 @@ class Battle::Scene::SafariDataBox < SpriteWrapper
     super()
   end
 end
-
-
 
 #===============================================================================
 # Shows the player throwing bait at a wild Pokémon in a Safari battle.
@@ -159,8 +155,6 @@ class Battle::Scene::Animation::ThrowBait < Battle::Scene::Animation
   end
 end
 
-
-
 #===============================================================================
 # Shows the player throwing a rock at a wild Pokémon in a Safari battle.
 #===============================================================================
@@ -222,8 +216,6 @@ class Battle::Scene::Animation::ThrowRock < Battle::Scene::Animation
   end
 end
 
-
-
 #===============================================================================
 # Safari Zone battle scene (the visuals of the battle)
 #===============================================================================
@@ -280,8 +272,6 @@ class Battle::Scene
   end
 end
 
-
-
 #===============================================================================
 # Safari Zone battle class
 #===============================================================================
@@ -308,9 +298,9 @@ class SafariBattle
 
   def pbRandom(x); return rand(x); end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Initialize the battle class
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def initialize(scene, player, party2)
     @scene         = scene
     @peer          = Battle::Peer.new
@@ -335,9 +325,9 @@ class SafariBattle
   def defaultWeather=(value); @weather = value; end
   def defaultTerrain=(value); end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Information about the type and size of the battle
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def wildBattle?;    return true;  end
   def trainerBattle?; return false; end
 
@@ -347,9 +337,9 @@ class SafariBattle
     return @sideSizes[index % 2]
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Trainers and owner-related
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def pbPlayer; return @player[0]; end
   def opponent; return nil;        end
 
@@ -374,18 +364,18 @@ class SafariBattle
     end
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Get party info (counts all teams on the same side)
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def pbParty(idxBattler)
     return (opposes?(idxBattler)) ? @party2 : nil
   end
 
   def pbAllFainted?(idxBattler = 0); return false; end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Battler-related
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def opposes?(idxBattler1, idxBattler2 = 0)
     idxBattler1 = idxBattler1.index if idxBattler1.respond_to?("index")
     idxBattler2 = idxBattler2.index if idxBattler2.respond_to?("index")
@@ -395,9 +385,9 @@ class SafariBattle
   def pbRemoveFromParty(idxBattler, idxParty); end
   def pbGainExp; end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Messages and animations
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def pbDisplay(msg, &block)
     @scene.pbDisplayMessage(msg, &block)
   end
@@ -414,17 +404,15 @@ class SafariBattle
     return @scene.pbDisplayConfirmMessage(msg)
   end
 
-
-
   class BattleAbortedException < Exception; end
 
   def pbAbort
     raise BattleAbortedException.new("Battle aborted")
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   # Safari battle-specific methods
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   def pbEscapeRate(catch_rate)
     return 125 if catch_rate <= 45   # Escape factor 9 (45%)
     return 100 if catch_rate <= 60   # Escape factor 7 (35%)

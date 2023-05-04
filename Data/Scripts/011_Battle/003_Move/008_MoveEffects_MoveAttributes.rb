@@ -100,9 +100,7 @@ class Battle::Move::OHKO < Battle::Move::FixedDamageMove
 
   def pbHitEffectivenessMessages(user, target, numTargets = 1)
     super
-    if target.fainted?
-      @battle.pbDisplay(_INTL("It's a one-hit KO!"))
-    end
+    @battle.pbDisplay(_INTL("It's a one-hit KO!")) if target.fainted?
   end
 end
 
@@ -333,7 +331,7 @@ class Battle::Move::PowerHigherWithConsecutiveUse < Battle::Move
     oldVal = user.effects[PBEffects::FuryCutter]
     super
     maxMult = 1
-    while (@baseDamage << (maxMult - 1)) < 160
+    while (@power << (maxMult - 1)) < 160
       maxMult += 1   # 1-4 for base damage of 20, 1-3 for base damage of 40
     end
     user.effects[PBEffects::FuryCutter] = (oldVal >= maxMult) ? maxMult : oldVal + 1
@@ -452,8 +450,6 @@ class Battle::Move::DoublePowerIfTargetPoisoned < Battle::Move
     return baseDmg
   end
 end
-
-
 
 #===============================================================================
 # Power is doubled if the target is paralyzed. Cures the target of paralysis.
@@ -1113,8 +1109,7 @@ class Battle::Move::EffectivenessIncludesFlyingType < Battle::Move
   def pbCalcTypeModSingle(moveType, defType, user, target)
     ret = super
     if GameData::Type.exists?(:FLYING)
-      flyingEff = Effectiveness.calculate_one(:FLYING, defType)
-      ret *= flyingEff.to_f / Effectiveness::NORMAL_EFFECTIVE_ONE
+      ret *= Effectiveness.calculate(:FLYING, defType)
     end
     return ret
   end
@@ -1214,9 +1209,7 @@ end
 #===============================================================================
 class Battle::Move::UseTargetAttackInsteadOfUserAttack < Battle::Move
   def pbGetAttackStats(user, target)
-    if specialMove?
-      return target.spatk, target.stages[:SPECIAL_ATTACK] + 6
-    end
+    return target.spatk, target.stages[:SPECIAL_ATTACK] + 6 if specialMove?
     return target.attack, target.stages[:ATTACK] + 6
   end
 end

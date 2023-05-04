@@ -1,9 +1,9 @@
-#==============================================================================
+#===============================================================================
 # ** Game_Map
 #------------------------------------------------------------------------------
 #  This class handles the map. It includes scrolling and passable determining
 #  functions. Refer to "$game_map" for the instance of this class.
-#==============================================================================
+#===============================================================================
 class Game_Map
   attr_accessor :map_id
   attr_accessor :tileset_name             # tileset file name
@@ -106,28 +106,24 @@ class Game_Map
     return GameData::MapMetadata.try_get(@map_id)
   end
 
-  #-----------------------------------------------------------------------------
   # Returns the name of this map's BGM. If it's night time, returns the night
   # version of the BGM (if it exists).
-  #-----------------------------------------------------------------------------
   def bgm_name
     if PBDayNight.isNight? && FileTest.audio_exist?("Audio/BGM/" + @map.bgm.name + "_n")
       return @map.bgm.name + "_n"
     end
     return @map.bgm.name
   end
-  #-----------------------------------------------------------------------------
-  # * Autoplays background music
-  #   Plays music called "[normal BGM]_n" if it's night time and it exists
-  #-----------------------------------------------------------------------------
+
+  # Autoplays background music
+  # Plays music called "[normal BGM]_n" if it's night time and it exists
   def autoplayAsCue
     pbCueBGM(bgm_name, 1.0, @map.bgm.volume, @map.bgm.pitch) if @map.autoplay_bgm
     pbBGSPlay(@map.bgs) if @map.autoplay_bgs
   end
-  #-----------------------------------------------------------------------------
-  # * Plays background music
-  #   Plays music called "[normal BGM]_n" if it's night time and it exists
-  #-----------------------------------------------------------------------------
+
+  # Plays background music
+  # Plays music called "[normal BGM]_n" if it's night time and it exists
   def autoplay
     pbBGMPlay(bgm_name, @map.bgm.volume, @map.bgm.pitch) if @map.autoplay_bgm
     pbBGSPlay(@map.bgs) if @map.autoplay_bgs
@@ -189,6 +185,7 @@ class Game_Map
       if self_event && terrain.can_surf_freely
         [2, 1, 0].each do |j|
           facing_tile_id = data[newx, newy, j]
+          next if facing_tile_id == 0
           return false if facing_tile_id.nil?
           facing_terrain = GameData::TerrainTag.try_get(@terrain_tags[facing_tile_id])
           if facing_terrain.id != :None && !facing_terrain.ignore_passability
@@ -203,6 +200,7 @@ class Game_Map
         # Can't walk onto ledges
         [2, 1, 0].each do |j|
           facing_tile_id = data[newx, newy, j]
+          next if facing_tile_id == 0
           return false if facing_tile_id.nil?
           facing_terrain = GameData::TerrainTag.try_get(@terrain_tags[facing_tile_id])
           return false if facing_terrain.ledge
@@ -210,6 +208,7 @@ class Game_Map
         end
       end
       next if terrain&.ignore_passability
+      next if tile_id == 0
       # Regular passability checks
       passage = @passages[tile_id]
       return false if passage & bit != 0 || passage & 0x0f == 0x0f
@@ -222,6 +221,7 @@ class Game_Map
     bit = (1 << ((d / 2) - 1)) & 0x0f
     [2, 1, 0].each do |i|
       tile_id = data[x, y, i]
+      next if tile_id == 0
       terrain = GameData::TerrainTag.try_get(@terrain_tags[tile_id])
       passage = @passages[tile_id]
       if terrain
@@ -230,7 +230,7 @@ class Game_Map
         # Make water tiles passable if player is surfing
         return true if $PokemonGlobal.surfing && terrain.can_surf && !terrain.waterfall
         # Prevent cycling in really tall grass/on ice
-        return false if $PokemonGlobal.bicycle && terrain.must_walk
+        return false if $PokemonGlobal.bicycle && (terrain.must_walk || terrain.must_walk_or_run)
         # Depend on passability of bridge tile if on bridge
         if terrain.bridge && $PokemonGlobal.bridge > 0
           return (passage & bit == 0 && passage & 0x0f != 0x0f)
@@ -245,7 +245,7 @@ class Game_Map
   end
 
   # Returns whether the position x,y is fully passable (there is no blocking
-  # event there, and the tile is fully passable in all directions)
+  # event there, and the tile is fully passable in all directions).
   def passableStrict?(x, y, d, self_event = nil)
     return false if !valid?(x, y)
     events.each_value do |event|
@@ -257,6 +257,7 @@ class Game_Map
     end
     [2, 1, 0].each do |i|
       tile_id = data[x, y, i]
+      next if tile_id == 0
       next if GameData::TerrainTag.try_get(@terrain_tags[tile_id]).ignore_passability
       return false if @passages[tile_id] & 0x0f != 0
       return true if @priorities[tile_id] == 0
@@ -267,6 +268,7 @@ class Game_Map
   def bush?(x, y)
     [2, 1, 0].each do |i|
       tile_id = data[x, y, i]
+      next if tile_id == 0
       return false if GameData::TerrainTag.try_get(@terrain_tags[tile_id]).bridge &&
                       $PokemonGlobal.bridge > 0
       return true if @passages[tile_id] & 0x40 == 0x40
@@ -277,6 +279,7 @@ class Game_Map
   def deepBush?(x, y)
     [2, 1, 0].each do |i|
       tile_id = data[x, y, i]
+      next if tile_id == 0
       terrain = GameData::TerrainTag.try_get(@terrain_tags[tile_id])
       return false if terrain.bridge && $PokemonGlobal.bridge > 0
       return true if terrain.deep_bush && @passages[tile_id] & 0x40 == 0x40
@@ -287,6 +290,7 @@ class Game_Map
   def counter?(x, y)
     [2, 1, 0].each do |i|
       tile_id = data[x, y, i]
+      next if tile_id == 0
       passage = @passages[tile_id]
       return true if passage & 0x80 == 0x80
     end
@@ -297,6 +301,7 @@ class Game_Map
     if valid?(x, y)
       [2, 1, 0].each do |i|
         tile_id = data[x, y, i]
+        next if tile_id == 0
         terrain = GameData::TerrainTag.try_get(@terrain_tags[tile_id])
         next if terrain.id == :None || terrain.ignore_passability
         next if !countBridge && terrain.bridge && $PokemonGlobal.bridge == 0
@@ -366,17 +371,13 @@ class Game_Map
   def start_fog_tone_change(tone, duration)
     @fog_tone_target = tone.clone
     @fog_tone_duration = duration
-    if @fog_tone_duration == 0
-      @fog_tone = @fog_tone_target.clone
-    end
+    @fog_tone = @fog_tone_target.clone if @fog_tone_duration == 0
   end
 
   def start_fog_opacity_change(opacity, duration)
     @fog_opacity_target = opacity.to_f
     @fog_opacity_duration = duration
-    if @fog_opacity_duration == 0
-      @fog_opacity = @fog_opacity_target
-    end
+    @fog_opacity = @fog_opacity_target if @fog_opacity_duration == 0
   end
 
   def set_tile(x, y, layer, id = 0)

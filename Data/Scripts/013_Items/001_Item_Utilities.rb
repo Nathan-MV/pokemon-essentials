@@ -113,8 +113,9 @@ module ItemHandlers
   end
 end
 
-
-
+#===============================================================================
+#
+#===============================================================================
 def pbCanRegisterItem?(item)
   return ItemHandlers.hasUseInFieldHandler(item)
 end
@@ -122,8 +123,6 @@ end
 def pbCanUseOnPokemon?(item)
   return ItemHandlers.hasUseOnPokemon(item) || GameData::Item.get(item).is_machine?
 end
-
-
 
 #===============================================================================
 # Change a Pokémon's level
@@ -147,6 +146,7 @@ def pbChangeLevel(pkmn, new_level, scene)
   old_speed           = pkmn.speed
   pkmn.level = new_level
   pkmn.calc_stats
+  pkmn.hp = 1 if new_level > old_level && pkmn.species_data.base_stats[:HP] == 1
   scene.pbRefresh
   if old_level > new_level
     if scene.is_a?(PokemonPartyScreen)
@@ -160,9 +160,9 @@ def pbChangeLevel(pkmn, new_level, scene)
     special_attack_diff  = pkmn.spatk - old_special_attack
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
-    pbTopRightWindow(_INTL("Max. HP<r>{1}\r\nAttack<r>{2}\r\nDefense<r>{3}\r\nSp. Atk<r>{4}\r\nSp. Def<r>{5}\r\nSpeed<r>{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
                            total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
-    pbTopRightWindow(_INTL("Max. HP<r>{1}\r\nAttack<r>{2}\r\nDefense<r>{3}\r\nSp. Atk<r>{4}\r\nSp. Def<r>{5}\r\nSpeed<r>{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
                            pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
   else
     pkmn.changeHappiness("vitamin")
@@ -177,9 +177,9 @@ def pbChangeLevel(pkmn, new_level, scene)
     special_attack_diff  = pkmn.spatk - old_special_attack
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
-    pbTopRightWindow(_INTL("Max. HP<r>+{1}\r\nAttack<r>+{2}\r\nDefense<r>+{3}\r\nSp. Atk<r>+{4}\r\nSp. Def<r>+{5}\r\nSpeed<r>+{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>+{1}\nAttack<r>+{2}\nDefense<r>+{3}\nSp. Atk<r>+{4}\nSp. Def<r>+{5}\nSpeed<r>+{6}",
                            total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
-    pbTopRightWindow(_INTL("Max. HP<r>{1}\r\nAttack<r>{2}\r\nDefense<r>{3}\r\nSp. Atk<r>{4}\r\nSp. Def<r>{5}\r\nSpeed<r>{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
                            pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
     # Learn new moves upon level up
     movelist = pkmn.getMoveList
@@ -190,13 +190,13 @@ def pbChangeLevel(pkmn, new_level, scene)
     # Check for evolution
     new_species = pkmn.check_evolution_on_level_up
     if new_species
-      pbFadeOutInWithMusic {
+      pbFadeOutInWithMusic do
         evo = PokemonEvolutionScene.new
         evo.pbStartScreen(pkmn, new_species)
         evo.pbEvolution
         evo.pbEndScreen
         scene.pbRefresh if scene.is_a?(PokemonPartyScreen)
-      }
+      end
     end
   end
 end
@@ -258,9 +258,9 @@ def pbChangeExp(pkmn, new_exp, scene)
     special_attack_diff  = pkmn.spatk - old_special_attack
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
-    pbTopRightWindow(_INTL("Max. HP<r>{1}\r\nAttack<r>{2}\r\nDefense<r>{3}\r\nSp. Atk<r>{4}\r\nSp. Def<r>{5}\r\nSpeed<r>{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
                            total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
-    pbTopRightWindow(_INTL("Max. HP<r>{1}\r\nAttack<r>{2}\r\nDefense<r>{3}\r\nSp. Atk<r>{4}\r\nSp. Def<r>{5}\r\nSpeed<r>{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
                            pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
   else   # Gains Exp
     difference = new_exp - pkmn.exp
@@ -286,9 +286,9 @@ def pbChangeExp(pkmn, new_exp, scene)
     special_attack_diff  = pkmn.spatk - old_special_attack
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
-    pbTopRightWindow(_INTL("Max. HP<r>+{1}\r\nAttack<r>+{2}\r\nDefense<r>+{3}\r\nSp. Atk<r>+{4}\r\nSp. Def<r>+{5}\r\nSpeed<r>+{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>+{1}\nAttack<r>+{2}\nDefense<r>+{3}\nSp. Atk<r>+{4}\nSp. Def<r>+{5}\nSpeed<r>+{6}",
                            total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
-    pbTopRightWindow(_INTL("Max. HP<r>{1}\r\nAttack<r>{2}\r\nDefense<r>{3}\r\nSp. Atk<r>{4}\r\nSp. Def<r>{5}\r\nSpeed<r>{6}",
+    pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
                            pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
     # Learn new moves upon level up
     movelist = pkmn.getMoveList
@@ -299,13 +299,13 @@ def pbChangeExp(pkmn, new_exp, scene)
     # Check for evolution
     new_species = pkmn.check_evolution_on_level_up
     if new_species
-      pbFadeOutInWithMusic {
+      pbFadeOutInWithMusic do
         evo = PokemonEvolutionScene.new
         evo.pbStartScreen(pkmn, new_species)
         evo.pbEvolution
         evo.pbEndScreen
         scene.pbRefresh if scene.is_a?(PokemonPartyScreen)
-      }
+      end
     end
   end
 end
@@ -521,7 +521,8 @@ end
 #===============================================================================
 def pbBikeCheck
   if $PokemonGlobal.surfing || $PokemonGlobal.diving ||
-     (!$PokemonGlobal.bicycle && $game_player.pbTerrainTag.must_walk)
+     (!$PokemonGlobal.bicycle &&
+     ($game_player.pbTerrainTag.must_walk || $game_player.pbTerrainTag.must_walk_or_run))
     pbMessage(_INTL("Can't use that here."))
     return false
   end
@@ -590,11 +591,11 @@ def pbLearnMove(pkmn, move, ignore_if_known = false, by_machine = false, &block)
     return false
   elsif pkmn.numMoves < Pokemon::MAX_MOVES
     pkmn.learn_move(move)
-    pbMessage(_INTL("\\se[]{1} learned {2}!\\se[Pkmn move learnt]", pkmn_name, move_name), &block)
+    pbMessage("\\se[]" + _INTL("{1} learned {2}!", pkmn_name, move_name) + "\\se[Pkmn move learnt]", &block)
     return true
   end
-  pbMessage(_INTL("{1} wants to learn {2}, but it already knows {3} moves.\1",
-                  pkmn_name, move_name, pkmn.numMoves.to_word), &block)
+  pbMessage(_INTL("{1} wants to learn {2}, but it already knows {3} moves.",
+                  pkmn_name, move_name, pkmn.numMoves.to_word) + "\1", &block)
   if pbConfirmMessage(_INTL("Should {1} forget a move to learn {2}?", pkmn_name, move_name), &block)
     loop do
       move_index = pbForgetMove(pkmn, move)
@@ -605,9 +606,9 @@ def pbLearnMove(pkmn, move, ignore_if_known = false, by_machine = false, &block)
         if by_machine && Settings::TAUGHT_MACHINES_KEEP_OLD_PP
           pkmn.moves[move_index].pp = [oldmovepp, pkmn.moves[move_index].total_pp].min
         end
-        pbMessage(_INTL("1, 2, and...\\wt[16] ...\\wt[16] ...\\wt[16] Ta-da!\\se[Battle ball drop]\1"), &block)
-        pbMessage(_INTL("{1} forgot how to use {2}.\\nAnd...\1", pkmn_name, old_move_name), &block)
-        pbMessage(_INTL("\\se[]{1} learned {2}!\\se[Pkmn move learnt]", pkmn_name, move_name), &block)
+        pbMessage(_INTL("1, 2, and...\\wt[16] ...\\wt[16] ...\\wt[16] Ta-da!") + "\\se[Battle ball drop]\1", &block)
+        pbMessage(_INTL("{1} forgot how to use {2}.\\nAnd..." + "\1", pkmn_name, old_move_name), &block)
+        pbMessage("\\se[]" + _INTL("{1} learned {2}!", pkmn_name, move_name) + "\\se[Pkmn move learnt]", &block)
         pkmn.changeHappiness("machine") if by_machine
         return true
       elsif pbConfirmMessage(_INTL("Give up on learning {1}?", move_name), &block)
@@ -623,11 +624,11 @@ end
 
 def pbForgetMove(pkmn, moveToLearn)
   ret = -1
-  pbFadeOutIn {
+  pbFadeOutIn do
     scene = PokemonSummary_Scene.new
     screen = PokemonSummaryScreen.new(scene)
     ret = screen.pbStartForgetScreen([pkmn], 0, moveToLearn)
-  }
+  end
   return ret
 end
 
@@ -652,7 +653,7 @@ def pbUseItem(bag, item, bagscene = nil)
         annot.push((elig) ? _INTL("ABLE") : _INTL("NOT ABLE"))
       end
     end
-    pbFadeOutIn {
+    pbFadeOutIn do
       scene = PokemonParty_Scene.new
       screen = PokemonPartyScreen.new(scene, $player.party)
       screen.pbStartScene(_INTL("Use on which Pokémon?"), false, annot)
@@ -670,7 +671,7 @@ def pbUseItem(bag, item, bagscene = nil)
         max_at_once = [max_at_once, $bag.quantity(item)].min
         if max_at_once > 1
           qty = screen.scene.pbChooseNumber(
-            _INTL("How many {1} do you want to use?", GameData::Item.get(item).name), max_at_once
+            _INTL("How many {1} do you want to use?", GameData::Item.get(item).portion_name_plural), max_at_once
           )
           screen.scene.pbSetHelpText("") if screen.is_a?(PokemonPartyScreen)
         end
@@ -679,12 +680,12 @@ def pbUseItem(bag, item, bagscene = nil)
         next unless ret && itm.consumed_after_use?
         bag.remove(item, qty)
         next if bag.has?(item)
-        pbMessage(_INTL("You used your last {1}.", itm.name)) { screen.pbUpdate }
+        pbMessage(_INTL("You used your last {1}.", itm.portion_name)) { screen.pbUpdate }
         break
       end
       screen.pbEndScene
       bagscene&.pbRefresh
-    }
+    end
     return (ret) ? 1 : 0
   elsif useType == 2 || itm.is_machine?   # Item is usable from Bag or teaches a move
     intret = ItemHandlers.triggerUseFromBag(item)
@@ -713,7 +714,7 @@ def pbUseItemOnPokemon(item, pkmn, scene)
     elsif !pkmn.compatible_with_move?(machine)
       pbMessage(_INTL("{1} can't learn {2}.", pkmn.name, movename)) { scene.pbUpdate }
     else
-      pbMessage(_INTL("\\se[PC access]You booted up {1}.\1", itm.name)) { scene.pbUpdate }
+      pbMessage("\\se[PC access]" + _INTL("You booted up the {1}.", itm.portion_name) + "\1") { scene.pbUpdate }
       if pbConfirmMessage(_INTL("Do you want to teach {1} to {2}?", movename, pkmn.name)) { scene.pbUpdate }
         if pbLearnMove(pkmn, machine, false, true) { scene.pbUpdate }
           $bag.remove(item) if itm.consumed_after_use?
@@ -729,7 +730,7 @@ def pbUseItemOnPokemon(item, pkmn, scene)
   max_at_once = [max_at_once, $bag.quantity(item)].min
   if max_at_once > 1
     qty = scene.scene.pbChooseNumber(
-      _INTL("How many {1} do you want to use?", itm.name), max_at_once
+      _INTL("How many {1} do you want to use?", itm.portion_name_plural), max_at_once
     )
     scene.scene.pbSetHelpText("") if scene.is_a?(PokemonPartyScreen)
   end
@@ -740,7 +741,7 @@ def pbUseItemOnPokemon(item, pkmn, scene)
   if ret && itm.consumed_after_use?
     $bag.remove(item, qty)
     if !$bag.has?(item)
-      pbMessage(_INTL("You used your last {1}.", itm.name)) { scene.pbUpdate }
+      pbMessage(_INTL("You used your last {1}.", itm.portion_name)) { scene.pbUpdate }
     end
   end
   return ret
@@ -757,7 +758,7 @@ def pbUseKeyItemInField(item)
 end
 
 def pbUseItemMessage(item)
-  itemname = GameData::Item.get(item).name
+  itemname = GameData::Item.get(item).portion_name
   if itemname.starts_with_vowel?
     pbMessage(_INTL("You used an {1}.", itemname))
   else
@@ -765,15 +766,15 @@ def pbUseItemMessage(item)
   end
 end
 
-def pbCheckUseOnPokemon(_item, pkmn, _screen)
-  return pkmn && !pkmn.egg?
+def pbCheckUseOnPokemon(item, pkmn, _screen)
+  return pkmn && !pkmn.egg? && (!pkmn.hyper_mode || GameData::Item.get(item)&.is_scent?)
 end
 
 #===============================================================================
 # Give an item to a Pokémon to hold, and take a held item from a Pokémon
 #===============================================================================
 def pbGiveItemToPokemon(item, pkmn, scene, pkmnid = 0)
-  newitemname = GameData::Item.get(item).name
+  newitemname = GameData::Item.get(item).portion_name
   if pkmn.egg?
     scene.pbDisplay(_INTL("Eggs can't hold items."))
     return false
@@ -782,13 +783,11 @@ def pbGiveItemToPokemon(item, pkmn, scene, pkmnid = 0)
     return false if !pbTakeItemFromPokemon(pkmn, scene)
   end
   if pkmn.hasItem?
-    olditemname = pkmn.item.name
-    if pkmn.hasItem?(:LEFTOVERS)
-      scene.pbDisplay(_INTL("{1} is already holding some {2}.\1", pkmn.name, olditemname))
-    elsif newitemname.starts_with_vowel?
-      scene.pbDisplay(_INTL("{1} is already holding an {2}.\1", pkmn.name, olditemname))
+    olditemname = pkmn.item.portion_name
+    if newitemname.starts_with_vowel?
+      scene.pbDisplay(_INTL("{1} is already holding an {2}.", pkmn.name, olditemname) + "\1")
     else
-      scene.pbDisplay(_INTL("{1} is already holding a {2}.\1", pkmn.name, olditemname))
+      scene.pbDisplay(_INTL("{1} is already holding a {2}.", pkmn.name, olditemname) + "\1")
     end
     if scene.pbConfirm(_INTL("Would you like to switch the two items?"))
       $bag.remove(item)
@@ -835,14 +834,14 @@ def pbTakeItemFromPokemon(pkmn, scene)
       end
     elsif scene.pbConfirm(_INTL("If the mail is removed, its message will be lost. OK?"))
       $bag.add(pkmn.item)
-      scene.pbDisplay(_INTL("Received the {1} from {2}.", pkmn.item.name, pkmn.name))
+      scene.pbDisplay(_INTL("Received the {1} from {2}.", pkmn.item.portion_name, pkmn.name))
       pkmn.item = nil
       pkmn.mail = nil
       ret = true
     end
   else
     $bag.add(pkmn.item)
-    scene.pbDisplay(_INTL("Received the {1} from {2}.", pkmn.item.name, pkmn.name))
+    scene.pbDisplay(_INTL("Received the {1} from {2}.", pkmn.item.portion_name, pkmn.name))
     pkmn.item = nil
     ret = true
   end
@@ -854,33 +853,33 @@ end
 #===============================================================================
 def pbChooseItem(var = 0, *args)
   ret = nil
-  pbFadeOutIn {
+  pbFadeOutIn do
     scene = PokemonBag_Scene.new
     screen = PokemonBagScreen.new(scene, $bag)
     ret = screen.pbChooseItemScreen
-  }
+  end
   $game_variables[var] = ret || :NONE if var > 0
   return ret
 end
 
 def pbChooseApricorn(var = 0)
   ret = nil
-  pbFadeOutIn {
+  pbFadeOutIn do
     scene = PokemonBag_Scene.new
     screen = PokemonBagScreen.new(scene, $bag)
     ret = screen.pbChooseItemScreen(proc { |item| GameData::Item.get(item).is_apricorn? })
-  }
+  end
   $game_variables[var] = ret || :NONE if var > 0
   return ret
 end
 
 def pbChooseFossil(var = 0)
   ret = nil
-  pbFadeOutIn {
+  pbFadeOutIn do
     scene = PokemonBag_Scene.new
     screen = PokemonBagScreen.new(scene, $bag)
     ret = screen.pbChooseItemScreen(proc { |item| GameData::Item.get(item).is_fossil? })
-  }
+  end
   $game_variables[var] = ret || :NONE if var > 0
   return ret
 end

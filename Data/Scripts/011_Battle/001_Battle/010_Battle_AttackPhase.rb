@@ -39,9 +39,7 @@ class Battle
       end
       # Use Pursuit
       @choices[b.index][3] = idxSwitcher   # Change Pursuit's target
-      if b.pbProcessTurn(@choices[b.index], false)
-        b.effects[PBEffects::Pursuit] = true
-      end
+      b.pbProcessTurn(@choices[b.index], false)
       break if @decision > 0 || @battlers[idxSwitcher].fainted?
     end
     @switching = false
@@ -59,9 +57,9 @@ class Battle
       pbPursuit(b.index)
       return if @decision > 0
       # Switch Pokémon
-      allBattlers.each do |b|
-        b.droppedBelowHalfHP = false
-        b.statsDropped = false
+      allBattlers.each do |b2|
+        b2.droppedBelowHalfHP = false
+        b2.statsDropped = false
       end
       pbRecallAndReplace(b.index, idxNewPkmn)
       pbOnBattlerEnteringBattle(b.index, true)

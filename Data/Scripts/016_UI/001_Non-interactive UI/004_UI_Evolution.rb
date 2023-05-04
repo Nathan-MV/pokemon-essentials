@@ -496,7 +496,7 @@ class PokemonEvolutionScene
     @viewport.z = 99999
     @msgviewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @msgviewport.z = 99999
-    addBackgroundOrColoredPlane(@sprites, "background", "evolutionbg",
+    addBackgroundOrColoredPlane(@sprites, "background", "evolution_bg",
                                 Color.new(248, 248, 248), @bgviewport)
     rsprite1 = PokemonSprite.new(@viewport)
     rsprite1.setOffset(PictureOrigin::CENTER)
@@ -535,7 +535,7 @@ class PokemonEvolutionScene
     metaplayer1.play
     metaplayer2.play
     pbBGMStop
-    pbMessageDisplay(@sprites["msgwindow"], "\\se[]" + _INTL("What?") + "\\1") { pbUpdate }
+    pbMessageDisplay(@sprites["msgwindow"], "\\se[]" + _INTL("What?") + "\1") { pbUpdate }
     pbPlayDecisionSE
     @pokemon.play_cry
     @sprites["msgwindow"].text = _INTL("{1} is evolving!", @pokemon.name)
@@ -591,13 +591,15 @@ class PokemonEvolutionScene
     pbMEPlay("Evolution success")
     newspeciesname = GameData::Species.get(@newspecies).name
     pbMessageDisplay(@sprites["msgwindow"],
-                     _INTL("\\se[]Congratulations! Your {1} evolved into {2}!\\wt[80]",
-                           @pokemon.name, newspeciesname)) { pbUpdate }
+                     "\\se[]" + _INTL("Congratulations! Your {1} evolved into {2}!",
+                                      @pokemon.name, newspeciesname) + "\\wt[80]") { pbUpdate }
     @sprites["msgwindow"].text = ""
     # Check for consumed item and check if Pokémon should be duplicated
     pbEvolutionMethodAfterEvolution
     # Modify Pokémon to make it evolved
+    was_fainted = @pokemon.fainted?
     @pokemon.species = @newspecies
+    @pokemon.hp = 0 if was_fainted
     @pokemon.calc_stats
     @pokemon.ready_to_evolve = false
     # See and own evolved species
@@ -615,13 +617,13 @@ class PokemonEvolutionScene
       pbMessageDisplay(@sprites["msgwindow"],
                        _INTL("{1}'s data was added to the Pokédex.", newspeciesname)) { pbUpdate }
       $player.pokedex.register_last_seen(@pokemon)
-      pbFadeOutIn {
+      pbFadeOutIn do
         scene = PokemonPokedexInfo_Scene.new
         screen = PokemonPokedexInfoScreen.new(scene)
         screen.pbDexEntry(@pokemon.species)
         @sprites["msgwindow"].text = "" if moves_to_learn.length > 0
         pbEndScreen(false) if moves_to_learn.length == 0
-      }
+      end
     end
     # Learn moves upon evolution for evolved species
     moves_to_learn.each do |move|

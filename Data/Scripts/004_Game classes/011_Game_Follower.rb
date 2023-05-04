@@ -27,7 +27,7 @@ class Game_Follower < Game_Event
     end
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   def move_through(direction)
     old_through = @through
@@ -105,13 +105,14 @@ class Game_Follower < Game_Event
     end
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   def turn_towards_leader(leader)
     pbTurnTowardEvent(self, leader)
   end
 
   def follow_leader(leader, instant = false, leaderIsTrueLeader = true)
+    return if @move_route_forcing
     maps_connected = $map_factory.areConnected?(leader.map.map_id, self.map.map_id)
     target = nil
     # Get the target tile that self wants to move to
@@ -145,18 +146,7 @@ class Game_Follower < Game_Event
     end
   end
 
-  #=============================================================================
-
-  def update_move
-    was_jumping = jumping?
-    super
-    if was_jumping && !jumping?
-      spriteset = $scene.spriteset(map_id)
-      spriteset&.addUserAnimation(Settings::DUST_ANIMATION_ID, self.x, self.y, true, 1)
-    end
-  end
-
-  #=============================================================================
+  #-----------------------------------------------------------------------------
 
   private
 

@@ -24,10 +24,11 @@ class BugContestState
     @lastContest = nil
   end
 
+  # Returns whether the last contest ended less than 24 hours ago.
   def pbContestHeld?
     return false if !@lastContest
     timenow = pbGetTimeNow
-    return timenow.to_i - @lastContest < 86_400
+    return timenow.to_i - @lastContest < 24 * 60 * 60   # 24 hours
   end
 
   def expired?
@@ -39,17 +40,17 @@ class BugContestState
   end
 
   def clear
-    @ballcount = 0
-    @ended = false
-    @inProgress = false
-    @decision = 0
-    @encounterMap = 0
-    @lastPokemon = nil
-    @otherparty = []
-    @contestants = []
-    @places = []
-    @start = nil
-    @reception = []
+    @ballcount    = 0
+    @ended        = false
+    @inProgress   = false
+    @decision     = 0
+    @lastPokemon  = nil
+    @otherparty   = []
+    @contestants  = []
+    @places       = []
+    @start        = nil
+    @contestMaps  = []
+    @reception    = []
   end
 
   def inProgress?
@@ -68,21 +69,35 @@ class BugContestState
     @chosenPokemon = chosenpoke
   end
 
+  def pbSetContestMap(*maps)
+    maps.each do |map|
+      if map.is_a?(String)   # Map metadata flag
+        GameData::MapMetadata.each do |map_data|
+          @contestMaps.push(map_data.id) if map_data.has_flag?(map)
+        end
+      else
+        @contestMaps.push(map)
+      end
+    end
+  end
+
   # Reception map is handled separately from contest map since the reception map
   # can be outdoors, with its own grassy patches.
-  def pbSetReception(*arg)
-    @reception = []
-    arg.each do |i|
-      @reception.push(i)
+  def pbSetReception(*maps)
+    maps.each do |map|
+      if map.is_a?(String)   # Map metadata flag
+        GameData::MapMetadata.each do |map_data|
+          @reception.push(map_data.id) if map_data.has_flag?(map)
+        end
+      else
+        @reception.push(map)
+      end
     end
   end
 
   def pbOffLimits?(map)
-#    p [map,@contestMap,@reception]
-    return false if map == @contestMap
-    @reception.each do |i|
-      return false if map == i
-    end
+    return false if @contestMaps.include?(map)
+    return false if @reception.include?(map)
     return true
   end
 
@@ -90,32 +105,30 @@ class BugContestState
     @start = [startMap, startX, startY, dir]
   end
 
-  def pbSetContestMap(map)
-    @contestMap = map
-  end
-
   def pbJudge
     judgearray = []
     if @lastPokemon
       judgearray.push([-1, @lastPokemon.species, pbBugContestScore(@lastPokemon)])
     end
-    enctype = :BugContest
-    if !$PokemonEncounters.map_has_encounter_type?(@contestMap, enctype)
-      enctype = :Land
-    end
-    @contestants.each do |cont|
-      enc = $PokemonEncounters.choose_wild_pokemon_for_map(@contestMap, enctype)
-      if !enc
-        raise _INTL("No encounters for map {1}, so can't judge contest", @contestMap)
+    maps_with_encounters = []
+    @contestMaps.each do |map|
+      enc_type = :BugContest
+      enc_type = :Land if !$PokemonEncounters.map_has_encounter_type?(map, enc_type)
+      if $PokemonEncounters.map_has_encounter_type?(map, enc_type)
+        maps_with_encounters.push([map, enc_type])
       end
+    end
+    raise _INTL("There are no Bug Contest/Land encounters for any Bug Contest maps.") if maps_with_encounters.empty?
+    @contestants.each do |cont|
+      enc_data = maps_with_encounters.sample
+      enc = $PokemonEncounters.choose_wild_pokemon_for_map(enc_data[0], enc_data[1])
+      raise _INTL("No encounters for map {1} somehow, so can't judge contest.", enc_data[0]) if !enc
       pokemon = Pokemon.new(enc[0], enc[1])
-      pokemon.hp = rand(1..pokemon.totalhp - 1)
+      pokemon.hp = rand(1...pokemon.totalhp)
       score = pbBugContestScore(pokemon)
       judgearray.push([cont, pokemon.species, score])
     end
-    if judgearray.length < 3
-      raise _INTL("Too few bug catching contestants")
-    end
+    raise _INTL("Too few bug catching contestants") if judgearray.length < 3
     judgearray.sort! { |a, b| b[2] <=> a[2] }   # sort by score in descending order
     @places.push(judgearray[0])
     @places.push(judgearray[1])
@@ -141,15 +154,16 @@ class BugContestState
     @decision = 1
     pbJudge
     if $scene.is_a?(Scene_Map)
-      pbFadeOutIn {
-        $game_temp.player_transferring = true
+      pbFadeOutIn do
+        $game_temp.player_transferring  = true
         $game_temp.player_new_map_id    = @start[0]
         $game_temp.player_new_x         = @start[1]
         $game_temp.player_new_y         = @start[2]
         $game_temp.player_new_direction = @start[3]
+        pbDismountBike
         $scene.transfer_player
         $game_map.need_refresh = true   # in case player moves to the same map
-      }
+      end
     end
   end
 
@@ -193,24 +207,21 @@ class BugContestState
 
   def pbEnd(interrupted = false)
     return if !@inProgress
-    @otherparty.each do |poke|
-      $player.party.push(poke)
-    end
+    @otherparty.each { |pkmn| $player.party.push(pkmn) }
     if interrupted
       @ended = false
     else
-      if @lastPokemon
-        pbNicknameAndStore(@lastPokemon)
-      end
+      pbNicknameAndStore(@lastPokemon) if @lastPokemon
       @ended = true
     end
     $stats.bug_contest_wins += 1 if place == 0
-    @lastPokemon = nil
-    @otherparty = []
-    @reception = []
     @ballcount = 0
     @inProgress = false
     @decision = 0
+    @lastPokemon = nil
+    @otherparty = []
+    @contestMaps = []
+    @reception = []
     timenow = pbGetTimeNow
     @lastContest = timenow.to_i
     $game_map.need_refresh = true
@@ -342,22 +353,22 @@ EventHandlers.add(:on_leave_map, :end_bug_contest,
 #
 #===============================================================================
 EventHandlers.add(:on_calling_wild_battle, :bug_contest_battle,
-  proc { |species, level, handled|
+  proc { |pkmn, handled|
     # handled is an array: [nil]. If [true] or [false], the battle has already
     # been overridden (the boolean is its outcome), so don't do anything that
     # would override it again
     next if !handled[0].nil?
     next if !pbInBugContest?
-    handled[0] = pbBugContestBattle(species, level)
+    handled[0] = pbBugContestBattle(pkmn)
   }
 )
 
-def pbBugContestBattle(species, level)
+def pbBugContestBattle(pkmn, level = 1)
   # Record information about party Pokémon to be used at the end of battle (e.g.
   # comparing levels for an evolution check)
   EventHandlers.trigger(:on_start_battle)
   # Generate a wild Pokémon based on the species and level
-  pkmn = pbGenerateWildPokemon(species, level)
+  pkmn = pbGenerateWildPokemon(pkmn, level) if !pkmn.is_a?(Pokemon)
   foeParty = [pkmn]
   # Calculate who the trainers and their party are
   playerTrainer     = [$player]
@@ -373,7 +384,7 @@ def pbBugContestBattle(species, level)
   BattleCreationHelperMethods.prepare_battle(battle)
   # Perform the battle itself
   decision = 0
-  pbBattleAnimation(pbGetWildBattleBGM(foeParty), 0, foeParty) {
+  pbBattleAnimation(pbGetWildBattleBGM(foeParty), 0, foeParty) do
     decision = battle.pbStartBattle
     BattleCreationHelperMethods.after_battle(decision, true)
     if [2, 5].include?(decision)   # Lost or drew
@@ -381,7 +392,7 @@ def pbBugContestBattle(species, level)
       $game_system.bgs_unpause
       pbBugContestStartOver
     end
-  }
+  end
   Input.update
   # Update Bug Contest game data based on result of battle
   pbBugContestState.ballcount = battle.ballCount
@@ -392,7 +403,7 @@ def pbBugContestBattle(species, level)
   # Save the result of the battle in Game Variable 1
   BattleCreationHelperMethods.set_outcome(decision, 1)
   # Used by the Poké Radar to update/break the chain
-  EventHandlers.trigger(:on_wild_battle_end, species, level, decision)
+  EventHandlers.trigger(:on_wild_battle_end, pkmn.species_data.id, pkmn.level, decision)
   # Return false if the player lost or drew the battle, and true if any other result
   return (decision != 2 && decision != 5)
 end

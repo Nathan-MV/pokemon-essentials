@@ -111,7 +111,7 @@ class Battle
   # all instances where the party screen is opened.
   def pbPartyScreen(idxBattler, checkLaxOnly = false, canCancel = false, shouldRegister = false)
     ret = -1
-    @scene.pbPartyScreen(idxBattler, canCancel) { |idxParty, partyScene|
+    @scene.pbPartyScreen(idxBattler, canCancel) do |idxParty, partyScene|
       if checkLaxOnly
         next false if !pbCanSwitchLax?(idxBattler, idxParty, partyScene)
       elsif !pbCanSwitch?(idxBattler, idxParty, partyScene)
@@ -122,7 +122,7 @@ class Battle
       end
       ret = idxParty
       next true
-    }
+    end
     return ret
   end
 
@@ -413,7 +413,7 @@ class Battle
         pbDisplay(_INTL("{1} became cloaked in mystical moonlight!", battler.pbThis))
         battler.pbRecoverHP(battler.totalhp)
         battler.pbCureStatus(false)
-        battler.eachMove { |m| m.pp = m.total_pp }
+        battler.eachMove { |m| battler.pbSetPP(m, m.total_pp) }
         position.effects[PBEffects::LunarDance] = false
       elsif Settings::MECHANICS_GENERATION < 8
         position.effects[PBEffects::LunarDance] = false
@@ -427,9 +427,8 @@ class Battle
     if battler_side.effects[PBEffects::StealthRock] && battler.takesIndirectDamage? &&
        GameData::Type.exists?(:ROCK) && !battler.hasActiveItem?(:HEAVYDUTYBOOTS)
       bTypes = battler.pbTypes(true)
-      eff = Effectiveness.calculate(:ROCK, bTypes[0], bTypes[1], bTypes[2])
+      eff = Effectiveness.calculate(:ROCK, *bTypes)
       if !Effectiveness.ineffective?(eff)
-        eff = eff.to_f / Effectiveness::NORMAL_EFFECTIVE
         battler.pbReduceHP(battler.totalhp * eff / 8, false)
         pbDisplay(_INTL("Pointed stones dug into {1}!", battler.pbThis))
         battler.pbItemHPHealCheck
