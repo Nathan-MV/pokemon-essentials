@@ -461,16 +461,6 @@ MenuHandlers.add(:debug_menu, :pokemon_menu, {
   "always_show" => false
 })
 
-MenuHandlers.add(:debug_menu, :clear_party_pokemon, {
-  "name"        => _INTL("Clear Party Pokemon"),
-  "parent"      => :pokemon_menu,
-  "description" => _INTL("Remove all Pokémon in party."),
-  "effect"      => proc {
-    $player.party.each { |pkmn| pkmn.delete }
-    pbMessage(_INTL("Removed all Pokémon in the party."))
-  }
-})
-
 MenuHandlers.add(:debug_menu, :heal_party, {
   "name"        => _INTL("Heal Party"),
   "parent"      => :pokemon_menu,
@@ -506,6 +496,16 @@ MenuHandlers.add(:debug_menu, :add_pokemon, {
         end
       end
     end
+  }
+})
+
+MenuHandlers.add(:debug_menu, :clear_party, {
+  "name"        => _INTL("Clear Party"),
+  "parent"      => :pokemon_menu,
+  "description" => _INTL("Remove all Pokémon in the party."),
+  "effect"      => proc {
+    $player.party.clear
+    pbMessage(_INTL("Your Pokémon has been deleted."))
   }
 })
 

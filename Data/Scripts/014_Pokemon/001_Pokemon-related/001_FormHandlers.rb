@@ -281,35 +281,28 @@ MultipleForms.register(:SHAYMIN, {
 MultipleForms.register(:ARCEUS, {
   "getForm" => proc { |pkmn|
     next nil if !pkmn.hasAbility?(:MULTITYPE)
-    typeArray = {
-      1  => [:FISTPLATE,   :FIGHTINIUMZ],
-      2  => [:SKYPLATE,    :FLYINIUMZ],
-      3  => [:TOXICPLATE,  :POISONIUMZ],
-      4  => [:EARTHPLATE,  :GROUNDIUMZ],
-      5  => [:STONEPLATE,  :ROCKIUMZ],
-      6  => [:INSECTPLATE, :BUGINIUMZ],
-      7  => [:SPOOKYPLATE, :GHOSTIUMZ],
-      8  => [:IRONPLATE,   :STEELIUMZ],
-      10 => [:FLAMEPLATE,  :FIRIUMZ],
-      11 => [:SPLASHPLATE, :WATERIUMZ],
-      12 => [:MEADOWPLATE, :GRASSIUMZ],
-      13 => [:ZAPPLATE,    :ELECTRIUMZ],
-      14 => [:MINDPLATE,   :PSYCHIUMZ],
-      15 => [:ICICLEPLATE, :ICIUMZ],
-      16 => [:DRACOPLATE,  :DRAGONIUMZ],
-      17 => [:DREADPLATE,  :DARKINIUMZ],
-      18 => [:PIXIEPLATE,  :FAIRIUMZ]
-    }
-    ret = 0
-    typeArray.each do |f, items|
-      items.each do |item|
-        next if !pkmn.hasItem?(item)
-        ret = f
-        break
-      end
-      break if ret > 0
-    end
-    next ret
+    typeArray = [
+      [:FISTPLATE,   :FIGHTINIUMZ],
+      [:SKYPLATE,    :FLYINIUMZ],
+      [:TOXICPLATE,  :POISONIUMZ],
+      [:EARTHPLATE,  :GROUNDIUMZ],
+      [:STONEPLATE,  :ROCKIUMZ],
+      [:INSECTPLATE, :BUGINIUMZ],
+      [:SPOOKYPLATE, :GHOSTIUMZ],
+      [:IRONPLATE,   :STEELIUMZ],
+      [],
+      [:FLAMEPLATE,  :FIRIUMZ],
+      [:SPLASHPLATE, :WATERIUMZ],
+      [:MEADOWPLATE, :GRASSIUMZ],
+      [:ZAPPLATE,    :ELECTRIUMZ],
+      [:MINDPLATE,   :PSYCHIUMZ],
+      [:ICICLEPLATE, :ICIUMZ],
+      [:DRACOPLATE,  :DRAGONIUMZ],
+      [:DREADPLATE,  :DARKINIUMZ],
+      [:PIXIEPLATE,  :FAIRIUMZ]
+    ]
+    form = typeArray.index { |type| type && type.any? { |item| pkmn.hasItem?(item) } }
+    next form.nil? ? 0 : form + 1
   }
 })
 
@@ -509,35 +502,28 @@ MultipleForms.register(:WISHIWASHI, {
 MultipleForms.register(:SILVALLY, {
   "getForm" => proc { |pkmn|
     next nil if !pkmn.hasAbility?(:RKSSYSTEM)
-    typeArray = {
-      1  => [:FIGHTINGMEMORY],
-      2  => [:FLYINGMEMORY],
-      3  => [:POISONMEMORY],
-      4  => [:GROUNDMEMORY],
-      5  => [:ROCKMEMORY],
-      6  => [:BUGMEMORY],
-      7  => [:GHOSTMEMORY],
-      8  => [:STEELMEMORY],
-      10 => [:FIREMEMORY],
-      11 => [:WATERMEMORY],
-      12 => [:GRASSMEMORY],
-      13 => [:ELECTRICMEMORY],
-      14 => [:PSYCHICMEMORY],
-      15 => [:ICEMEMORY],
-      16 => [:DRAGONMEMORY],
-      17 => [:DARKMEMORY],
-      18 => [:FAIRYMEMORY]
-    }
-    ret = 0
-    typeArray.each do |f, items|
-      items.each do |item|
-        next if !pkmn.hasItem?(item)
-        ret = f
-        break
-      end
-      break if ret > 0
-    end
-    next ret
+    typeArray = [
+      :FIGHTINGMEMORY,
+      :FLYINGMEMORY,
+      :POISONMEMORY,
+      :GROUNDMEMORY,
+      :ROCKMEMORY,
+      :BUGMEMORY,
+      :GHOSTMEMORY,
+      :STEELMEMORY,
+      [],
+      :FIREMEMORY,
+      :WATERMEMORY,
+      :GRASSMEMORY,
+      :ELECTRICMEMORY,
+      :PSYCHICMEMORY,
+      :ICEMEMORY,
+      :DRAGONMEMORY,
+      :DARKMEMORY,
+      :FAIRYMEMORY
+    ]
+    form = typeArray.index { |item| pkmn.hasItem?(item) }#.to_i#typeArray.index { |item| pkmn.hasItem?(item) if item && item.any }
+    next form.nil? ? 0 : form + 1
   }
 })
 
