@@ -290,7 +290,7 @@ MultipleForms.register(:ARCEUS, {
       [:INSECTPLATE, :BUGINIUMZ],
       [:SPOOKYPLATE, :GHOSTIUMZ],
       [:IRONPLATE,   :STEELIUMZ],
-      [],
+      [], # Unknown
       [:FLAMEPLATE,  :FIRIUMZ],
       [:SPLASHPLATE, :WATERIUMZ],
       [:MEADOWPLATE, :GRASSIUMZ],
@@ -301,8 +301,9 @@ MultipleForms.register(:ARCEUS, {
       [:DREADPLATE,  :DARKINIUMZ],
       [:PIXIEPLATE,  :FAIRIUMZ]
     ]
-    form = typeArray.index { |type| type && type.any? { |item| pkmn.hasItem?(item) } }
-    next form.nil? ? 0 : form + 1
+    type = typeArray.index { |type| type && type.any? { |item| pkmn.hasItem?(item) } }
+    next type + 1 if !type.nil?
+    next 0
   }
 })
 
@@ -328,49 +329,18 @@ MultipleForms.register(:KYUREM, {
     next pkmn.form - 2 if pkmn.form >= 3   # Fused forms stop glowing
   },
   "onSetForm" => proc { |pkmn, form, oldForm|
-    case form
-    when 0   # Normal
+    moves_to_replace = {
+      0 => { :ICEBURN => :GLACIATE, :FREEZESHOCK => :GLACIATE, :FUSIONFLARE => :SCARYFACE, :FUSIONBOLT => :SCARYFACE },
+      1 => { :GLACIATE => :ICEBURN, :SCARYFACE => :FUSIONFLARE },
+      2 => { :GLACIATE => :FREEZESHOCK, :SCARYFACE => :FUSIONBOLT }
+    }
+    moves_to_replace[form].each do |original_move, replacement_move|
       pkmn.moves.each_with_index do |move, i|
-        case move.id
-        when :ICEBURN, :FREEZESHOCK
-          next if !GameData::Move.exists?(:GLACIATE)
-          if pkmn.hasMove?(:GLACIATE)
-            pkmn.moves[i] = nil
-          else
-            move.id = :GLACIATE
-          end
-        when :FUSIONFLARE, :FUSIONBOLT
-          next if !GameData::Move.exists?(:SCARYFACE)
-          if pkmn.hasMove?(:SCARYFACE)
-            pkmn.moves[i] = nil
-          else
-            move.id = :SCARYFACE
-          end
-        end
-        pkmn.moves.compact!
-      end
-    when 1   # White
-      pkmn.moves.each do |move|
-        case move.id
-        when :GLACIATE
-          next if !GameData::Move.exists?(:ICEBURN) || pkmn.hasMove?(:ICEBURN)
-          move.id = :ICEBURN
-        when :SCARYFACE
-          next if !GameData::Move.exists?(:FUSIONFLARE) || pkmn.hasMove?(:FUSIONFLARE)
-          move.id = :FUSIONFLARE
+        if move.id == original_move && GameData::Move.exists?(replacement_move) && !pkmn.hasMove?(replacement_move)
+          pkmn.moves[i].id = replacement_move
         end
       end
-    when 2   # Black
-      pkmn.moves.each do |move|
-        case move.id
-        when :GLACIATE
-          next if !GameData::Move.exists?(:FREEZESHOCK) || pkmn.hasMove?(:FREEZESHOCK)
-          move.id = :FREEZESHOCK
-        when :SCARYFACE
-          next if !GameData::Move.exists?(:FUSIONBOLT) || pkmn.hasMove?(:FUSIONBOLT)
-          move.id = :FUSIONBOLT
-        end
-      end
+      pkmn.moves.compact!
     end
   }
 })
@@ -511,7 +481,7 @@ MultipleForms.register(:SILVALLY, {
       :BUGMEMORY,
       :GHOSTMEMORY,
       :STEELMEMORY,
-      [],
+      [], # Unknown
       :FIREMEMORY,
       :WATERMEMORY,
       :GRASSMEMORY,
@@ -522,8 +492,9 @@ MultipleForms.register(:SILVALLY, {
       :DARKMEMORY,
       :FAIRYMEMORY
     ]
-    form = typeArray.index { |item| pkmn.hasItem?(item) }#.to_i#typeArray.index { |item| pkmn.hasItem?(item) if item && item.any }
-    next form.nil? ? 0 : form + 1
+    type = typeArray.index { |item| pkmn.hasItem?(item) }
+    next type + 1 if !type.nil?
+    next 0
   }
 })
 
