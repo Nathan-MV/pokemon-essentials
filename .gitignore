@@ -6,7 +6,7 @@ Plugins/
 # Data folder, but not Data/Scripts folder
 Data/*
 !Data/Scripts.rxdata
-!Data/Scripts/
+!Data/Scripts
 
 # Files in the main project folder
 Game.ini
@@ -28,5 +28,6 @@ Thumbs.db
 [Dd]esktop.ini
 
 # Temp files
+New folder/
 ____Transition_HGSS
 ~*
