@@ -73,6 +73,7 @@ def pbAddPokemon(pkmn, level = 1, see_form = true)
   pbNicknameAndStore(pkmn)
   return true
 end
+alias add_pokemon pbAddPokemon
 
 def pbAddPokemonSilent(pkmn, level = 1, see_form = true)
   return false if !pkmn || pbBoxesFull?
