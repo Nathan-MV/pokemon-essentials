@@ -3800,6 +3800,14 @@ FieldUse = OnPokemon
 Flags = Fling_30
 Description = A candy that is packed with energy. It raises the level of a single Pokémon by one.
 #-------------------------------
+[MELTANCANDY]
+Name = Meltan Candy
+NamePlural = Meltan Candies
+Pocket = 2
+Price = 20
+FieldUse = OnPokemon
+Description = A candy that is packed with energy. Feeding it to a certain Pokémon will make it evolve.
+#-------------------------------
 [MASTERBALL]
 Name = Master Ball
 NamePlural = Master Balls
