@@ -213,6 +213,8 @@ class PokemonPartyPanel < Sprite
     @ballsprite.z = self.z + 1
     @ballsprite.addBitmap("desel", "Graphics/UI/Party/icon_ball")
     @ballsprite.addBitmap("sel", "Graphics/UI/Party/icon_ball_sel")
+    @ballsprite.addBitmap("desel_canevo", "Plugins/LAEVO/Graphics/evo_icon_ball")
+    @ballsprite.addBitmap("sel_canevo", "Plugins/LAEVO/Graphics/evo_icon_ball_sel")
     @pkmnsprite = PokemonIconSprite.new(pokemon, viewport)
     @pkmnsprite.setOffset(PictureOrigin::CENTER)
     @pkmnsprite.active = @active
@@ -363,7 +365,9 @@ class PokemonPartyPanel < Sprite
 
   def refresh_ball_graphic
     return if !@ballsprite || @ballsprite.disposed?
-    @ballsprite.changeBitmap((self.selected) ? "sel" : "desel")
+    bitmapname = (self.selected) ? "sel" : "desel"
+    bitmapname << "_canevo" unless @evoreqs.nil? || @evoreqs.empty?
+    @ballsprite.changeBitmap(bitmapname)
     @ballsprite.x     = self.x + 10
     @ballsprite.y     = self.y
     @ballsprite.color = self.color
