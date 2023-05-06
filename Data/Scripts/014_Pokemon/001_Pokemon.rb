@@ -641,22 +641,21 @@ class Pokemon
     end
   end
 
-  # Silently learns the given move. Will erase the first known move if it has to.
-  # @param move_id [Symbol, String, GameData::Move] ID of the move to learn
-  def learn_move(move_id)
-    move_data = GameData::Move.try_get(move_id)
-    return if !move_data
+  # Silently learns the given moves. Will erase the first known move if it has to.
+  # @param move_ids [Array<Symbol, String, GameData::Move>] IDs of the moves to learn
+  def learn_move(*move_ids)
+    move_data = move_ids.map { |id| GameData::Move.try_get(id) }.compact
     # Check if self already knows the move; if so, move it to the end of the array
-    @moves.each_with_index do |m, i|
-      next if m.id != move_data.id
-      @moves.push(m)
-      @moves.delete_at(i)
-      return
+    move_data.each do |move|
+      if (index = @moves.index { |m| m.id == move.id })
+        @moves.push(@moves.delete_at(index))
+      else
+        # Move is not already known; learn it
+        @moves.push(Pokemon::Move.new(move.id))
+        # Delete the first known move if self now knows more moves than it should
+        @moves.shift if numMoves > MAX_MOVES
+      end
     end
-    # Move is not already known; learn it
-    @moves.push(Pokemon::Move.new(move_data.id))
-    # Delete the first known move if self now knows more moves than it should
-    @moves.shift if numMoves > MAX_MOVES
   end
 
   # Deletes the given move from the Pokémon.

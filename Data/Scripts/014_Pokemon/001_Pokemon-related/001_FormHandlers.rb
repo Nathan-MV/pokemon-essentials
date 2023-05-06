@@ -281,35 +281,29 @@ MultipleForms.register(:SHAYMIN, {
 MultipleForms.register(:ARCEUS, {
   "getForm" => proc { |pkmn|
     next nil if !pkmn.hasAbility?(:MULTITYPE)
-    typeArray = {
-      1  => [:FISTPLATE,   :FIGHTINIUMZ],
-      2  => [:SKYPLATE,    :FLYINIUMZ],
-      3  => [:TOXICPLATE,  :POISONIUMZ],
-      4  => [:EARTHPLATE,  :GROUNDIUMZ],
-      5  => [:STONEPLATE,  :ROCKIUMZ],
-      6  => [:INSECTPLATE, :BUGINIUMZ],
-      7  => [:SPOOKYPLATE, :GHOSTIUMZ],
-      8  => [:IRONPLATE,   :STEELIUMZ],
-      10 => [:FLAMEPLATE,  :FIRIUMZ],
-      11 => [:SPLASHPLATE, :WATERIUMZ],
-      12 => [:MEADOWPLATE, :GRASSIUMZ],
-      13 => [:ZAPPLATE,    :ELECTRIUMZ],
-      14 => [:MINDPLATE,   :PSYCHIUMZ],
-      15 => [:ICICLEPLATE, :ICIUMZ],
-      16 => [:DRACOPLATE,  :DRAGONIUMZ],
-      17 => [:DREADPLATE,  :DARKINIUMZ],
-      18 => [:PIXIEPLATE,  :FAIRIUMZ]
-    }
-    ret = 0
-    typeArray.each do |f, items|
-      items.each do |item|
-        next if !pkmn.hasItem?(item)
-        ret = f
-        break
-      end
-      break if ret > 0
-    end
-    next ret
+    typeArray = [
+      [:FISTPLATE,   :FIGHTINIUMZ],
+      [:SKYPLATE,    :FLYINIUMZ],
+      [:TOXICPLATE,  :POISONIUMZ],
+      [:EARTHPLATE,  :GROUNDIUMZ],
+      [:STONEPLATE,  :ROCKIUMZ],
+      [:INSECTPLATE, :BUGINIUMZ],
+      [:SPOOKYPLATE, :GHOSTIUMZ],
+      [:IRONPLATE,   :STEELIUMZ],
+      [], # Unknown
+      [:FLAMEPLATE,  :FIRIUMZ],
+      [:SPLASHPLATE, :WATERIUMZ],
+      [:MEADOWPLATE, :GRASSIUMZ],
+      [:ZAPPLATE,    :ELECTRIUMZ],
+      [:MINDPLATE,   :PSYCHIUMZ],
+      [:ICICLEPLATE, :ICIUMZ],
+      [:DRACOPLATE,  :DRAGONIUMZ],
+      [:DREADPLATE,  :DARKINIUMZ],
+      [:PIXIEPLATE,  :FAIRIUMZ]
+    ]
+    type = typeArray.index { |type| type && type.any? { |item| pkmn.hasItem?(item) } }
+    next type + 1 if !type.nil?
+    next 0
   }
 })
 
@@ -335,49 +329,18 @@ MultipleForms.register(:KYUREM, {
     next pkmn.form - 2 if pkmn.form >= 3   # Fused forms stop glowing
   },
   "onSetForm" => proc { |pkmn, form, oldForm|
-    case form
-    when 0   # Normal
+    moves_to_replace = {
+      0 => { :ICEBURN => :GLACIATE, :FREEZESHOCK => :GLACIATE, :FUSIONFLARE => :SCARYFACE, :FUSIONBOLT => :SCARYFACE },
+      1 => { :GLACIATE => :ICEBURN, :SCARYFACE => :FUSIONFLARE },
+      2 => { :GLACIATE => :FREEZESHOCK, :SCARYFACE => :FUSIONBOLT }
+    }
+    moves_to_replace[form].each do |original_move, replacement_move|
       pkmn.moves.each_with_index do |move, i|
-        case move.id
-        when :ICEBURN, :FREEZESHOCK
-          next if !GameData::Move.exists?(:GLACIATE)
-          if pkmn.hasMove?(:GLACIATE)
-            pkmn.moves[i] = nil
-          else
-            move.id = :GLACIATE
-          end
-        when :FUSIONFLARE, :FUSIONBOLT
-          next if !GameData::Move.exists?(:SCARYFACE)
-          if pkmn.hasMove?(:SCARYFACE)
-            pkmn.moves[i] = nil
-          else
-            move.id = :SCARYFACE
-          end
-        end
-        pkmn.moves.compact!
-      end
-    when 1   # White
-      pkmn.moves.each do |move|
-        case move.id
-        when :GLACIATE
-          next if !GameData::Move.exists?(:ICEBURN) || pkmn.hasMove?(:ICEBURN)
-          move.id = :ICEBURN
-        when :SCARYFACE
-          next if !GameData::Move.exists?(:FUSIONFLARE) || pkmn.hasMove?(:FUSIONFLARE)
-          move.id = :FUSIONFLARE
+        if move.id == original_move && GameData::Move.exists?(replacement_move) && !pkmn.hasMove?(replacement_move)
+          pkmn.moves[i].id = replacement_move
         end
       end
-    when 2   # Black
-      pkmn.moves.each do |move|
-        case move.id
-        when :GLACIATE
-          next if !GameData::Move.exists?(:FREEZESHOCK) || pkmn.hasMove?(:FREEZESHOCK)
-          move.id = :FREEZESHOCK
-        when :SCARYFACE
-          next if !GameData::Move.exists?(:FUSIONBOLT) || pkmn.hasMove?(:FUSIONBOLT)
-          move.id = :FUSIONBOLT
-        end
-      end
+      pkmn.moves.compact!
     end
   }
 })
@@ -509,35 +472,29 @@ MultipleForms.register(:WISHIWASHI, {
 MultipleForms.register(:SILVALLY, {
   "getForm" => proc { |pkmn|
     next nil if !pkmn.hasAbility?(:RKSSYSTEM)
-    typeArray = {
-      1  => [:FIGHTINGMEMORY],
-      2  => [:FLYINGMEMORY],
-      3  => [:POISONMEMORY],
-      4  => [:GROUNDMEMORY],
-      5  => [:ROCKMEMORY],
-      6  => [:BUGMEMORY],
-      7  => [:GHOSTMEMORY],
-      8  => [:STEELMEMORY],
-      10 => [:FIREMEMORY],
-      11 => [:WATERMEMORY],
-      12 => [:GRASSMEMORY],
-      13 => [:ELECTRICMEMORY],
-      14 => [:PSYCHICMEMORY],
-      15 => [:ICEMEMORY],
-      16 => [:DRAGONMEMORY],
-      17 => [:DARKMEMORY],
-      18 => [:FAIRYMEMORY]
-    }
-    ret = 0
-    typeArray.each do |f, items|
-      items.each do |item|
-        next if !pkmn.hasItem?(item)
-        ret = f
-        break
-      end
-      break if ret > 0
-    end
-    next ret
+    typeArray = [
+      :FIGHTINGMEMORY,
+      :FLYINGMEMORY,
+      :POISONMEMORY,
+      :GROUNDMEMORY,
+      :ROCKMEMORY,
+      :BUGMEMORY,
+      :GHOSTMEMORY,
+      :STEELMEMORY,
+      [], # Unknown
+      :FIREMEMORY,
+      :WATERMEMORY,
+      :GRASSMEMORY,
+      :ELECTRICMEMORY,
+      :PSYCHICMEMORY,
+      :ICEMEMORY,
+      :DRAGONMEMORY,
+      :DARKMEMORY,
+      :FAIRYMEMORY
+    ]
+    type = typeArray.index { |item| pkmn.hasItem?(item) }
+    next type + 1 if !type.nil?
+    next 0
   }
 })
 

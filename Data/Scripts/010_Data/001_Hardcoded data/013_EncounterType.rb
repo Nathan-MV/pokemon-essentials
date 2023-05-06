@@ -156,6 +156,11 @@ GameData::EncounterType.register({
 })
 
 GameData::EncounterType.register({
+  :id             => :Dig,
+  :type           => :none,
+})
+
+GameData::EncounterType.register({
   :id             => :HeadbuttLow,
   :type           => :none
 })

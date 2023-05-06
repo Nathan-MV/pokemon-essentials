@@ -554,6 +554,16 @@ MenuHandlers.add(:debug_menu, :add_pokemon, {
   }
 })
 
+MenuHandlers.add(:debug_menu, :clear_party, {
+  "name"        => _INTL("Clear Party"),
+  "parent"      => :pokemon_menu,
+  "description" => _INTL("Remove all Pokémon in the party."),
+  "effect"      => proc {
+    $player.party.clear
+    pbMessage(_INTL("Your Pokémon has been deleted."))
+  }
+})
+
 MenuHandlers.add(:debug_menu, :fill_boxes, {
   "name"        => _INTL("Fill Storage Boxes"),
   "parent"      => :pokemon_menu,
@@ -620,38 +630,15 @@ MenuHandlers.add(:debug_menu, :give_demo_party, {
   "parent"      => :pokemon_menu,
   "description" => _INTL("Give yourself 6 preset Pokémon. They overwrite the current party."),
   "effect"      => proc {
-    party = []
     species = [:PIKACHU, :PIDGEOTTO, :KADABRA, :GYARADOS, :DIGLETT, :CHANSEY]
-    species.each { |id| party.push(id) if GameData::Species.exists?(id) }
-    $player.party.clear
-    # Generate Pokémon of each species at level 20
-    party.each do |spec|
-      pkmn = Pokemon.new(spec, 20)
-      $player.party.push(pkmn)
-      $player.pokedex.register(pkmn)
-      $player.pokedex.set_owned(spec)
-      case spec
-      when :PIDGEOTTO
-        pkmn.learn_move(:FLY)
-      when :KADABRA
-        pkmn.learn_move(:FLASH)
-        pkmn.learn_move(:TELEPORT)
-      when :GYARADOS
-        pkmn.learn_move(:SURF)
-        pkmn.learn_move(:DIVE)
-        pkmn.learn_move(:WATERFALL)
-      when :DIGLETT
-        pkmn.learn_move(:DIG)
-        pkmn.learn_move(:CUT)
-        pkmn.learn_move(:HEADBUTT)
-        pkmn.learn_move(:ROCKSMASH)
-      when :CHANSEY
-        pkmn.learn_move(:SOFTBOILED)
-        pkmn.learn_move(:STRENGTH)
-        pkmn.learn_move(:SWEETSCENT)
-      end
-      pkmn.record_first_moves
-    end
+    party = species.select { |id| GameData::Species.exists?(id) }.map { |spec| Pokemon.new(spec, 20) }
+    party[1].learn_move(:FLY)
+    party[2].learn_move(:FLASH, :TELEPORT)
+    party[3].learn_move(:SURF, :DIVE, :WATERFALL)
+    party[4].learn_move(:DIG, :CUT, :HEADBUTT, :ROCKSMASH)
+    party[5].learn_move(:SOFTBOILED, :STRENGTH, :SWEETSCENT)
+    $player.party.replace(party)
+    party.each { |pkmn| $player.pokedex.register(pkmn); $player.pokedex.set_owned(pkmn.species) }
     pbMessage(_INTL("Filled party with demo Pokémon."))
   }
 })

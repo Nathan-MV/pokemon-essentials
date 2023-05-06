@@ -59,7 +59,7 @@
     // as opposed to stretch-to-fill
     // (default: enabled)
     //
-    // "fixedAspectRatio": true,
+    "fixedAspectRatio": false,
 
 
     // Apply linear interpolation when game screen

@@ -1,0 +1,27 @@
+﻿# See the documentation on the wiki to learn how to edit this file.
+#-------------------------------
+[FLONNE,1]
+FormName = Fallen Angel
+BaseStats = 78,104,78,100,159,115
+Abilities = DROUGHT
+HiddenAbilities = DROUGHT
+Pokedex = Its bond with its Trainer is the source of its power. It boasts speed and maneuverability greater than that of a jet fighter.
+BattlerPlayerX = 6
+#-------------------------------
+[FLONNE,2]
+FormName = Archangel
+BaseStats = 78,104,78,100,159,115
+Abilities = DROUGHT
+HiddenAbilities = DROUGHT
+Pokedex = Its bond with its Trainer is the source of its power. It boasts speed and maneuverability greater than that of a jet fighter.
+BattlerPlayerX = 6
+#-------------------------------
+[KURTIS,1]
+FormName = Prinny
+BaseStats = 78,104,78,100,159,115
+Abilities = DROUGHT
+HiddenAbilities = DROUGHT
+Pokedex = Its bond with its Trainer is the source of its power. It boasts speed and maneuverability greater than that of a jet fighter.
+BattlerPlayerX = 6
+BattlerEnemyX = -2
+BattlerEnemyY = 44

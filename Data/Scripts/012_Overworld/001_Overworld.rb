@@ -753,3 +753,10 @@ def pbBuyPrize(item, quantity = 1)
                            item_name, pocket, PokemonBag.pocket_names[pocket - 1]))
   return true
 end
+
+def add_item_silent(item, quantity = 1)
+  item = GameData::Item.get(item)
+  return false if !item || quantity < 1
+  return true  if $bag.add(item, quantity) # If item can be added
+  return false                             # Can't add the item
+end

@@ -24,7 +24,7 @@ def pbStorePokemon(pkmn)
   if $player.party_full?
     stored_box = $PokemonStorage.pbStoreCaught(pkmn)
     box_name   = $PokemonStorage[stored_box].name
-    pbMessage(_INTL("{1} has been sent to Box \"{2}\"!", pkmn.name, box_name))
+    pbMessage(_INTL("{1} has been sent to {2}!", pkmn.name, box_name))
   else
     $player.party[$player.party.length] = pkmn
   end
