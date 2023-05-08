@@ -1,30 +1,5 @@
-#########################################
-#                                       #
-# Easy Debug Terminal                   #
-# by ENLS                               #
-# no clue what to write here honestly   #
-#                                       #
-#########################################
-
-###########################
-#      Configuration      #
-###########################
-
-# Enable or disable the debug terminal
 TERMINAL_ENABLED = true
-
-# Button used to open the terminal
 TERMINAL_KEYBIND = :F3
-# Uses SDL scancodes, without the SDL_SCANCODE_ prefix.
-# https://github.com/mkxp-z/mkxp-z/wiki/Extensions-(RGSS,-Modules)#detecting-key-states
-
-
-
-
-
-###########################
-#       Code Stuff        #
-###########################
 
 module Input
   unless defined?(update_Debug_Terminal)
@@ -50,10 +25,8 @@ end
 
 $InCommandLine = false
 
-# Custom Message Input Box Stuff
 def pbFreeTextNoWindow(currenttext, passwordbox, maxlength, width = 240)
   window = Window_TextEntry_Keyboard_Terminal.new(currenttext, 0, 0, width, 64)
-  ret = ""
   window.maxlength = maxlength
   window.visible = true
   window.z = 99999
@@ -63,17 +36,12 @@ def pbFreeTextNoWindow(currenttext, passwordbox, maxlength, width = 240)
   loop do
     Graphics.update
     Input.update
-    if Input.triggerex?(:ESCAPE)
-      ret = currenttext
-      break
-    elsif Input.triggerex?(:RETURN)
-      ret = window.text
-      break
-    end
+    break if Input.triggerex?(:ESCAPE) || Input.triggerex?(:RETURN)
     window.update
     yield if block_given?
   end
   Input.text_input = false
+  ret = Input.triggerex?(:RETURN) ? window.text : currenttext
   window.dispose
   Input.update
   return ret
@@ -85,41 +53,26 @@ class Window_TextEntry_Keyboard_Terminal < Window_TextEntry
     @frame %= 20
     self.refresh if (@frame % 10) == 0
     return if !self.active
-    # Moving cursor
-    if Input.triggerex?(:LEFT) || Input.repeatex?(:LEFT)
-      if @helper.cursor > 0
-        @helper.cursor -= 1
-        @frame = 0
-        self.refresh
-      end
-      return
-    elsif Input.triggerex?(:RIGHT) || Input.repeatex?(:RIGHT)
-      if @helper.cursor < self.text.scan(/./m).length
-        @helper.cursor += 1
-        @frame = 0
-        self.refresh
-      end
-      return
-    elsif Input.triggerex?(:BACKSPACE) || Input.repeatex?(:BACKSPACE)
+    if Input.triggerex?(:BACKSPACE) || Input.repeatex?(:BACKSPACE)
       self.delete if @helper.cursor > 0
-      return
     elsif Input.triggerex?(:UP) && $InCommandLine && !$game_temp.lastcommand.empty?
       self.text = $game_temp.lastcommand
       @helper.cursor = self.text.scan(/./m).length
-      return
-    elsif Input.triggerex?(:RETURN) || Input.triggerex?(:ESCAPE)
-      return
+    elsif ![:LEFT, :RIGHT, :RETURN, :ESCAPE].any? { |key| Input.triggerex?(key) || Input.repeatex?(key) }
+      Input.gets.each_char { |c| insert(c) }
+    elsif @helper.cursor > 0 && [:LEFT, :RIGHT].any? { |key| Input.triggerex?(key) || Input.repeatex?(key) }
+      @helper.cursor -= 1 if Input.triggerex?(:LEFT) || Input.repeatex?(:LEFT)
+      @helper.cursor += 1 if Input.triggerex?(:RIGHT) || Input.repeatex?(:RIGHT)
+      @frame = 0
+      self.refresh
     end
-    Input.gets.each_char { |c| insert(c) }
   end
 end
 
-# Saving the last executed command
 class Game_Temp
   attr_accessor :lastcommand
 
   def lastcommand
-    @lastcommand = "" if !@lastcommand
-    return @lastcommand
+    @lastcommand ||= ""
   end
 end
