@@ -1403,7 +1403,7 @@ end
 class Battle::Move::TypeDependsOnUserPlate < Battle::Move
   def initialize(battle, move)
     super
-    @itemTypes = {
+    @item_types = {
       :FISTPLATE   => :FIGHTING,
       :SKYPLATE    => :FLYING,
       :TOXICPLATE  => :POISON,
@@ -1425,15 +1425,61 @@ class Battle::Move::TypeDependsOnUserPlate < Battle::Move
   end
 
   def pbBaseType(user)
-    ret = :NORMAL
     if user.itemActive?
-      @itemTypes.each do |item, itemType|
+      @item_types.each do |item, item_type|
         next if user.item != item
-        ret = itemType if GameData::Type.exists?(itemType)
-        break
+        return item_type if GameData::Type.exists?(item_type)
       end
     end
-    return ret
+
+    if user.isSpecies?(:ARCEUS) && user.hasActiveAbility?(:MULTITYPE) && user.hasActiveItem?(:LEGENDPLATE)
+      targets = user.pbFindTargets(@battle.choices[user.index], self, user)
+      target = targets[0]
+      return if target.nil?
+
+      target_types = target.pbTypes(true)
+      best_type = nil
+      best_multiplier = 0
+      best_multiplier2 = Float::INFINITY
+      GameData::Type.each do |type|
+        next if (type == :GROUND && target.airborne?) ||
+                (type == :WATER && (target.hasActiveAbility?([:DRYSKIN, :STORMDRAIN,
+                                                              :WATERABSORB]) || target.effectiveWeather == :HarshSun)) ||
+                (type == :FIRE && (target.hasActiveAbility?(:FLASHFIRE) || target.effectiveWeather == :HeavyRain)) ||
+                (type == :GRASS && target.hasActiveAbility?(:SAPSIPPER)) ||
+                (type == :ELECTRIC && target.hasActiveAbility?([:LIGHTNINGROD, :MOTORDRIVE, :VOLTABSORB]))
+
+        multiplier = target_types.inject(1) do |m, target_type|
+          m * Effectiveness.get_type_effectiveness(type.id, target_type)
+        end
+        multiplier2 = target_types.inject(0) do |m, target_type|
+          m + Effectiveness.get_type_effectiveness(target_type, type.id)
+        end
+
+        if (type == :WATER && target.effectiveWeather == :Sun) || (type == :FIRE && target.effectiveWeather == :Rain)
+          multiplier /= 2
+        end
+
+        next unless multiplier > best_multiplier || (multiplier == best_multiplier && multiplier2 <= best_multiplier2)
+
+        best_type = type.id
+        best_multiplier = multiplier
+        best_multiplier2 = multiplier2
+      end
+
+      new_form = [
+        :NORMAL, :FIGHTING, :FLYING, :POISON, :GROUND,
+        :ROCK, :BUG, :GHOST, :STEEL, nil, :FIRE, :WATER, :GRASS,
+        :ELECTRIC, :PSYCHIC, :ICE, :DRAGON, :DARK, :FAIRY
+      ].index(best_type)
+
+      if new_form && user.pbChangeForm(
+        new_form, _INTL("{1} becomes {3}'s type to match {2}'s weakness!",
+                        user.pbThis, target.pbThis, GameData::Type.get(best_type).name)
+      )
+        return best_type
+      end
+    end
   end
 end
 

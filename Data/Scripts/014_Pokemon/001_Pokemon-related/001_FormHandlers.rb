@@ -304,6 +304,11 @@ MultipleForms.register(:ARCEUS, {
     type = typeArray.index { |type| type && type.any? { |item| pkmn.hasItem?(item) } }
     next type + 1 if !type.nil?
     next 0
+  },
+  "getFormOnLeavingBattle" => proc { |pkmn, battle, usedInBattle, endBattle|
+    if pkmn.hasItem?(:LEGENDPLATE)
+      next 0
+    end
   }
 })
 

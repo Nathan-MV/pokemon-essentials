@@ -10,7 +10,6 @@
 #===============================================================================
 # System and Temp Variables
 #===============================================================================
-
 class Game_Temp
   attr_accessor :disable_speed_up
 
@@ -25,6 +24,7 @@ class PokemonSystem
   attr_reader :speed_scale
 
   def gamespeed
+    # Default is Faster than original
     @gamespeed = 0 if @gamespeed == nil
     return @gamespeed
   end

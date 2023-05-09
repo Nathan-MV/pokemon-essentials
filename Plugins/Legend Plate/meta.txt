@@ -1,0 +1,4 @@
+Name      = Legend Plate
+Version   = 1.0
+Essentials = 20.1.dev
+Credits   = Eskiss, Lucidious 89, Nathan-MV
