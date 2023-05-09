@@ -2,6 +2,7 @@
 #
 #===============================================================================
 class PokemonSystem
+  attr_accessor :gamespeed
   attr_accessor :textspeed
   attr_accessor :battlescene
   attr_accessor :battlestyle
@@ -17,6 +18,7 @@ class PokemonSystem
   attr_accessor :textinput
 
   def initialize
+    @gamespeed     = 0     # Text speed (0=normal, 1=fast, 2=faster)
     @textspeed     = 1     # Text speed (0=slow, 1=normal, 2=fast)
     @battlescene   = 0     # Battle effects (animations) (0=on, 1=off)
     @battlestyle   = 0     # Battle style (0=switch, 1=set)
@@ -416,6 +418,16 @@ MenuHandlers.add(:options_menu, :se_volume, {
     end
     pbPlayCursorSE
   }
+})
+
+MenuHandlers.add(:options_menu, :gamespeed, {
+  "name"        => _INTL("Game Speed"),
+  "order"       => 25,
+  "type"        => EnumOption,
+  "parameters"  => [_INTL("Normal"), _INTL("Fast"), _INTL("Faster")],
+  "description" => _INTL("Choose the speed at which Game animate."),
+  "get_proc"    => proc { next $PokemonSystem.gamespeed },
+  "set_proc"    => proc { |value, _scene| $PokemonSystem.gamespeed = value }
 })
 
 MenuHandlers.add(:options_menu, :text_speed, {

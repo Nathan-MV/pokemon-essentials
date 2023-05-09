@@ -1,4 +1,4 @@
 Name      = Better Speed Up
 Version   = 3.0
 Essentials = 20.1
-Credits   = Marin, Phantombass, ra101
+Credits   = Marin, Phantombass, ra101, Nathan-MV

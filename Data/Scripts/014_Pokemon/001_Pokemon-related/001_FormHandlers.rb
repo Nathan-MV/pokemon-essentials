@@ -306,9 +306,7 @@ MultipleForms.register(:ARCEUS, {
     next 0
   },
   "getFormOnLeavingBattle" => proc { |pkmn, battle, usedInBattle, endBattle|
-    if pkmn.hasItem?(:LEGENDPLATE)
-      next 0
-    end
+    next 0 if pkmn.hasItem?(:LEGENDPLATE)
   }
 })
 
