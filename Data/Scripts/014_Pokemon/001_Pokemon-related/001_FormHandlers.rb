@@ -281,28 +281,27 @@ MultipleForms.register(:SHAYMIN, {
 MultipleForms.register(:ARCEUS, {
   "getForm" => proc { |pkmn|
     next nil if !pkmn.hasAbility?(:MULTITYPE)
-    typeArray = [
-      [:FISTPLATE,   :FIGHTINIUMZ],
-      [:SKYPLATE,    :FLYINIUMZ],
-      [:TOXICPLATE,  :POISONIUMZ],
-      [:EARTHPLATE,  :GROUNDIUMZ],
-      [:STONEPLATE,  :ROCKIUMZ],
-      [:INSECTPLATE, :BUGINIUMZ],
-      [:SPOOKYPLATE, :GHOSTIUMZ],
-      [:IRONPLATE,   :STEELIUMZ],
-      [], # Unknown
-      [:FLAMEPLATE,  :FIRIUMZ],
-      [:SPLASHPLATE, :WATERIUMZ],
-      [:MEADOWPLATE, :GRASSIUMZ],
-      [:ZAPPLATE,    :ELECTRIUMZ],
-      [:MINDPLATE,   :PSYCHIUMZ],
-      [:ICICLEPLATE, :ICIUMZ],
-      [:DRACOPLATE,  :DRAGONIUMZ],
-      [:DREADPLATE,  :DARKINIUMZ],
-      [:PIXIEPLATE,  :FAIRIUMZ]
-    ]
-    type = typeArray.index { |type| type && type.any? { |item| pkmn.hasItem?(item) } }
-    next type + 1 if !type.nil?
+    typeArray = {
+      1  => [:FISTPLATE,   :FIGHTINIUMZ],
+      2  => [:SKYPLATE,    :FLYINIUMZ],
+      3  => [:TOXICPLATE,  :POISONIUMZ],
+      4  => [:EARTHPLATE,  :GROUNDIUMZ],
+      5  => [:STONEPLATE,  :ROCKIUMZ],
+      6  => [:INSECTPLATE, :BUGINIUMZ],
+      7  => [:SPOOKYPLATE, :GHOSTIUMZ],
+      8  => [:IRONPLATE,   :STEELIUMZ],
+      10 => [:FLAMEPLATE,  :FIRIUMZ],
+      11 => [:SPLASHPLATE, :WATERIUMZ],
+      12 => [:MEADOWPLATE, :GRASSIUMZ],
+      13 => [:ZAPPLATE,    :ELECTRIUMZ],
+      14 => [:MINDPLATE,   :PSYCHIUMZ],
+      15 => [:ICICLEPLATE, :ICIUMZ],
+      16 => [:DRACOPLATE,  :DRAGONIUMZ],
+      17 => [:DREADPLATE,  :DARKINIUMZ],
+      18 => [:PIXIEPLATE,  :FAIRIUMZ]
+    }
+    type = typeArray.find { |f, items| items.any? { |item| pkmn.hasItem?(item) } }&.first
+    next type if type
     next 0
   },
   "getFormOnLeavingBattle" => proc { |pkmn, battle, usedInBattle, endBattle|
@@ -475,28 +474,27 @@ MultipleForms.register(:WISHIWASHI, {
 MultipleForms.register(:SILVALLY, {
   "getForm" => proc { |pkmn|
     next nil if !pkmn.hasAbility?(:RKSSYSTEM)
-    typeArray = [
-      :FIGHTINGMEMORY,
-      :FLYINGMEMORY,
-      :POISONMEMORY,
-      :GROUNDMEMORY,
-      :ROCKMEMORY,
-      :BUGMEMORY,
-      :GHOSTMEMORY,
-      :STEELMEMORY,
-      [], # Unknown
-      :FIREMEMORY,
-      :WATERMEMORY,
-      :GRASSMEMORY,
-      :ELECTRICMEMORY,
-      :PSYCHICMEMORY,
-      :ICEMEMORY,
-      :DRAGONMEMORY,
-      :DARKMEMORY,
-      :FAIRYMEMORY
-    ]
-    type = typeArray.index { |item| pkmn.hasItem?(item) }
-    next type + 1 if !type.nil?
+    typeArray = {
+      1  => [:FIGHTINGMEMORY],
+      2  => [:FLYINGMEMORY],
+      3  => [:POISONMEMORY],
+      4  => [:GROUNDMEMORY],
+      5  => [:ROCKMEMORY],
+      6  => [:BUGMEMORY],
+      7  => [:GHOSTMEMORY],
+      8  => [:STEELMEMORY],
+      10 => [:FIREMEMORY],
+      11 => [:WATERMEMORY],
+      12 => [:GRASSMEMORY],
+      13 => [:ELECTRICMEMORY],
+      14 => [:PSYCHICMEMORY],
+      15 => [:ICEMEMORY],
+      16 => [:DRAGONMEMORY],
+      17 => [:DARKMEMORY],
+      18 => [:FAIRYMEMORY]
+    }
+    ret = typeArray.find { |f, items| items.any? { |item| pkmn.hasItem?(item) } }&.first
+    next ret if ret
     next 0
   }
 })
@@ -688,28 +686,24 @@ MultipleForms.register(:CALYREX, {
   }
 })
 
-MultipleForms.register(:PIKACHU,{
+MultipleForms.register(:PIKACHU, {
   "onSetForm" => proc { |pkmn, form, old_form|
     # All Cosplay Pikachu forms are 100% female
-    if (2..7).include?(form)
-      pkmn.makeFemale
+    pkmn.makeFemale if (2..7).include?(form)
     # All Cap Pikachu forms are 100% male
-    elsif (8..15).include?(form)
-      pkmn.makeMale
-    end
-    form_moves = [
-      nil,               # Form 1 (Alolan form) has no special move
-      nil,               # Form 2 (Cosplay form) has no special move
-      :ICICLECRASH,      # Belle Pikachu
-      :FLYINGPRESS,      # Libre Pikachu
-      :ELECTRICTERRAIN,  # PhD Pikachu
-      :DRAININGKISS,     # Pop Star Pikachu
-      :METEORMASH        # Rockstar Pikachu
-    ]
+    pkmn.makeMale if (8..15).include?(form)
+    form_moves = {
+      3 => :ICICLECRASH,     # Belle Pikachu
+      4 => :FLYINGPRESS,     # Libre Pikachu
+      5 => :ELECTRICTERRAIN, # PhD Pikachu
+      6 => :DRAININGKISS,    # Pop Star Pikachu
+      7 => :METEORMASH       # Rockstar Pikachu
+    }
+
     # Find a known move that should be forgotten
     old_move_index = -1
     pkmn.moves.each_with_index do |move, i|
-      next if !form_moves.include?(move.id)
+      next if !form_moves.values.include?(move.id)
       old_move_index = i
       break
     end
