@@ -39,11 +39,21 @@ def pbSetResizeFactor(factor)
     Graphics.resize_screen(Settings::SCREEN_WIDTH, Settings::SCREEN_HEIGHT)
     $ResizeInitialized = true
   end
-  if factor < 0 || factor == 4
+
+  case factor
+  when 0..1
+    scale = (Settings::SCREEN_SCALE * (factor + 1) / 2.0)
+  when 2
+    scale = (Settings::SCREEN_SCALE * factor)
+  when 3
     Graphics.fullscreen = true if !Graphics.fullscreen
   else
-    Graphics.fullscreen = false if Graphics.fullscreen
-    Graphics.scale = (factor + 1) * 0.5
+    raise ArgumentError, "Invalid resize factor: #{factor}"
+  end
+
+  if factor.between?(0, 2)
+    Graphics.fullscreen = false
+    Graphics.scale = scale
     Graphics.center
   end
 end
@@ -52,4 +62,14 @@ if System::VERSION != Essentials::MKXPZ_VERSION
   printf(sprintf("\e[1;33mWARNING: mkxp-z version %s detected, but this version of Pokémon Essentials was designed for mkxp-z version %s.\e[0m\r\n",
                  System::VERSION, Essentials::MKXPZ_VERSION))
   printf("\e[1;33mWARNING: Pokémon Essentials may not work properly.\e[0m\r\n")
+end
+
+def show_resolution
+  if Graphics.fullscreen == true
+    printf(sprintf("%sx%s fullscreen\e[0m\r\n", Graphics.width, Graphics.height))
+  else
+    width = (Settings::SCREEN_WIDTH * Graphics.scale).to_i
+    height = (Settings::SCREEN_HEIGHT * Graphics.scale).to_i
+    printf(sprintf("%sx%s scaled by %s\e[0m\r\n", width, height, Graphics.scale))
+  end
 end

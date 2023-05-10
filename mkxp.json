@@ -45,7 +45,7 @@
     // Game window is resizable
     // (default: enabled)
     //
-    // "winResizable": true,
+    "winResizable": true,
 
 
     // Start game in fullscreen (this can
@@ -59,14 +59,14 @@
     // as opposed to stretch-to-fill
     // (default: enabled)
     //
-    "fixedAspectRatio": false,
+    // "fixedAspectRatio": true,
 
 
     // Apply linear interpolation when game screen
     // is upscaled
     // (default: disabled)
     //
-    // "smoothScaling": false,
+    "smoothScaling": true,
 
 
     // Sync screen redraws to the monitor refresh rate
@@ -81,7 +81,7 @@
     // in RGSS2 or higher).
     // (default: 0)
     //
-    "defScreenW": 512,
+    "defScreenW": 640,
 
 
     // Specify the window height on startup. If set to 0,
@@ -90,7 +90,7 @@
     // in RGSS2 or higher).
     // (default: 0)
     //
-    "defScreenH": 384,
+    "defScreenH": 360,
 
 
     // Override the game window title
@@ -189,7 +189,7 @@
     // they are forced to the smaller of the two.
     // (default: disabled)
     //
-    // "integerScalingActive": false,
+    "integerScalingActive": true,
 
 
     // When integer scaling is enabled, this option controls

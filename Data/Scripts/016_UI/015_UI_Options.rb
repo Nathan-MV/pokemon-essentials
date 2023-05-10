@@ -26,7 +26,7 @@ class PokemonSystem
     @givenicknames = 0     # Give nicknames (0=give, 1=don't give)
     @frame         = 0     # Default window frame (see also Settings::MENU_WINDOWSKINS)
     @textskin      = 0     # Speech frame
-    @screensize    = (Settings::SCREEN_SCALE * 2).floor - 1   # 0=half size, 1=full size, 2=full-and-a-half size, 3=double size
+    @screensize    = 1     # Screen size (0=half size(320x180), 1=normal size(640x360), 2=double size(1280x720), 3=full screen)
     @language      = 0     # Language (see also Settings::LANGUAGES in script PokemonSystem)
     @runstyle      = 0     # Default movement speed (0=walk, 1=run)
     @bgmvolume     = 100   # Volume of background music and ME
@@ -545,9 +545,9 @@ MenuHandlers.add(:options_menu, :screen_size, {
   "name"        => _INTL("Screen Size"),
   "order"       => 120,
   "type"        => EnumOption,
-  "parameters"  => [_INTL("S"), _INTL("M"), _INTL("L"), _INTL("XL"), _INTL("Full")],
+  "parameters"  => [_INTL("S"), _INTL("M"), _INTL("L"), _INTL("Full")],
   "description" => _INTL("Choose the size of the game window."),
-  "get_proc"    => proc { next [$PokemonSystem.screensize, 4].min },
+  "get_proc"    => proc { next [$PokemonSystem.screensize, 3].min },
   "set_proc"    => proc { |value, _scene|
     next if $PokemonSystem.screensize == value
     $PokemonSystem.screensize = value
