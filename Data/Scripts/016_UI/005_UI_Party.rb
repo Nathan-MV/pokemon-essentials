@@ -365,8 +365,8 @@ class PokemonPartyPanel < Sprite
 
   def refresh_ball_graphic
     return if !@ballsprite || @ballsprite.disposed?
-    bitmapname = (self.selected) ? "sel" : "desel"
-    bitmapname << "_canevo" unless @evoreqs.nil? || @evoreqs.empty?
+    bitmapname = self.selected ? "sel" : "desel"
+    bitmapname << "_canevo" unless @evoreqs&.empty?
     @ballsprite.changeBitmap(bitmapname)
     @ballsprite.x     = self.x + 10
     @ballsprite.y     = self.y

@@ -545,7 +545,7 @@ MenuHandlers.add(:options_menu, :screen_size, {
   "name"        => _INTL("Screen Size"),
   "order"       => 120,
   "type"        => EnumOption,
-  "parameters"  => [_INTL("S"), _INTL("M"), _INTL("L"), _INTL("Full")],
+  "parameters"  => [_INTL("320x180"), _INTL("640x360"), _INTL("1280x720"), _INTL("Fullscreen")],
   "description" => _INTL("Choose the size of the game window."),
   "get_proc"    => proc { next [$PokemonSystem.screensize, 3].min },
   "set_proc"    => proc { |value, _scene|
