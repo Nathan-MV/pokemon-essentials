@@ -219,7 +219,7 @@ class TilemapRenderer
 
     def update
       super
-      @timer += Graphics.delta_s
+      @timer += System.uptime
       # Update the current frame for each autotile
       @bitmaps.each_key do |filename|
         next if !@bitmaps[filename] || @bitmaps[filename].disposed?

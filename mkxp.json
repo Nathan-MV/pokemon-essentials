@@ -53,7 +53,7 @@
     // Game window is resizable
     // (default: enabled)
     //
-    "winResizable": true,
+    // "winResizable": true,
 
 
     // Start game in fullscreen (this can
@@ -67,7 +67,7 @@
     // as opposed to stretch-to-fill
     // (default: enabled)
     //
-    // "fixedAspectRatio": true,
+    "fixedAspectRatio": false,
 
 
     // Apply linear interpolation when game screen
