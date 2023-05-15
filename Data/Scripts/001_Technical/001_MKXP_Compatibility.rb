@@ -45,7 +45,7 @@ def pbSetResizeFactor(factor)
   when 2
     scale = (Settings::SCREEN_SCALE * factor)
   when 3
-    Graphics.fullscreen = true if !Graphics.fullscreen
+    Graphics.fullscreen = true
   else
     raise ArgumentError, "Invalid resize factor: #{factor}"
   end
