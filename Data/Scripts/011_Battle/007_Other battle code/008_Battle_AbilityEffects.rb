@@ -381,7 +381,7 @@ Battle::AbilityEffects::OnHPDroppedBelowHalf.add(:EMERGENCYEXIT,
     end
     # In trainer battles
     next false if battle.pbAllFainted?(battler.idxOpposingSide)
-    next false if !battle.pbCanSwitch?(battler.index)   # Battler can't switch out
+    next false if !battle.pbCanSwitchOut?(battler.index)   # Battler can't switch out
     next false if !battle.pbCanChooseNonActive?(battler.index)   # No Pokémon can switch in
     battle.pbShowAbilitySplash(battler, true)
     battle.pbHideAbilitySplash(battler)
@@ -1200,7 +1200,7 @@ Battle::AbilityEffects::DamageCalcFromUser.add(:AERILATE,
   }
 )
 
-Battle::AbilityEffects::DamageCalcFromUser.copy(:AERILATE, :PIXILATE, :REFRIGERATE, :GALVANIZE, :NORMALIZE)
+Battle::AbilityEffects::DamageCalcFromUser.copy(:AERILATE, :GALVANIZE, :NORMALIZE, :PIXILATE, :REFRIGERATE)
 
 Battle::AbilityEffects::DamageCalcFromUser.add(:ANALYTIC,
   proc { |ability, user, target, move, mults, power, type|
@@ -1372,17 +1372,17 @@ Battle::AbilityEffects::DamageCalcFromUser.add(:SLOWSTART,
   }
 )
 
+Battle::AbilityEffects::DamageCalcFromUser.add(:SNIPER,
+  proc { |ability, user, target, move, mults, power, type|
+    mults[:final_damage_multiplier] *= 1.5 if target.damageState.critical
+  }
+)
+
 Battle::AbilityEffects::DamageCalcFromUser.add(:SOLARPOWER,
   proc { |ability, user, target, move, mults, power, type|
     if move.specialMove? && [:Sun, :HarshSun].include?(user.effectiveWeather)
       mults[:attack_multiplier] *= 1.5
     end
-  }
-)
-
-Battle::AbilityEffects::DamageCalcFromUser.add(:SNIPER,
-  proc { |ability, user, target, move, mults, power, type|
-    mults[:final_damage_multiplier] *= 1.5 if target.damageState.critical
   }
 )
 
@@ -1420,7 +1420,7 @@ Battle::AbilityEffects::DamageCalcFromUser.add(:SWARM,
 
 Battle::AbilityEffects::DamageCalcFromUser.add(:TECHNICIAN,
   proc { |ability, user, target, move, mults, power, type|
-    if user.index != target.index && move && move.id != :STRUGGLE &&
+    if user.index != target.index && move && move.function != "Struggle" &&
        power * mults[:power_multiplier] <= 60
       mults[:power_multiplier] *= 1.5
     end
@@ -1693,7 +1693,7 @@ Battle::AbilityEffects::OnBeingHit.add(:ANGERPOINT,
     next if !target.damageState.critical
     next if !target.pbCanRaiseStatStage?(:ATTACK, target)
     battle.pbShowAbilitySplash(target)
-    target.stages[:ATTACK] = 6
+    target.stages[:ATTACK] = Battle::Battler::STAT_STAGE_MAXIMUM
     target.statsRaisedThisRound = true
     battle.pbCommonAnimation("StatUp", target)
     if Battle::Scene::USE_ABILITY_SPLASH
