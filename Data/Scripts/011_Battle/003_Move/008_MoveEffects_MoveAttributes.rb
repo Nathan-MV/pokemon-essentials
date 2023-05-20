@@ -1406,11 +1406,9 @@ class Battle::Move::TypeDependsOnUserPlate < Battle::Move
   end
 
   def pbBaseType(user)
-    if user.itemActive?
-      @item_types.each do |item, item_type|
-        next if user.item != item
-        return item_type if GameData::Type.exists?(item_type)
-      end
+    if user.item_id && user.itemActive?
+      typ = @item_types[user.item_id.to_sym]
+      return typ if typ && GameData::Type.exists?(typ)
     end
 
     if user.isSpecies?(:ARCEUS) && user.hasActiveAbility?(:MULTITYPE) && user.hasActiveItem?(:LEGENDPLATE)
