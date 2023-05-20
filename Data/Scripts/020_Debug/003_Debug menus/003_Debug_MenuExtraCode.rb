@@ -596,10 +596,10 @@ end
 
 def pbImportAllAnimations
   animationFolders = []
-  if safeIsDirectory?("Animations")
+  if FileTest.directory?("Animations")
     Dir.foreach("Animations") do |fb|
       f = "Animations/" + fb
-      animationFolders.push(f) if safeIsDirectory?(f) && fb != "." && fb != ".."
+      animationFolders.push(f) if FileTest.directory?(f) && fb != "." && fb != ".."
     end
   end
   if animationFolders.length == 0
@@ -639,14 +639,14 @@ def pbImportAllAnimations
           textdata.id = -1   # This is not an RPG Maker XP animation
           BattleAnimationEditor.pbConvertAnimToNewFormat(textdata)
           if textdata.graphic && textdata.graphic != "" &&
-             !safeExists?(folder + "/" + textdata.graphic) &&
+             !FileTest.exist?(folder + "/" + textdata.graphic) &&
              !FileTest.image_exist?("Graphics/Animations/" + textdata.graphic)
             textdata.graphic = ""
             missingFiles.push(textdata.graphic)
           end
           textdata.timing.each do |timing|
             next if !timing.name || timing.name == "" ||
-                    safeExists?(folder + "/" + timing.name) ||
+                    FileTest.exist?(folder + "/" + timing.name) ||
                     FileTest.audio_exist?("Audio/SE/Anim/" + timing.name)
             timing.name = ""
             missingFiles.push(timing.name)
@@ -670,14 +670,14 @@ def pbDebugFixInvalidTiles
   num_error_maps = 0
   tilesets = $data_tilesets
   mapData = Compiler::MapData.new
-  t = Time.now.to_i
+  t = System.uptime
   Graphics.update
   total_maps = mapData.mapinfos.keys.length
   Console.echo_h1(_INTL("Checking {1} maps for invalid tiles", total_maps))
   mapData.mapinfos.keys.sort.each do |id|
-    if Time.now.to_i - t >= 5
+    if System.uptime - t >= 5
+      t += 5
       Graphics.update
-      t = Time.now.to_i
     end
     map_errors = 0
     map = mapData.getMap(id)
