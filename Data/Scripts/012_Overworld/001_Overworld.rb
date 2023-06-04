@@ -49,7 +49,6 @@ EventHandlers.add(:on_frame_update, :low_battery_warning,
     next if $game_temp.warned_low_battery || !pbBatteryLow?
     next if $game_temp.in_menu || $game_temp.in_battle || $game_player.move_route_forcing ||
             $game_temp.message_window_showing || pbMapInterpreterRunning?
-    next if Time.now.sec != 0
     $game_temp.warned_low_battery = true
     pbMessage(_INTL("The game has detected that the battery is low. You should save soon to avoid losing your progress."))
   }
@@ -160,8 +159,9 @@ EventHandlers.add(:on_step_taken, :auto_move_player,
     next if !$scene.is_a?(Scene_Map)
     next if event != $game_player
     currentTag = $game_player.pbTerrainTag
-    if currentTag.waterfall_crest
-      pbDescendWaterfall
+    if currentTag.waterfall_crest || currentTag.waterfall ||
+       $PokemonGlobal.descending_waterfall || $PokemonGlobal.ascending_waterfall
+      pbTraverseWaterfall
     elsif currentTag.ice || $PokemonGlobal.ice_sliding
       pbSlideOnIce
     end

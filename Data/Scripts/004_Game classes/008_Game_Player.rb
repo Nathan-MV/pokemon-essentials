@@ -6,20 +6,19 @@
 #  instance of this class.
 #===============================================================================
 class Game_Player < Game_Character
-  attr_accessor :bump_se
   attr_accessor :charsetData
   attr_accessor :encounter_count
 
   SCREEN_CENTER_X = ((Settings::SCREEN_WIDTH / 2) - (Game_Map::TILE_WIDTH / 2)) * Game_Map::X_SUBPIXELS
   SCREEN_CENTER_Y = ((Settings::SCREEN_HEIGHT / 2) - (Game_Map::TILE_HEIGHT / 2)) * Game_Map::Y_SUBPIXELS
-
-  @@bobFrameSpeed = 1.0 / 15
+  # Time in seconds for one cycle of bobbing (playing 4 charset frames) while
+  # surfing or diving.
+  SURF_BOB_DURATION = 1.5
 
   def initialize(*arg)
     super(*arg)
     @lastdir = 0
     @lastdirframe = 0
-    @bump_se = 0
   end
 
   def map
@@ -48,8 +47,11 @@ class Game_Player < Game_Character
     return $PokemonGlobal.followers.length == 0
   end
 
+  #-----------------------------------------------------------------------------
+
   def can_run?
     return @move_speed > 3 if @move_route_forcing
+    return false if @bumping
     return false if $game_temp.in_menu || $game_temp.in_battle ||
                     $game_temp.message_window_showing || pbMapInterpreterRunning?
     return false if !$player.has_running_shoes && !$PokemonGlobal.diving &&
@@ -75,6 +77,9 @@ class Game_Player < Game_Character
         self.move_speed = (type == :surfing_jumping) ? 3 : 4
       end
       new_charset = pbGetPlayerCharset(meta.surf_charset)
+    when :descending_waterfall, :ascending_waterfall
+      self.move_speed = 2 if !@move_route_forcing
+      new_charset = pbGetPlayerCharset(meta.surf_charset)
     when :cycling, :cycling_fast, :cycling_jumping, :cycling_stopped
       if !@move_route_forcing
         self.move_speed = (type == :cycling_jumping) ? 3 : 5
@@ -90,6 +95,7 @@ class Game_Player < Game_Character
       self.move_speed = 3 if !@move_route_forcing
       new_charset = pbGetPlayerCharset(meta.walk_charset)
     end
+    self.move_speed = 3 if @bumping
     @character_name = new_charset if new_charset
   end
 
@@ -110,10 +116,15 @@ class Game_Player < Game_Character
     @character_name = new_charset if new_charset
   end
 
+  #-----------------------------------------------------------------------------
+
   def bump_into_object
-    return if @bump_se && @bump_se > 0
     pbSEPlay("Player bump") if !@move_route_forcing
-    @bump_se = Graphics.frame_rate / 4
+    $stats.bump_count += 1
+    @move_initial_x = @x
+    @move_initial_y = @y
+    @move_timer = 0.0
+    @bumping = true
   end
 
   def add_move_distance_to_stats(distance = 1)
@@ -140,14 +151,21 @@ class Game_Player < Game_Character
             increase_steps
           end
           return
+        elsif pbFacingTerrainTag.waterfall_crest && dir == 2
+          $PokemonGlobal.descending_waterfall = true
+          $game_player.through = true
+          $stats.waterfalls_descended += 1
         end
         # Jumping out of surfing back onto land
         return if pbEndSurf(x_offset, y_offset)
         # General movement
         turn_generic(dir, true)
         if !$game_temp.encounter_triggered
+          @move_initial_x = @x
+          @move_initial_y = @y
           @x += x_offset
           @y += y_offset
+          @move_timer = 0.0
           add_move_distance_to_stats(x_offset.abs + y_offset.abs)
           increase_steps
         end
@@ -174,49 +192,7 @@ class Game_Player < Game_Character
     add_move_distance_to_stats(x_plus.abs + y_plus.abs) if @x != old_x || @y != old_y
   end
 
-  def pbTriggeredTrainerEvents(triggers, checkIfRunning = true, trainer_only = false)
-    result = []
-    # If event is running
-    return result if checkIfRunning && $game_system.map_interpreter.running?
-    # All event loops
-    $game_map.events.each_value do |event|
-      next if !triggers.include?(event.trigger)
-      next if !event.name[/trainer\((\d+)\)/i] && (trainer_only || !event.name[/sight\((\d+)\)/i])
-      distance = $~[1].to_i
-      next if !pbEventCanReachPlayer?(event, self, distance)
-      next if event.jumping? || event.over_trigger?
-      result.push(event)
-    end
-    return result
-  end
-
-  def pbTriggeredCounterEvents(triggers, checkIfRunning = true)
-    result = []
-    # If event is running
-    return result if checkIfRunning && $game_system.map_interpreter.running?
-    # All event loops
-    $game_map.events.each_value do |event|
-      next if !triggers.include?(event.trigger)
-      next if !event.name[/counter\((\d+)\)/i]
-      distance = $~[1].to_i
-      next if !pbEventFacesPlayer?(event, self, distance)
-      next if event.jumping? || event.over_trigger?
-      result.push(event)
-    end
-    return result
-  end
-
-  def pbCheckEventTriggerAfterTurning; end
-
-  def pbCheckEventTriggerFromDistance(triggers)
-    ret = pbTriggeredTrainerEvents(triggers)
-    ret.concat(pbTriggeredCounterEvents(triggers))
-    return false if ret.length == 0
-    ret.each do |event|
-      event.start
-    end
-    return true
-  end
+  #-----------------------------------------------------------------------------
 
   def pbTerrainTag(countBridge = false)
     return $map_factory.getTerrainTagFromCoords(self.map.map_id, @x, @y, countBridge) if $map_factory
@@ -303,6 +279,52 @@ class Game_Player < Game_Character
     @blend_type = 0
   end
 
+  #-----------------------------------------------------------------------------
+
+  def pbTriggeredTrainerEvents(triggers, checkIfRunning = true, trainer_only = false)
+    result = []
+    # If event is running
+    return result if checkIfRunning && $game_system.map_interpreter.running?
+    # All event loops
+    $game_map.events.each_value do |event|
+      next if !triggers.include?(event.trigger)
+      next if !event.name[/trainer\((\d+)\)/i] && (trainer_only || !event.name[/sight\((\d+)\)/i])
+      distance = $~[1].to_i
+      next if !pbEventCanReachPlayer?(event, self, distance)
+      next if event.jumping? || event.over_trigger?
+      result.push(event)
+    end
+    return result
+  end
+
+  def pbTriggeredCounterEvents(triggers, checkIfRunning = true)
+    result = []
+    # If event is running
+    return result if checkIfRunning && $game_system.map_interpreter.running?
+    # All event loops
+    $game_map.events.each_value do |event|
+      next if !triggers.include?(event.trigger)
+      next if !event.name[/counter\((\d+)\)/i]
+      distance = $~[1].to_i
+      next if !pbEventFacesPlayer?(event, self, distance)
+      next if event.jumping? || event.over_trigger?
+      result.push(event)
+    end
+    return result
+  end
+
+  def pbCheckEventTriggerAfterTurning; end
+
+  def pbCheckEventTriggerFromDistance(triggers)
+    ret = pbTriggeredTrainerEvents(triggers)
+    ret.concat(pbTriggeredCounterEvents(triggers))
+    return false if ret.length == 0
+    ret.each do |event|
+      event.start
+    end
+    return true
+  end
+
   # Trigger event(s) at the same coordinates as self with the appropriate
   # trigger(s) that can be triggered
   def check_event_trigger_here(triggers)
@@ -387,6 +409,8 @@ class Game_Player < Game_Character
     return result
   end
 
+  #-----------------------------------------------------------------------------
+
   def update
     last_real_x = @real_x
     last_real_y = @real_y
@@ -399,20 +423,18 @@ class Game_Player < Game_Character
       $game_temp.followers.move_followers
     end
     $game_temp.followers.update
-    # Count down the time between allowed bump sounds
-    @bump_se -= 1 if @bump_se && @bump_se > 0
     update_event_triggering
   end
 
   def update_command_new
     dir = Input.dir4
-    if $PokemonGlobal.ice_sliding
+    if $PokemonGlobal.forced_movement?
       move_forward
     elsif !pbMapInterpreterRunning? && !$game_temp.message_window_showing &&
           !$game_temp.in_mini_update && !$game_temp.in_menu
       # Move player in the direction the directional button is being pressed
       if @moved_last_frame ||
-         (dir > 0 && dir == @lastdir && Graphics.frame_count - @lastdirframe > Graphics.frame_rate / 20)
+         (dir > 0 && dir == @lastdir && System.uptime - @lastdirframe >= 0.075)
         case dir
         when 2 then move_down
         when 4 then move_left
@@ -427,16 +449,20 @@ class Game_Player < Game_Character
         when 8 then turn_up
         end
       end
+      # Record last direction input
+      @lastdirframe = System.uptime if dir != @lastdir
+      @lastdir = dir
     end
-    # Record last direction input
-    @lastdirframe = Graphics.frame_count if dir != @lastdir
-    @lastdir      = dir
   end
 
   def update_move
     if !@moved_last_frame || @stopped_last_frame   # Started a new step
       if $PokemonGlobal.ice_sliding || @last_terrain_tag.ice
         set_movement_type(:ice_sliding)
+      elsif $PokemonGlobal.descending_waterfall
+        set_movement_type(:descending_waterfall)
+      elsif $PokemonGlobal.ascending_waterfall
+        set_movement_type(:ascending_waterfall)
       else
         faster = can_run?
         if $PokemonGlobal&.diving
@@ -488,10 +514,10 @@ class Game_Player < Game_Character
 
   def update_pattern
     if $PokemonGlobal&.surfing || $PokemonGlobal&.diving
-      p = ((Graphics.frame_count % 60) * @@bobFrameSpeed).floor
-      @pattern = p if !@lock_pattern
-      @pattern_surf = p
-      @bob_height = (p >= 2) ? 2 : 0
+      bob_pattern = (4 * System.uptime / SURF_BOB_DURATION).to_i % 4
+      @pattern = bob_pattern if !@lock_pattern
+      @pattern_surf = bob_pattern
+      @bob_height = (bob_pattern >= 2) ? 2 : 0
       @anime_count = 0
     else
       @bob_height = 0
@@ -513,7 +539,7 @@ class Game_Player < Game_Character
   end
 
   def update_event_triggering
-    return if moving? || jumping? || $PokemonGlobal.ice_sliding
+    return if moving? || jumping? || $PokemonGlobal.forced_movement?
     # Try triggering events upon walking into them/in front of them
     if @moved_this_frame
       $game_temp.followers.turn_followers

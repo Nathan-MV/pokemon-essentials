@@ -75,11 +75,10 @@ end
 #
 #===============================================================================
 class MiningGameCursor < BitmapSprite
-  attr_accessor :mode
   attr_accessor :position
-  attr_accessor :hit
-  attr_accessor :counter
+  attr_accessor :mode
 
+  HIT_FRAME_DURATION = 0.05   # In seconds
   TOOL_POSITIONS = [[1, 0], [1, 1], [1, 1], [0, 0], [0, 0],
                     [0, 2], [0, 2], [0, 0], [0, 0], [0, 2], [0, 2]]   # Graphic, position
 
@@ -90,51 +89,53 @@ class MiningGameCursor < BitmapSprite
     @position = position
     @mode     = mode
     @hit      = 0   # 0=regular, 1=hit item, 2=hit iron
-    @counter  = 0
     @cursorbitmap = AnimatedBitmap.new("Graphics/UI/Mining/cursor")
     @toolbitmap   = AnimatedBitmap.new("Graphics/UI/Mining/tools")
     @hitsbitmap   = AnimatedBitmap.new("Graphics/UI/Mining/hits")
     update
   end
 
-  def isAnimating?
-    return @counter > 0
+  def animate(hit)
+    @hit = hit
+    @hit_timer_start = System.uptime
   end
 
-  def animate(hit)
-    @counter = 22
-    @hit     = hit
+  def isAnimating?
+    return !@hit_timer_start.nil?
   end
 
   def update
     self.bitmap.clear
     x = 32 * (@position % MiningGameScene::BOARD_WIDTH)
     y = 32 * (@position / MiningGameScene::BOARD_WIDTH)
-    if @counter > 0
-      @counter -= 1
-      toolx = x
-      tooly = y
-      i = 10 - (@counter / 2).floor
-      case TOOL_POSITIONS[i][1]
-      when 1
-        toolx -= 8
-        tooly += 8
-      when 2
-        toolx += 6
-      end
-      self.bitmap.blt(toolx, tooly, @toolbitmap.bitmap,
-                      Rect.new(96 * TOOL_POSITIONS[i][0], 96 * @mode, 96, 96))
-      if i < 5 && i.even?
-        if @hit == 2
-          self.bitmap.blt(x - 64, y, @hitsbitmap.bitmap, Rect.new(160 * 2, 0, 160, 160))
-        else
-          self.bitmap.blt(x - 64, y, @hitsbitmap.bitmap, Rect.new(160 * @mode, 0, 160, 160))
+    if @hit_timer_start
+      hit_frame = ((System.uptime - @hit_timer_start) / HIT_FRAME_DURATION).to_i
+      @hit_timer_start = nil if hit_frame >= TOOL_POSITIONS.length
+      if @hit_timer_start
+        toolx = x
+        tooly = y
+        case TOOL_POSITIONS[hit_frame][1]
+        when 1
+          toolx -= 8
+          tooly += 8
+        when 2
+          toolx += 6
+        end
+        self.bitmap.blt(toolx, tooly, @toolbitmap.bitmap,
+                        Rect.new(96 * TOOL_POSITIONS[hit_frame][0], 96 * @mode, 96, 96))
+        if hit_frame < 5 && hit_frame.even?
+          if @hit == 2
+            self.bitmap.blt(x - 64, y, @hitsbitmap.bitmap, Rect.new(160 * 2, 0, 160, 160))
+          else
+            self.bitmap.blt(x - 64, y, @hitsbitmap.bitmap, Rect.new(160 * @mode, 0, 160, 160))
+          end
+        end
+        if @hit == 1 && hit_frame < 3
+          self.bitmap.blt(x - 64, y, @hitsbitmap.bitmap, Rect.new(160 * hit_frame, 160, 160, 160))
         end
       end
-      if @hit == 1 && i < 3
-        self.bitmap.blt(x - 64, y, @hitsbitmap.bitmap, Rect.new(160 * i, 160, 160, 160))
-      end
-    else
+    end
+    if !@hit_timer_start
       self.bitmap.blt(x, y + 64, @cursorbitmap.bitmap, Rect.new(32 * @mode, 0, 32, 32))
     end
   end
@@ -489,23 +490,26 @@ class MiningGameScene
   def pbFlashItems(revealed)
     return if revealed.length <= 0
     revealeditems = BitmapSprite.new(Graphics.width, Graphics.height, @viewport)
-    halfFlashTime = Graphics.frame_rate / 8
-    alphaDiff = (255.0 / halfFlashTime).ceil
-    (1..halfFlashTime * 2).each do |i|
-      revealed.each do |index|
-        burieditem = @items[index]
-        revealeditems.bitmap.blt(32 * burieditem[1], 64 + (32 * burieditem[2]),
-                                 @itembitmap.bitmap,
-                                 Rect.new(32 * ITEMS[burieditem[0]][2], 32 * ITEMS[burieditem[0]][3],
-                                          32 * ITEMS[burieditem[0]][4], 32 * ITEMS[burieditem[0]][5]))
-        if i > halfFlashTime
-          revealeditems.color = Color.new(255, 255, 255, ((halfFlashTime * 2) - i) * alphaDiff)
-        else
-          revealeditems.color = Color.new(255, 255, 255, i * alphaDiff)
+    revealeditems.color = Color.new(255, 255, 255, 0)
+    flash_duration = 0.25
+    2.times do |i|
+      alpha_start = (i == 0) ? 0 : 255
+      alpha_end = (i == 0) ? 255 : 0
+      timer_start = System.uptime
+      loop do
+        revealed.each do |index|
+          burieditem = @items[index]
+          revealeditems.bitmap.blt(32 * burieditem[1], 64 + (32 * burieditem[2]),
+                                   @itembitmap.bitmap,
+                                   Rect.new(32 * ITEMS[burieditem[0]][2], 32 * ITEMS[burieditem[0]][3],
+                                            32 * ITEMS[burieditem[0]][4], 32 * ITEMS[burieditem[0]][5]))
         end
+        flash_alpha = lerp(alpha_start, alpha_end, flash_duration / 2, timer_start, System.uptime)
+        revealeditems.color.alpha = flash_alpha
+        update
+        Graphics.update
+        break if flash_alpha == alpha_end
       end
-      update
-      Graphics.update
     end
     revealeditems.dispose
     revealed.each do |index|
