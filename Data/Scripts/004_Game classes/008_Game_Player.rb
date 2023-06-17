@@ -427,26 +427,19 @@ class Game_Player < Game_Character
   end
 
   def update_command_new
-    dir = Input.dir4
+    dir = Input.dir8
     if $PokemonGlobal.forced_movement?
       move_forward
     elsif !pbMapInterpreterRunning? && !$game_temp.message_window_showing &&
           !$game_temp.in_mini_update && !$game_temp.in_menu
       # Move player in the direction the directional button is being pressed
-      if @moved_last_frame ||
-         (dir > 0 && dir == @lastdir && System.uptime - @lastdirframe >= 0.075)
-        case dir
-        when 2 then move_down
-        when 4 then move_left
-        when 6 then move_right
-        when 8 then move_up
-        end
-      elsif dir != @lastdir
-        case dir
-        when 2 then turn_down
-        when 4 then turn_left
-        when 6 then turn_right
-        when 8 then turn_up
+      if @moved_last_frame || System.uptime - @lastdirframe >= 0.075
+        if dir > 0 && dir != @lastdir
+          move_in_direction(dir)
+        elsif dir != 0 && dir == @lastdir
+          move_in_direction(dir)
+        elsif dir != 0 && dir != @lastdir
+          turn_in_direction(dir)
         end
       end
       # Record last direction input

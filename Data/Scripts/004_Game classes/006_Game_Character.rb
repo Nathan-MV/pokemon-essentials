@@ -815,6 +815,37 @@ class Game_Character
   def turn_right; turn_generic(6); end
   def turn_up;    turn_generic(8); end
 
+  def turn_lower_left;  turn_generic(1); end
+  def turn_lower_right; turn_generic(3); end
+  def turn_upper_left;  turn_generic(7); end
+  def turn_upper_right; turn_generic(9); end
+
+  def move_in_direction(dir)
+    case dir
+    when 2 then move_down
+    when 4 then move_left
+    when 6 then move_right
+    when 8 then move_up
+    when 1 then move_lower_left
+    when 3 then move_lower_right
+    when 7 then move_upper_left
+    when 9 then move_upper_right
+    end
+  end
+
+  def turn_in_direction(dir)
+    case dir
+    when 2 then turn_down
+    when 4 then turn_left
+    when 6 then turn_right
+    when 8 then turn_up
+    when 1 then turn_lower_left
+    when 3 then turn_lower_right
+    when 7 then turn_upper_left
+    when 9 then turn_upper_right
+    end
+  end
+
   def turn_right_90
     case @direction
     when 2 then turn_left
