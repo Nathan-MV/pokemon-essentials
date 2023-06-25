@@ -41,7 +41,7 @@ class Battle::AI
     # Prefer using Baton Pass instead of switching
     baton_pass = -1
     @user.battler.eachMoveWithIndex do |m, i|
-      next if m.function != "SwitchOutUserPassOnEffects"   # Baton Pass
+      next if m.function_code != "SwitchOutUserPassOnEffects"   # Baton Pass
       next if !@battle.pbCanChooseMove?(@user.index, i, false)
       baton_pass = i
       break
@@ -345,16 +345,16 @@ Battle::AI::Handlers::ShouldSwitch.add(:yawning,
       end
       trapping = false
       ai.each_foe_battler(battler.side) do |b, i|
-        next if b.ability_active? && Battle::AbilityEffects.triggerCertainSwitching(b.ability, b, battle)
-        next if b.item_active? && Battle::ItemEffects.triggerCertainSwitching(b.item, b, battle)
+        next if b.ability_active? && Battle::AbilityEffects.triggerCertainSwitching(b.ability, b.battler, battle)
+        next if b.item_active? && Battle::ItemEffects.triggerCertainSwitching(b.item, b.battler, battle)
         next if Settings::MORE_TYPE_EFFECTS && b.has_type?(:GHOST)
         next if b.battler.trappedInBattle?   # Relevant trapping effects are checked above
         if battler.ability_active?
-          trapping = Battle::AbilityEffects.triggerTrappingByTarget(battler.ability, b, battler.battler, battle)
+          trapping = Battle::AbilityEffects.triggerTrappingByTarget(battler.ability, b.battler, battler.battler, battle)
           break if trapping
         end
         if battler.item_active?
-          trapping = Battle::ItemEffects.triggerTrappingByTarget(battler.item, b, battler.battler, battle)
+          trapping = Battle::ItemEffects.triggerTrappingByTarget(battler.item, b.battler, battler.battler, battle)
           break if trapping
         end
       end
@@ -379,7 +379,7 @@ Battle::AI::Handlers::ShouldSwitch.add(:asleep,
     # Doesn't benefit from being asleep
     next false if battler.has_active_ability?(:MARVELSCALE)
     # Doesn't know Rest (if it does, sleep is expected, so don't apply this check)
-    next false if battler.check_for_move { |m| m.function == "HealUserFullyAndFallAsleep" }
+    next false if battler.check_for_move { |m| m.function_code == "HealUserFullyAndFallAsleep" }
     # Not trapping another battler in battle
     if ai.trainer.high_skill?
       next false if ai.battlers.any? do |b|
@@ -390,16 +390,16 @@ Battle::AI::Handlers::ShouldSwitch.add(:asleep,
       end
       trapping = false
       ai.each_foe_battler(battler.side) do |b, i|
-        next if b.ability_active? && Battle::AbilityEffects.triggerCertainSwitching(b.ability, b, battle)
-        next if b.item_active? && Battle::ItemEffects.triggerCertainSwitching(b.item, b, battle)
+        next if b.ability_active? && Battle::AbilityEffects.triggerCertainSwitching(b.ability, b.battler, battle)
+        next if b.item_active? && Battle::ItemEffects.triggerCertainSwitching(b.item, b.battler, battle)
         next if Settings::MORE_TYPE_EFFECTS && b.has_type?(:GHOST)
         next if b.battler.trappedInBattle?   # Relevant trapping effects are checked above
         if battler.ability_active?
-          trapping = Battle::AbilityEffects.triggerTrappingByTarget(battler.ability, b, battler.battler, battle)
+          trapping = Battle::AbilityEffects.triggerTrappingByTarget(battler.ability, b.battler, battler.battler, battle)
           break if trapping
         end
         if battler.item_active?
-          trapping = Battle::ItemEffects.triggerTrappingByTarget(battler.item, b, battler.battler, battle)
+          trapping = Battle::ItemEffects.triggerTrappingByTarget(battler.item, b.battler, battler.battler, battle)
           break if trapping
         end
       end
@@ -457,7 +457,7 @@ Battle::AI::Handlers::ShouldSwitch.add(:foe_absorbs_all_moves_with_its_ability,
       battler.battler.eachMove do |move|
         next if move.statusMove?
         if ["IgnoreTargetAbility",
-            "CategoryDependsOnHigherDamageIgnoreTargetAbility"].include?(move.function)
+            "CategoryDependsOnHigherDamageIgnoreTargetAbility"].include?(move.function_code)
           can_damage_foe = true
           break
         end
