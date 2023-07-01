@@ -1,6 +1,6 @@
 #==============================================================================#
 #                              Pokémon Essentials                              #
-#                               Version 20.1.dev                               #
+#                                  Version 21                                  #
 #                https://github.com/Maruno17/pokemon-essentials                #
 #==============================================================================#
 
@@ -425,11 +425,34 @@ module Settings
     "choice 27",
     "choice 28"
   ]
+
+  #=============================================================================
+
+  # Your game's credits, in an array. You can allow certain lines to be
+  # translated by wrapping them in _INTL() as shown. Blank lines are just "".
+  # To split a line into two columns, put "<s>" in it. Plugin credits and
+  # Essentials engine credits are added to the end of these credits
+  # automatically.
+  def self.game_credits
+    return [
+      _INTL("My Game by:"),
+      "Maruno",
+      "",
+      _INTL("Also involved were:"),
+      "A. Lee Uss<s>Anne O'Nymus",
+      "Ecksam Pell<s>Jane Doe",
+      "Joe Dan<s>Nick Nayme",
+      "Sue Donnim<s>",
+      "",
+      _INTL("Special thanks to:"),
+      "Pizza"
+    ]
+  end
 end
 
 # DO NOT EDIT THESE!
 module Essentials
-  VERSION = "20.1.dev"
+  VERSION = "21"
   ERROR_TEXT = ""
   MKXPZ_VERSION = "2.4.2/ee8dc7e"
 end
