@@ -1,5 +1,33 @@
+#########################################
+#                                       #
+# Easy Debug Terminal                   #
+# by ENLS                               #
+# no clue what to write here honestly   #
+#                                       #
+#########################################
+
+###########################
+#      Configuration      #
+###########################
+
+# Enable or disable the debug terminal
 TERMINAL_ENABLED = true
+
+# Always print returned value from script
+TERMINAL_ECHO = true
+
+# Button used to open the terminal
 TERMINAL_KEYBIND = :F3
+# Uses SDL scancodes, without the SDL_SCANCODE_ prefix.
+# https://github.com/mkxp-z/mkxp-z/wiki/Extensions-(RGSS,-Modules)#detecting-key-states
+
+
+
+
+
+###########################
+#       Code Stuff        #
+###########################
 
 module Input
   unless defined?(update_Debug_Terminal)
@@ -12,10 +40,16 @@ module Input
     update_Debug_Terminal
     if triggerex?(TERMINAL_KEYBIND) && $DEBUG && !$InCommandLine && TERMINAL_ENABLED
       $InCommandLine = true
+      backup_array = $game_temp.lastcommand.clone
       script = pbFreeTextNoWindow("",false,256,Graphics.width)
-      $game_temp.lastcommand = script unless nil_or_empty?(script)
+      $game_temp.lastcommand = backup_array
+      $game_temp.lastcommand.insert(0, script) unless nil_or_empty?(script)
       begin
-        pbMapInterpreter.execute_script(script) unless nil_or_empty?(script)
+        if TERMINAL_ECHO && !script.include?("echoln")
+          echoln(pbMapInterpreter.execute_script(script)) unless nil_or_empty?(script)
+        else
+          pbMapInterpreter.execute_script(script) unless nil_or_empty?(script)
+        end
       rescue Exception
       end
       $InCommandLine = false
@@ -25,8 +59,10 @@ end
 
 $InCommandLine = false
 
+# Custom Message Input Box Stuff
 def pbFreeTextNoWindow(currenttext, passwordbox, maxlength, width = 240)
   window = Window_TextEntry_Keyboard_Terminal.new(currenttext, 0, 0, width, 64)
+  ret = ""
   window.maxlength = maxlength
   window.visible = true
   window.z = 99999
@@ -36,12 +72,16 @@ def pbFreeTextNoWindow(currenttext, passwordbox, maxlength, width = 240)
   loop do
     Graphics.update
     Input.update
-    break if Input.triggerex?(:ESCAPE) || Input.triggerex?(:RETURN)
+    if Input.triggerex?(:ESCAPE)
+      break
+    elsif Input.triggerex?(:RETURN)
+      ret = window.text
+      break
+    end
     window.update
     yield if block_given?
   end
   Input.text_input = false
-  ret = Input.triggerex?(:RETURN) ? window.text : currenttext
   window.dispose
   Input.update
   return ret
@@ -49,30 +89,63 @@ end
 
 class Window_TextEntry_Keyboard_Terminal < Window_TextEntry
   def update
-    @frame += 1
-    @frame %= 20
-    self.refresh if (@frame % 10) == 0
-    return if !self.active
-    if Input.triggerex?(:BACKSPACE) || Input.repeatex?(:BACKSPACE)
-      self.delete if @helper.cursor > 0
-    elsif Input.triggerex?(:UP) && $InCommandLine && !$game_temp.lastcommand.empty?
-      self.text = $game_temp.lastcommand
-      @helper.cursor = self.text.scan(/./m).length
-    elsif ![:LEFT, :RIGHT, :RETURN, :ESCAPE].any? { |key| Input.triggerex?(key) || Input.repeatex?(key) }
-      Input.gets.each_char { |c| insert(c) }
-    elsif @helper.cursor > 0 && [:LEFT, :RIGHT].any? { |key| Input.triggerex?(key) || Input.repeatex?(key) }
-      @helper.cursor -= 1 if Input.triggerex?(:LEFT) || Input.repeatex?(:LEFT)
-      @helper.cursor += 1 if Input.triggerex?(:RIGHT) || Input.repeatex?(:RIGHT)
-      @frame = 0
-      self.refresh
+    cursor_to_show = ((System.uptime - @cursor_timer_start) / 0.35).to_i % 2 == 0
+    if cursor_to_show != @cursor_shown
+      @cursor_shown = cursor_to_show
+      refresh
     end
+    return if !self.active
+    # Moving cursor
+    if Input.triggerex?(:LEFT) || Input.repeatex?(:LEFT)
+      if @helper.cursor > 0
+        @helper.cursor -= 1
+        @cursor_timer_start = System.uptime
+        @cursor_shown = true
+        self.refresh
+      end
+      return
+    elsif Input.triggerex?(:RIGHT) || Input.repeatex?(:RIGHT)
+      if @helper.cursor < self.text.scan(/./m).length
+        @helper.cursor += 1
+        @cursor_timer_start = System.uptime
+        @cursor_shown = true
+        self.refresh
+      end
+      return
+    elsif Input.triggerex?(:BACKSPACE) || Input.repeatex?(:BACKSPACE)
+      self.delete if @helper.cursor > 0
+      return
+    elsif Input.triggerex?(:UP) && $InCommandLine && !$game_temp.lastcommand.empty?
+      self.text = $game_temp.lastcommand.shift.to_s
+      $game_temp.lastcommand.push(self.text)
+      @helper.cursor = self.text.scan(/./m).length
+      return
+    elsif Input.triggerex?(:DOWN) && $InCommandLine && !$game_temp.lastcommand.empty?
+      $game_temp.lastcommand.insert(0, $game_temp.lastcommand.pop)
+      self.text = $game_temp.lastcommand.pop.to_s
+      $game_temp.lastcommand.push(self.text)
+      @helper.cursor = self.text.scan(/./m).length
+      return
+    elsif Input.triggerex?(:RETURN) || Input.triggerex?(:ESCAPE)
+      return
+    elsif Input.pressex?(:LCTRL) || Input.pressex?(:RCTRL)
+      Input.clipboard = self.text if Input.triggerex?(:C)
+      Console.echoln "Saved \"#{self.text}\" to clipboard." if Input.triggerex?(:C)
+      if Input.triggerex?(:V)
+        self.text << Input.clipboard
+        @helper.cursor = self.text.scan(/./m).length
+      end
+    end
+    Input.gets.each_char { |c| insert(c) }
   end
 end
 
+# Saving the last executed command
 class Game_Temp
   attr_accessor :lastcommand
 
   def lastcommand
-    @lastcommand ||= ""
+    @lastcommand = [] if !@lastcommand
+    return @lastcommand
   end
 end
