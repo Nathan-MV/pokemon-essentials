@@ -471,8 +471,8 @@ class Battle::Move::TwoTurnAttackInvulnerableInSkyTargetCannotAct < Battle::Move
     target.effects[PBEffects::SkyDrop] = user.index
   end
 
-  def pbAttackingTurnEffect(user, target)
-    target.effects[PBEffects::SkyDrop] = -1
+  def pbEffectAfterAllHits(user, target)
+    target.effects[PBEffects::SkyDrop] = -1 if @damagingTurn
   end
 end
 
@@ -606,7 +606,8 @@ class Battle::Move::MultiTurnAttackBideThenReturnDoubleDamage < Battle::Move::Fi
     end
   end
 
-  def pbDamagingMove?   # Stops damage being dealt in the charging turns
+  # Stops damage being dealt in the charging turns.
+  def pbDamagingMove?
     return false if !@damagingTurn
     return super
   end

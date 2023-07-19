@@ -9,15 +9,15 @@ class SpriteAnimation
     @sprite = sprite
   end
 
-  ["x", "y", "ox", "oy", "viewport", "flash", "src_rect", "opacity", "tone"].each do |def_name|
-    eval <<-__END__
-
-  def #{def_name}(*arg)         # def x(*arg)
-    @sprite.#{def_name}(*arg)   #   @sprite.x(*arg)
-  end                           # end
-
-    __END__
-  end
+  def x(*arg);        @sprite.x(*arg);        end
+  def y(*arg);        @sprite.y(*arg);        end
+  def ox(*arg);       @sprite.ox(*arg);       end
+  def oy(*arg);       @sprite.oy(*arg);       end
+  def viewport(*arg); @sprite.viewport(*arg); end
+  def flash(*arg);    @sprite.flash(*arg);    end
+  def src_rect(*arg); @sprite.src_rect(*arg); end
+  def opacity(*arg);  @sprite.opacity(*arg);  end
+  def tone(*arg);     @sprite.tone(*arg);     end
 
   def self.clear
     @@_animations.clear
@@ -35,7 +35,7 @@ class SpriteAnimation
     @_animation_hit      = hit
     @_animation_height   = height
     @_animation_duration = @_animation.frame_max
-    @_animation_index    = 0
+    @_animation_index    = -1
     fr = 20
     if @_animation.name[/\[\s*(\d+?)\s*\]\s*$/]
       fr = $~[1].to_i
@@ -69,7 +69,7 @@ class SpriteAnimation
     @_loop_animation = animation
     return if @_loop_animation.nil?
     @_loop_animation_duration = @_animation.frame_max
-    @_loop_animation_index = 0
+    @_loop_animation_index = -1
     fr = 20
     if @_animation.name[/\[\s*(\d+?)\s*\]\s*$/]
       fr = $~[1].to_i
@@ -151,7 +151,7 @@ class SpriteAnimation
     end
   end
 
-  def update_loop_animation(quick_update = false)
+  def update_loop_animation
     new_index = ((System.uptime - @_loop_animation_timer_start) / @_loop_animation_time_per_frame).to_i
     new_index %= @_loop_animation_duration
     quick_update = (@_loop_animation_index == new_index)

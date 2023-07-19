@@ -206,9 +206,9 @@ class PokemonPartyPanel < Sprite
     end
     @hpbgsprite = ChangelingSprite.new(0, 0, viewport)
     @hpbgsprite.z = self.z + 1
-    @hpbgsprite.addBitmap("able", "Graphics/UI/Party/overlay_hp_back")
-    @hpbgsprite.addBitmap("fainted", "Graphics/UI/Party/overlay_hp_back_faint")
-    @hpbgsprite.addBitmap("swap", "Graphics/UI/Party/overlay_hp_back_swap")
+    @hpbgsprite.addBitmap("able", _INTL("Graphics/UI/Party/overlay_hp_back"))
+    @hpbgsprite.addBitmap("fainted", _INTL("Graphics/UI/Party/overlay_hp_back_faint"))
+    @hpbgsprite.addBitmap("swap", _INTL("Graphics/UI/Party/overlay_hp_back_swap"))
     @ballsprite = ChangelingSprite.new(0, 0, viewport)
     @ballsprite.z = self.z + 1
     @ballsprite.addBitmap("desel", "Graphics/UI/Party/icon_ball")
@@ -409,7 +409,7 @@ class PokemonPartyPanel < Sprite
     return if @pokemon.egg?
     # "Lv" graphic
     pbDrawImagePositions(@overlaysprite.bitmap,
-                         [["Graphics/UI/Party/overlay_lv", 20, 70, 0, 0, 22, 14]])
+                         [[_INTL("Graphics/UI/Party/overlay_lv"), 20, 70, 0, 0, 22, 14]])
     # Level number
     pbSetSmallFont(@overlaysprite.bitmap)
     pbDrawTextPositions(@overlaysprite.bitmap,
@@ -692,12 +692,12 @@ class PokemonParty_Scene
     new_mult = newid.even? ? -1 : 1
     timer_start = System.uptime
     loop do
-      oldsprite.x = lerp(old_start_x, old_start_x + old_mult * Graphics.width / 2, 0.4, timer_start, System.uptime)
-      newsprite.x = lerp(new_start_x, new_start_x + new_mult * Graphics.width / 2, 0.4, timer_start, System.uptime)
+      oldsprite.x = lerp(old_start_x, old_start_x + (old_mult * Graphics.width / 2), 0.4, timer_start, System.uptime)
+      newsprite.x = lerp(new_start_x, new_start_x + (new_mult * Graphics.width / 2), 0.4, timer_start, System.uptime)
       Graphics.update
       Input.update
       self.update
-      break if oldsprite.x == old_start_x + old_mult * Graphics.width / 2
+      break if oldsprite.x == old_start_x + (old_mult * Graphics.width / 2)
     end
   end
 
@@ -713,12 +713,12 @@ class PokemonParty_Scene
     new_mult = newid.even? ? -1 : 1
     timer_start = System.uptime
     loop do
-      oldsprite.x = lerp(old_start_x, old_start_x - old_mult * Graphics.width / 2, 0.4, timer_start, System.uptime)
-      newsprite.x = lerp(new_start_x, new_start_x - new_mult * Graphics.width / 2, 0.4, timer_start, System.uptime)
+      oldsprite.x = lerp(old_start_x, old_start_x - (old_mult * Graphics.width / 2), 0.4, timer_start, System.uptime)
+      newsprite.x = lerp(new_start_x, new_start_x - (new_mult * Graphics.width / 2), 0.4, timer_start, System.uptime)
       Graphics.update
       Input.update
       self.update
-      break if oldsprite.x == old_start_x - old_mult * Graphics.width / 2
+      break if oldsprite.x == old_start_x - (old_mult * Graphics.width / 2)
     end
     Settings::MAX_PARTY_SIZE.times do |i|
       @sprites["pokemon#{i}"].preselected = false
@@ -1019,8 +1019,9 @@ class PokemonPartyScreen
     return @scene.pbShowCommands(helptext, commands, index)
   end
 
-  # Checks for identical species
-  def pbCheckSpecies(array)   # Unused
+  # Checks for identical species.
+  # Unused.
+  def pbCheckSpecies(array)
     array.length.times do |i|
       (i + 1...array.length).each do |j|
         return false if array[i].species == array[j].species
@@ -1029,8 +1030,9 @@ class PokemonPartyScreen
     return true
   end
 
-  # Checks for identical held items
-  def pbCheckItems(array)   # Unused
+  # Checks for identical held items.
+  # Unused.
+  def pbCheckItems(array)
     array.length.times do |i|
       next if !array[i].hasItem?
       (i + 1...array.length).each do |j|
@@ -1063,7 +1065,8 @@ class PokemonPartyScreen
     return @scene.pbShowCommands(helptext, movenames, index)
   end
 
-  def pbRefreshAnnotations(ableProc)   # For after using an evolution stone
+  # For after using an evolution stone.
+  def pbRefreshAnnotations(ableProc)
     return if !@scene.pbHasAnnotations?
     annot = []
     @party.each do |pkmn|
